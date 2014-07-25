@@ -17,8 +17,9 @@ public class Stage {
 	protected int[] pixels;
 	
 	// STAGES
-	private static Stage st_demo = new Stage("/textures/stages/st_demo.png");
-	private static Stage st_altdemo = new Stage("/textures/stages/st_altdemo.png");
+//	private static Stage st_demo = new Stage("/textures/stages/st_demo.png");
+//	private static Stage st_altdemo = new Stage("/textures/stages/st_altdemo.png");
+	private static Stage st_1 = new Stage("/textures/stages/st_1.png");
 	
 	public Stage(String path) {
 		this.path = path;
@@ -46,7 +47,11 @@ public class Stage {
 	// METHOD to pass a stage to the Screen class
 	// Currently it already has a VERY BASIC "give me a random stage" feature, but its just for fun
 	public static Stage getStage() {
-		if (selector > 5) return st_demo;
+		/*		
+		if (selector > 5) return st_1;
 		else return st_altdemo;
+		*/
+		
+		return st_1;
 	}
 }

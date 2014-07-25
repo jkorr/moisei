@@ -1,0 +1,80 @@
+package com.daenils.moisei.graphics;
+
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
+
+public class Sprite {
+	private String path;
+	protected int width, height;
+	
+	protected int[] pixels;
+
+	// GAME ASSETS
+	public static Sprite monster_demo = new Sprite("/textures/entities/monster_demo.png", 128, 208);
+	
+	public Sprite(String path, int w, int h) {
+		this.path = path;
+		this.width = w;
+		this.height = h;
+		load();
+	}
+
+	public Sprite(int[] pixels, int spriteWidth, int spriteHeight) {
+		this.pixels = pixels;
+		this.width = spriteWidth;
+		this.height = spriteHeight;
+	}
+
+	public void update() {	
+	}
+
+	public void load() {
+		pixels = new int[width * height];
+		try {
+			BufferedImage image = ImageIO.read(Sprite.class.getResource(path));
+			int w = image.getWidth();
+			int h = image.getHeight();
+		
+			image.getRGB(0, 0, w, h, pixels, 0, w);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		System.out.println("Sprite (" + Sprite.class.getResource(path) + ") is loaded successfully.");
+	
+}
+	
+	public static Sprite[] split(Spritesheet sheet) {
+		int amount = (sheet.getWidth() * sheet.getHeight()) / (sheet.spriteWidth * sheet.spriteHeight);
+		Sprite[] sprites = new Sprite[amount];
+		int current = 0;
+		int[] pixels = new int[sheet.spriteWidth * sheet.spriteHeight];
+		
+		for (int yp = 0; yp < sheet.getHeight() / sheet.spriteHeight; yp++) {
+			for (int xp = 0; xp < sheet.getWidth() / sheet.spriteWidth; xp++) {
+				
+				for (int y = 0; y < sheet.spriteHeight; y++) {
+					for (int x = 0; x < sheet.spriteWidth; x++) {
+						int xo = x + xp * sheet.spriteWidth;
+						int yo = y + yp * sheet.spriteHeight;
+						pixels[x + y * sheet.spriteWidth] = sheet.getPixels()[xo + yo * sheet.getWidth()];
+					}
+				}
+				sprites[current++] = new Sprite(pixels, sheet.spriteWidth, sheet.spriteHeight);
+			}
+		}
+		
+		return sprites;
+		 
+	}
+
+	public int getWidth() {
+		return width;
+	}
+
+	public int getHeight() {
+		return height;
+	}
+}

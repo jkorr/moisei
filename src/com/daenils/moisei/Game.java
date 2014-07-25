@@ -9,7 +9,11 @@ import java.awt.Graphics;
 
 import javax.swing.JFrame;
 
+import com.daenils.moisei.entities.Gameplay;
+import com.daenils.moisei.entities.Monster;
+import com.daenils.moisei.entities.Player;
 import com.daenils.moisei.graphics.Screen;
+import com.daenils.moisei.input.Keyboard;
 
 public class Game extends Canvas implements Runnable {
 	
@@ -23,6 +27,16 @@ public class Game extends Canvas implements Runnable {
 	private JFrame frame;
 	
 	private Screen screen;
+	private Keyboard key;
+	
+	// I'll see if this works out, but I currently don't have any other idea
+	// other than having this as static. I mean it only has ONE instance
+	// under any given circumstances, so I guess no harm's done, right?
+	private static Gameplay gameplay;
+	private String temp_turninfo;
+	
+	private Player player;
+	private Monster monster1;
 	
 	private boolean running = false;
 	
@@ -34,7 +48,24 @@ public Game() {
 	setPreferredSize(size);
 	
 	screen = new Screen(width, height);	
+	System.out.println("Rendering screen at the resolution of " + (width * scale) + "x" + (height * scale) + ".");
 	frame = new JFrame();
+	key = new Keyboard();
+	
+
+	monster1 = new Monster(580, 290, player);
+	player = new Player(key, monster1);
+	monster1.setDefaultTarget(player); // repeated due to lack of better solution for now (chicken-egg issue otherwise)
+
+	gameplay = new Gameplay(key);
+	gameplay.setFirst();
+
+	String temp_turninfo = "playerturn: " + gameplay.getIsPlayerTurn() + " | monsterturn: " + gameplay.getIsMonsterTurn();
+
+	
+	System.out.println("Gameplay control is running.");
+	
+	addKeyListener(key);
 }
 
 public synchronized void start() {
@@ -54,7 +85,6 @@ public synchronized void stop() {
 }
 
 public void run() {
-	System.out.println("Rendering screen at the resolution of " + (width * scale) + "x" + (height * scale) + ".");
 
 	long lastTime = System.nanoTime();
 	long timer = System.currentTimeMillis();
@@ -77,7 +107,7 @@ public void run() {
 		
 		if (System.currentTimeMillis() - timer > 1000) {
 			timer += 1000;
-			frame.setTitle(title + " | " + updates + " ups, " + frames + " fps");
+			frame.setTitle(title + " | " + updates + " ups, " + frames + " fps | " + temp_turninfo);
 			updates = 0;
 			frames = 0;
 		}
@@ -87,6 +117,14 @@ public void run() {
 
 public void update() {
 // don't forget to drop the other objects' update() methods here
+	key.update();
+	gameplay.update();
+	player.update();
+	monster1.update();
+	
+	// temporarily here
+	temp_turninfo = "playerturn: " + gameplay.getIsPlayerTurn() + " | monsterturn: " + gameplay.getIsMonsterTurn();
+
 }
 
 public void render() {
@@ -98,6 +136,9 @@ public void render() {
 	
 	screen.clear();
 	screen.render();
+	
+	player.render();
+	monster1.render(screen);
 	
 // don't forget to drop the other objects' render() methods here
 
@@ -122,6 +163,10 @@ public static int getRenderWidth() {
 
 public static int getRenderHeight() {
 	return height;
+}
+
+public static Gameplay getGameplay() {
+	return gameplay;
 }
 
 public static void main(String[] args) {
