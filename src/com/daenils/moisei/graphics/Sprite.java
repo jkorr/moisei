@@ -13,6 +13,8 @@ public class Sprite {
 
 	// GAME ASSETS
 	public static Sprite monster_demo = new Sprite("/textures/entities/monster_demo.png", 128, 208);
+	public static Sprite monster_demo2 = new Sprite("/textures/entities/monster_demo2.png", 128, 208);
+	public static Sprite monster_demo3 = new Sprite("/textures/entities/monster_demo3.png", 128, 208);
 	
 	public Sprite(String path, int w, int h) {
 		this.path = path;
@@ -22,7 +24,10 @@ public class Sprite {
 	}
 
 	public Sprite(int[] pixels, int spriteWidth, int spriteHeight) {
-		this.pixels = pixels;
+		this.pixels = new int[pixels.length];
+		for (int i = 0; i < pixels.length; i++) {
+			this.pixels[i] = pixels[i];
+		}
 		this.width = spriteWidth;
 		this.height = spriteHeight;
 	}

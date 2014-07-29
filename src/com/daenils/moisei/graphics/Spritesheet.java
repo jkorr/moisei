@@ -18,7 +18,6 @@ public class Spritesheet {
 	
 	// SPRITESHEETS
 	// fontsheet:
-	public static Spritesheet fontsheet = new Spritesheet("/textures/gui/fontsheet.png", 182, 112, 14);
 	
 	public Spritesheet(String path, int w, int h, int spriteSize) {
 		this.path = path;

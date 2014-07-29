@@ -10,8 +10,10 @@ import java.awt.Graphics;
 import javax.swing.JFrame;
 
 import com.daenils.moisei.entities.Gameplay;
+import com.daenils.moisei.entities.Gamestats;
 import com.daenils.moisei.entities.Monster;
 import com.daenils.moisei.entities.Player;
+import com.daenils.moisei.graphics.Font;
 import com.daenils.moisei.graphics.Screen;
 import com.daenils.moisei.input.Keyboard;
 
@@ -33,6 +35,7 @@ public class Game extends Canvas implements Runnable {
 	// other than having this as static. I mean it only has ONE instance
 	// under any given circumstances, so I guess no harm's done, right?
 	private static Gameplay gameplay;
+	private Gamestats gamestats;
 	private String temp_turninfo;
 	
 	private Player player;
@@ -52,18 +55,23 @@ public Game() {
 	frame = new JFrame();
 	key = new Keyboard();
 	
-
-	monster1 = new Monster(580, 290, player);
+	monster1 = new Monster((byte) 3, player); // WTF CODE?
 	player = new Player(key, monster1);
 	monster1.setDefaultTarget(player); // repeated due to lack of better solution for now (chicken-egg issue otherwise)
 
+	gamestats = new Gamestats(player, monster1);
+	System.out.println("Statistics collection is running.");
+	
 	gameplay = new Gameplay(key);
+	System.out.println("Gameplay control is running.");
+
 	gameplay.setFirst();
+	
+
 
 	String temp_turninfo = "playerturn: " + gameplay.getIsPlayerTurn() + " | monsterturn: " + gameplay.getIsMonsterTurn();
 
 	
-	System.out.println("Gameplay control is running.");
 	
 	addKeyListener(key);
 }
@@ -118,10 +126,10 @@ public void run() {
 public void update() {
 // don't forget to drop the other objects' update() methods here
 	key.update();
-	gameplay.update();
 	player.update();
 	monster1.update();
-	
+	gamestats.update();
+	gameplay.update();
 	// temporarily here
 	temp_turninfo = "playerturn: " + gameplay.getIsPlayerTurn() + " | monsterturn: " + gameplay.getIsMonsterTurn();
 
@@ -136,9 +144,12 @@ public void render() {
 	
 	screen.clear();
 	screen.render();
+
 	
 	player.render();
 	monster1.render(screen);
+	
+	gameplay.render(screen);
 	
 // don't forget to drop the other objects' render() methods here
 

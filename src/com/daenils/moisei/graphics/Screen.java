@@ -1,5 +1,7 @@
 package com.daenils.moisei.graphics;
 
+import com.daenils.moisei.Game;
+
 public class Screen {
 
 	private int width, height;
@@ -13,10 +15,14 @@ public class Screen {
 	
 	public void render() {
 		renderStage(Stage.getStage());
-		renderGUI(GUI.getGUI());
-		
-		renderSpritesheet(15, 15, Spritesheet.fontsheet);
-		
+
+		renderGUI(GUI.screenSpellPos1, GUI.screenBottomElements-30, GUI.gui_spelldefQ);
+		renderGUI(GUI.screenSpellPos2, GUI.screenBottomElements-30, GUI.gui_spelldefW);
+		renderGUI(GUI.screenSpellPos3, GUI.screenBottomElements-30, GUI.gui_spelldefE);
+		renderGUI(GUI.screenSpellPos4, GUI.screenBottomElements-30, GUI.gui_spelldefR);
+		renderGUI(GUI.screenTurninfoPos, GUI.screenBottomElements-30, GUI.gui_turninfo);
+		renderGUI(GUI.screenPlayerinfoPos, GUI.screenBottomElements-30, GUI.gui_playerinfo);
+		renderGUI(0, GUI.screenBottomBack, GUI.gui_back);
 	}
 	
 	public void clear() {
@@ -30,16 +36,19 @@ public class Screen {
 				pixels[x + y * width] = stage.pixels[x + y * width];
 	}
 	
-	public void renderGUI(GUI gui) {
-		for (int y = 0; y < height; y++) {
-			for (int x = 0; x < width; x++) {
+	public void renderGUI(int xp, int yp, GUI gui) {
+		for (int y = 0; y < gui.height; y++) {
+			int ya = y + yp;
+			for (int x = 0; x < gui.width; x++) {
+				int xa = x + xp;
 				int col = 0xffff00ff;
-				if (gui.pixels[x + y * width] != col) pixels[x + y * width] = gui.pixels[x + y * width];
+				if (gui.pixels[x + y * gui.width] != col) pixels[xa + ya * width] = gui.pixels[x + y * gui.width];
 				}
 		}
 	}
 	
-	public void renderSprite(int xp, int yp, Sprite sprite) {
+	public void renderSprite(int xp, int yp, Sprite sprite, int scale) {
+		// TODO: implement sprite scaling via int scale (100 default would be nice)
 		for (int y = 0; y < sprite.height; y++){
 			int ya = y + yp;
 			for (int x = 0; x < sprite.width; x++) {
@@ -50,6 +59,20 @@ public class Screen {
 			}
 		}
 	}
+	
+	public void renderCharacter(int xp, int yp, Sprite sprite, int scale, int color) {
+		// TODO: implement sprite scaling via int scale (100 default would be nice)
+		for (int y = 0; y < sprite.height; y++){
+			int ya = y + yp;
+			for (int x = 0; x < sprite.width; x++) {
+				int xa = x + xp;
+				int col = sprite.pixels[x + y * sprite.width];
+				
+				if (col != 0xffff00ff) pixels[xa + ya * width] = color;
+			}
+		}
+	}
+	
 	
 	public void renderSpritesheet(int xp, int yp, Spritesheet spritesheet) {
 		for (int y = 0; y < spritesheet.getHeight(); y++){
