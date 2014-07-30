@@ -5,64 +5,100 @@ import java.util.Random;
 import com.daenils.moisei.Game;
 import com.daenils.moisei.graphics.Screen;
 import com.daenils.moisei.graphics.Sprite;
+import com.daenils.moisei.graphics.Stage;
 
 public class Monster extends Entity {
-	private byte spawnSlot;
+	private int spawnSlot;
 	private int[] XY = new int[2];
 	private int[] randomWait = new int[2];
-	private boolean gotRandom;
 	private int r;
+	
+	private String type;
+	
+	private static int monstersAttacked;
+	private static int deathCount;
 	
 	public int[] spawnSlot1 = new int[] {100, 250};
 	public int[] spawnSlot2 = new int[] {335, 320};
 	public int[] spawnSlot3 = new int[] {580, 290};
 	public int[] spawnSlot4 = new int[] {810, 250};
 	public int[] spawnSlot5 = new int[] {1050, 210};
-	
-	public Monster(byte spawnSlot, Entity defaultTarget) {
-		this.id = "DemoMonster";
+		
+	public Monster(int spawnSlot, Entity defaultTarget) {
+		
 		this.spawnSlot = spawnSlot;
+		Game.getGameplay().spawnSlotFilled[spawnSlot - 1] = true;
+		
+		this.name = "DemoMonster[" + (spawnSlot) + "]";
+		this.id = spawnSlot;
 		
 		setXY(spawnSlot);
 		this.x = XY[0];
 		this.y = XY[1];
 		
-		this.sprite = Sprite.monster_demo3;
+		this.sprite = Sprite.monster_demo2;
 		
-		this.health = 60;
+		this.health = 30;
 		this.isAlive = true;
-		this.mana = 0;
+		this.mana = 5;
 		this.level = 1;
 		this.actionPoints = 1;
 		this.defaultActionPoints = actionPoints;
-		this.damage = new int[] {8, 15};
+		this.damage = new int[] {2, 5};
 		
 		this.defaultTarget = defaultTarget;
 		this.isWaiting = true;
-		this.randomWait = new int[] {1, 4};
-		this.gotRandom = false;
+		this.randomWait = new int[] {1, 3};
 		this.r = newRandomWait();
+		
+		this.stage = Stage.getStage();
+		
+		this.deathCount = 0;
 		
 		}
 	
-	public void update() {
+public Monster() {
+		// DUMMY MONSTER
 	
+		this.spawnSlot = -1;
+//		Game.getGameplay().spawnSlotFilled[spawnSlot - 1] = true;
+		
+		this.name = "DemoMonster[" + (spawnSlot) + "]";
+		
+		this.x = 50;
+		this.y = 50;
+		
+		this.sprite = Sprite.monster_demo3;
+		
+		this.health = 1;
+		this.isAlive = true;
+		this.mana = 0;
+		this.level = 0;
+		this.actionPoints = 0;
+		this.defaultActionPoints = actionPoints;
+		this.damage = new int[] {0, 0};
+		
+		this.isWaiting = true;
+		this.randomWait = new int[] {0, 0};
+		this.r = newRandomWait();
+		
+		this.stage = Stage.getStage();
+		
+		}
+
+	public void update() {
+//		System.out.println(id);
 //		System.out.println("Waiting? " + isWaiting);
 		isWaiting = true;
 //		System.out.println(isWaiting);
 		
-		
-		if (Gamestats.isMonsterTurn && isAlive && (actionPoints > 0)) {
-			monsterWait(1.5);
-			if (!isWaiting) {
-				while (actionPoints > 0) basicAttack(this, defaultTarget);
-			}			
-		}
-		
-		if (Gamestats.isMonsterTurn && isAlive && isWaiting && (actionPoints == 0)) {
+		if (Gamestats.isMonsterTurn && isAlive && (this.actionPoints > 0) && defaultTarget.isAlive) {
 			monsterWait(r);
-			if (!isWaiting) {
-				Game.getGameplay().endTurn(this);
+		if (!isWaiting) {
+				while (actionPoints > 0) {
+					basicAttack(this, defaultTarget);
+					monstersAttacked++;
+				}
 			}			
 		}
 	
@@ -83,9 +119,11 @@ public class Monster extends Entity {
 		return XY;
 	}
 	
-	public byte getSpawnSlot() {
+	public int getSpawnSlot() {
 		return spawnSlot;
 	}	
+	
+	
 	
 	public int getRandomWait() {
 		return r;
@@ -124,6 +162,22 @@ public class Monster extends Entity {
 		m.resetMonsterWait();
 		m.isWaiting = false;
 		Game.getGameplay().setIsWaitingOn(false);
+	}
+	
+	protected static void resetMonstersAttacked() {
+		monstersAttacked = 0;
+	}
+
+	public static int getMonstersAttacked() {
+		return monstersAttacked;
+	}
+	
+	public static void addDeathCount() {
+		deathCount++;
+	}
+	
+	public static int getDeathCount() {
+		return deathCount;
 	}
 }
 

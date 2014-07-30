@@ -2,17 +2,28 @@ package com.daenils.moisei.graphics;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
 import com.daenils.moisei.Game;
+import com.daenils.moisei.entities.Entity;
+import com.daenils.moisei.entities.Monster;
+import com.daenils.moisei.entities.Player;
 
 public class Stage {
+	private Stage playStage;
+	private Player player;
+	
 	
 	private String path;
 	private int width, height;
 	
-	private static int selector = (int) (Math.random() * 10);
+	private List<Entity> entities = new ArrayList<Entity>();
+	private List<Monster> monsters = new ArrayList<Monster>();
+	
+//	private static int selector = (int) (Math.random() * 10);
 	
 	protected int[] pixels;
 	
@@ -20,6 +31,12 @@ public class Stage {
 //	private static Stage st_demo = new Stage("/textures/stages/st_demo.png");
 //	private static Stage st_altdemo = new Stage("/textures/stages/st_altdemo.png");
 	private static Stage st_1 = new Stage("/textures/stages/st_1.png");
+	
+	public Stage(Stage stage, Player player) {
+		this.playStage = stage;
+		this.player = player;
+		
+	}
 	
 	public Stage(String path) {
 		this.path = path;
@@ -29,6 +46,50 @@ public class Stage {
 	}
 
 	public void update() {
+		for (int i = 0; i < entities.size(); i++) {
+			entities.get(i).update();
+		}
+		for (int i = 0; i < monsters.size(); i++) {
+			monsters.get(i).update();
+		}
+		
+		remove();
+	}
+	
+	public void render(Screen screen) {
+		// maybe put stage render here? from Screen.java
+		
+		// render monsters
+		for (int i = 0; i < entities.size(); i++) {
+			entities.get(i).render(screen);
+		}
+		for (int i = 0; i < monsters.size(); i++) {
+			monsters.get(i).render(screen);
+		}
+	}
+	
+	public void add(Entity e) {
+		e.init(this);
+		if (e instanceof Monster) {
+			monsters.add((Monster) e);
+			// this should set the target if a new monster is added
+		}
+		else {
+			entities.add(e);
+		}
+	}
+	
+	private void remove() {
+		for (int i = 0; i < entities.size(); i++) {
+			if (!entities.get(i).isAlive()) entities.remove(i);
+		}
+		for (int i = 0; i < monsters.size(); i++) {
+			if (!monsters.get(i).isAlive()) monsters.remove(i);
+		}
+	}
+	
+	public List<Monster> getMonsters() {
+		return monsters;
 	}
 	
 	public void load() {

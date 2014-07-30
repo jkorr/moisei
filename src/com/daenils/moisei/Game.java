@@ -12,9 +12,11 @@ import javax.swing.JFrame;
 import com.daenils.moisei.entities.Gameplay;
 import com.daenils.moisei.entities.Gamestats;
 import com.daenils.moisei.entities.Monster;
+import com.daenils.moisei.entities.MonsterAI;
 import com.daenils.moisei.entities.Player;
 import com.daenils.moisei.graphics.Font;
 import com.daenils.moisei.graphics.Screen;
+import com.daenils.moisei.graphics.Stage; // probably it should be in its own package later (e.g. moisei.stage.stage)
 import com.daenils.moisei.input.Keyboard;
 
 public class Game extends Canvas implements Runnable {
@@ -38,8 +40,11 @@ public class Game extends Canvas implements Runnable {
 	private Gamestats gamestats;
 	private String temp_turninfo;
 	
+	private Stage stage;
+	
 	private Player player;
-	private Monster monster1;
+	private MonsterAI monsterAI;
+	private Monster dummyMonster;
 	
 	private boolean running = false;
 	
@@ -55,15 +60,21 @@ public Game() {
 	frame = new JFrame();
 	key = new Keyboard();
 	
-	monster1 = new Monster((byte) 3, player); // WTF CODE?
-	player = new Player(key, monster1);
-	monster1.setDefaultTarget(player); // repeated due to lack of better solution for now (chicken-egg issue otherwise)
+	stage = new Stage(Stage.getStage(), player);
+	stage = Stage.getStage(); // not sure if it's really needed though
+	
+	gameplay = new Gameplay(key, stage);
+	System.out.println("Gameplay control is running.");
+	
+	dummyMonster = new Monster(); // WTF CODE?
+	player = new Player(key, null);
+	monsterAI = new MonsterAI();
+//	monster1.setDefaultTarget(player); // repeated due to lack of better solution for now (chicken-egg issue otherwise)
 
-	gamestats = new Gamestats(player, monster1);
+	gamestats = new Gamestats(player, stage, dummyMonster);
 	System.out.println("Statistics collection is running.");
 	
-	gameplay = new Gameplay(key);
-	System.out.println("Gameplay control is running.");
+	
 
 	gameplay.setFirst();
 	
@@ -126,8 +137,10 @@ public void run() {
 public void update() {
 // don't forget to drop the other objects' update() methods here
 	key.update();
+	stage.update();
 	player.update();
-	monster1.update();
+	monsterAI.update();
+//	dummyMonster.update();
 	gamestats.update();
 	gameplay.update();
 	// temporarily here
@@ -145,9 +158,10 @@ public void render() {
 	screen.clear();
 	screen.render();
 
+	stage.render(screen);
 	
 	player.render();
-	monster1.render(screen);
+//	dummyMonster.render(screen);
 	
 	gameplay.render(screen);
 	
@@ -179,6 +193,8 @@ public static int getRenderHeight() {
 public static Gameplay getGameplay() {
 	return gameplay;
 }
+
+
 
 public static void main(String[] args) {
 	Game game = new Game();
