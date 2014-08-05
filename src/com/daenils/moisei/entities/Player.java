@@ -1,14 +1,19 @@
 package com.daenils.moisei.entities;
 
 import com.daenils.moisei.Game;
+import com.daenils.moisei.graphics.GUI;
+import com.daenils.moisei.graphics.Screen;
 import com.daenils.moisei.graphics.Stage;
 import com.daenils.moisei.input.Keyboard;
+import com.daenils.moisei.entities.equipments.Ability;
 
 public class Player extends Entity {
 	private Keyboard input;
 	private boolean canUseSkills;
-	protected boolean neverCycled;
+//	private Ability[] playerAbility = new Ability[4];
 	
+	protected boolean neverCycled;
+
 	public Player(Keyboard input, Entity defaultTarget) {
 		this.name = "Player";
 		this.id = -1;
@@ -17,7 +22,15 @@ public class Player extends Entity {
 		this.y = 0;
 		
 		this.input = input;
-		this.canUseSkills = false;
+		this.canUseSkills = false;	
+		this.abilityCount = 4;
+		
+//		this.playerAbility[0] = new Ability(1, this);
+//		this.playerAbility[1] = new Ability(2, this);
+//		this.playerAbility[2] = new Ability(3, this);
+//		this.playerAbility[3] = new Ability(1, this);
+		
+		initAbilities();
 		
 		this.damage = new int[] {5, 11};
 		this.health = 100;
@@ -31,9 +44,20 @@ public class Player extends Entity {
 		this.stage = Stage.getStage();
 		
 		this.defaultTarget = defaultTarget;
+		
+
+	}
+	
+	public void initAbilities() {
+		unlockAbility(this, 1);
+		unlockAbility(this, 2);
+		unlockAbility(this, 3);
 	}
 	
 	public void update() {
+		updateAbilities();
+		dealDots();
+		
 		// set a default target
 		if (defaultTarget == null) newCycledTarget();
 		
@@ -50,11 +74,30 @@ public class Player extends Entity {
 			Game.getGameplay().enableGlobalCooldown();
 		}
 		
-		
-		if (input.playerQ && canUseSkills) {
-			System.out.print("Player casts a Fireball! | ");
+		// Q ABILITY
+		if (input.playerQ && canUseSkills && (abilities.size() > 0)) {
+			useAbility(this, abilities.get(0));
 			Game.getGameplay().enableGlobalCooldown();
 		}
+		
+		// W ABILITY
+		if (input.playerW && canUseSkills && (abilities.size() > 1)) {
+			useAbility(this, abilities.get(1));
+			Game.getGameplay().enableGlobalCooldown();
+		}
+		
+		// E ABILITY
+		if (input.playerE && canUseSkills && (abilities.size() > 2)) {
+			useAbility(this, abilities.get(2));
+			Game.getGameplay().enableGlobalCooldown();
+		}
+		
+		// R ABILITY
+		if (input.playerR && canUseSkills && (abilities.size() > 3)) {
+			useAbility(this, abilities.get(3));
+			Game.getGameplay().enableGlobalCooldown();
+		}
+		
 		
 		if (input.playerEndTurn && !Game.getGameplay().onGlobalCooldown && Game.getGameplay().getIsPlayerTurn()) {
 			// System.out.println("!!!");
@@ -64,13 +107,25 @@ public class Player extends Entity {
 		}
 		
 		if (input.debugAddMonster && !Game.getGameplay().onGlobalCooldown) {
-			Game.getGameplay().spawnMonster();
+			if (Gamestats.monstersAlive > 0) Game.getGameplay().spawnMonster();
+			else Game.getGameplay().newMonsterWave();
+		}
+		
+		if (input.debugForceNewWave && !Game.getGameplay().onGlobalCooldown) {
+			Game.getGameplay().newMonsterWave();
 		}
 
 		inputTargeting();
 
 	}
 	
+	
+	
+	protected void updateAbilities() {
+//		for (int i = 0; i < abilities.size(); i++) abilities.get(i).update();
+//		removeAbility();
+	}
+
 	private void inputTargeting() {
 			// OLD
 			for (int i = 0; i < Gamestats.monsterCount; i++) {
@@ -107,7 +162,17 @@ public class Player extends Entity {
 		
 	}
 
-	public void render() {	
+	
+	
+	public void render(Screen screen) {
+		int[] spellPosHelper = new int[]{GUI.screenSpellPos1, GUI.screenSpellPos2, GUI.screenSpellPos3, GUI.screenSpellPos4};
+		for (int i = 0; i < abilities.size(); i++) {
+			screen.renderSprite(spellPosHelper[i], GUI.screenBottomElements - 30, abilities.get(i).getIcon(), 0);
+		}
+	}
+	
+	public Player getPlayer() {
+		return this;
 	}
 	
 	public boolean getCanUseSkills() {

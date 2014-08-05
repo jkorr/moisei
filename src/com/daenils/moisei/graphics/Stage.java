@@ -9,6 +9,7 @@ import javax.imageio.ImageIO;
 
 import com.daenils.moisei.Game;
 import com.daenils.moisei.entities.Entity;
+import com.daenils.moisei.entities.Gamestats;
 import com.daenils.moisei.entities.Monster;
 import com.daenils.moisei.entities.Player;
 
@@ -31,11 +32,11 @@ public class Stage {
 //	private static Stage st_demo = new Stage("/textures/stages/st_demo.png");
 //	private static Stage st_altdemo = new Stage("/textures/stages/st_altdemo.png");
 	private static Stage st_1 = new Stage("/textures/stages/st_1.png");
+	private static Stage st_1a = new Stage("/textures/stages/st_1a.png");
 	
 	public Stage(Stage stage, Player player) {
 		this.playStage = stage;
 		this.player = player;
-		
 	}
 	
 	public Stage(String path) {
@@ -46,6 +47,7 @@ public class Stage {
 	}
 
 	public void update() {
+		
 		for (int i = 0; i < entities.size(); i++) {
 			entities.get(i).update();
 		}
@@ -80,16 +82,36 @@ public class Stage {
 	}
 	
 	private void remove() {
-		for (int i = 0; i < entities.size(); i++) {
-			if (!entities.get(i).isAlive()) entities.remove(i);
-		}
-		for (int i = 0; i < monsters.size(); i++) {
-			if (!monsters.get(i).isAlive()) monsters.remove(i);
-		}
+			for (int i = 0; i < entities.size(); i++) {
+				if (entities.get(i).getNeedsRemove()) {
+					entities.remove(i);
+					System.out.println("Entity removed");
+				}
+			}
+			for (int i = 0; i < monsters.size(); i++) {
+				if (monsters.get(i).getNeedsRemove()) {
+					monsters.remove(i);
+					System.out.println("Monster removed");
+					}
+			}
 	}
 	
 	public List<Monster> getMonsters() {
 		return monsters;
+	}
+	
+	public boolean checkIfAllDead() {
+		boolean returnValue = false;
+		if (Gamestats.turnCount > 0) { 		// "Gamestats.turnCount > 0" is a temporary fix (?)
+			int n = 0;
+			for (int i = 0; i < monsters.size(); i++) {
+				if (monsters.get(i).getHealth() <= 0) n++; 
+			}
+			if (n == Gamestats.monsterCount) returnValue = true;
+			else returnValue = false;
+		}
+//			System.out.println(returnValue);
+			return returnValue;
 	}
 	
 	public void load() {
@@ -113,6 +135,6 @@ public class Stage {
 		else return st_altdemo;
 		*/
 		
-		return st_1;
+		return st_1a;
 	}
 }

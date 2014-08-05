@@ -14,7 +14,7 @@ import com.daenils.moisei.graphics.Stage;
  */
 
 public class Gamestats {
-	private Entity player;
+	protected static Entity player;
 	private Entity monster1;
 	private Stage stage;
 	
@@ -27,6 +27,7 @@ public class Gamestats {
 	public static String playerLastAttacker;
 	public static byte playerLastActionPoints;
 	public static int playerTargetCycled;
+	public static int playerLastHealth;
 	
 	public static boolean playerCanUseSkills;
 	public static boolean playerNeverCycled;
@@ -43,6 +44,7 @@ public class Gamestats {
 	public static String[] monsterLastAttacker = new String[6];
 	public static String[] monsterId = new String[6];
 	public static byte[] monsterLastActionPoints = new byte[6];
+	public static int[] monsterLastHealth = new int[6];
 	public static int[] monsterSpawnSlot = new int[6];
 	public static boolean[] monsterIsWaiting = new boolean[6];
 	public static int[] monsterRW = new int[6];
@@ -53,11 +55,12 @@ public class Gamestats {
 	public static int[] spawnSlot4;
 	public static int[] spawnSlot5;
 	
-	public static int monsterDeathCount;
+
 	public static Entity monsterTarget;
 	
 	// GAME STUFF
 	public static long turnCount;
+	public static int waveCount;
 	public static boolean isPlayerTurn;
 	public static boolean isMonsterTurn;
 	
@@ -65,7 +68,11 @@ public class Gamestats {
 	public static double deltaGameTime;
 	
 	public static int monsterCount;
+	public static int monsterDeathCount;
 	public static int monstersAttacked;
+	public static boolean monstersAllDead;
+	public static int monstersAlive;
+	
 	public static boolean spawnSlotFilled1;
 	public static boolean spawnSlotFilled2;
 	public static boolean spawnSlotFilled3;
@@ -75,8 +82,12 @@ public class Gamestats {
 	// SAVED STUFF
 	public static long savedTurnCount;
 	public static double savedDeltaGameTime;
-	public static int savedMonsterCount; // not yet used
 	public static int savedMonsterDeathCount;
+	
+	// SAVED STUFF -- BUT NOT YET IMPLEMENTED
+	public static int savedMonsterCount;
+	public static int savedPlayerDamageDealt; // needs a playerDamageDealt as well?
+	public static int savedMonsterDamageDealt; // -- " --
 	
 	public Gamestats(Entity player, Stage stage, Entity monster) {
 		this.player = player;
@@ -104,13 +115,16 @@ public class Gamestats {
 		playerHitDamage = player.hitDamage;
 		playerLastAttacker = player.lastAttacker;
 		playerLastActionPoints = player.lastActionPoints;
+		playerLastHealth = player.lastHealth;
 		
 		playerTargetCycled = player.getTargetCycled();
 		playerNeverCycled = ((Player) player).neverCycled;
 		
 //		playerCanUseSkills = ((Player) player).getCanUseSkills();
 		
-		// all of these probably needs to be []
+		// check for the number of alive monsters
+		monstersAlive = checkAliveMonsterCount();
+		
 		for (int i = 0; i < monsterCount; i++) {
 			monsterHP[i] = stage.getMonsters().get(i).health;
 			monsterMana[i] = stage.getMonsters().get(i).mana;
@@ -125,6 +139,7 @@ public class Gamestats {
 			
 			monsterHitDamage[i] = stage.getMonsters().get(i).hitDamage;
 			monsterLastAttacker[i] = stage.getMonsters().get(i).lastAttacker;
+			monsterLastHealth[i] = stage.getMonsters().get(i).lastHealth;
 			monsterId[i] = stage.getMonsters().get(i).name;
 			monsterLastActionPoints[i] = stage.getMonsters().get(i).lastActionPoints;
 			
@@ -143,11 +158,13 @@ public class Gamestats {
 		monsterDamage[5] = monster1.damage;
 		monsterHitDamage[5] = monster1.hitDamage;
 		monsterLastAttacker[5] = monster1.lastAttacker;
+		monsterLastHealth[5] = monster1.lastHealth;
 		monsterLastActionPoints[5] = monster1.lastActionPoints;
 		
 		monsterDeathCount = Monster.getDeathCount();
+		monstersAllDead = stage.checkIfAllDead();
 		
-		monsterTarget = player;
+//		monsterTarget = player;
 		
 		monsterIsWaiting[5] = monster1.isWaiting;
 //		monsterSpawnSlot[5] = ((Monster) monster1).getSpawnSlot();
@@ -161,6 +178,7 @@ public class Gamestats {
 		
 		// Game
 		turnCount = Game.getGameplay().getCurrentTurn();
+		waveCount = Game.getGameplay().getWaveCount();
 		isPlayerTurn = Game.getGameplay().getIsPlayerTurn();
 		isMonsterTurn = Game.getGameplay().getIsMonsterTurn(); 
 		
@@ -193,6 +211,14 @@ public class Gamestats {
 		
 		public static int getTotalMonsterDeathCount() {
 			return savedMonsterDeathCount + monsterDeathCount;
+		}
+		
+		public int checkAliveMonsterCount() {
+			int n = 0;
+			for (int i =0; i < monsterCount; i++) {
+				if (stage.getMonsters().get(i).isAlive) n++;
+			}
+			return n;
 		}
 	
 	

@@ -15,8 +15,9 @@ public class Keyboard implements KeyListener {
 	public boolean playerEndTurn;
 
 	// debug stuff
-	public boolean debugTogglePlayerTurn, debugToggleMonsterTurn;
+	public boolean debugLockAbility, debugUnlockAbility;
 	public boolean debugAddMonster;
+	public boolean debugForceNewWave;
 	
 	public long[] keysPressTime = new long[300];
 	public long[] keysRelTime = new long[300];
@@ -37,9 +38,10 @@ public class Keyboard implements KeyListener {
 		playerTarget[3] = keys[KeyEvent.VK_4];
 		playerTarget[4] = keys[KeyEvent.VK_5];
 		
-		debugTogglePlayerTurn = keys[KeyEvent.VK_PAGE_UP];
-		debugToggleMonsterTurn = keys[KeyEvent.VK_PAGE_DOWN];
+		debugLockAbility = keys[KeyEvent.VK_PAGE_UP];
+		debugUnlockAbility = keys[KeyEvent.VK_PAGE_DOWN];
 		debugAddMonster = keys[KeyEvent.VK_M];
+		debugForceNewWave = keys[KeyEvent.VK_N];
 		
 //		for (int i = 0; i < keys.length; i++)
 //			if (keys[i]) System.out.println(i); 

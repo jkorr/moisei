@@ -3,6 +3,7 @@ package com.daenils.moisei.entities;
 import java.util.Random;
 
 import com.daenils.moisei.Game;
+import com.daenils.moisei.entities.equipments.Ability;
 import com.daenils.moisei.graphics.Screen;
 import com.daenils.moisei.graphics.Sprite;
 import com.daenils.moisei.graphics.Stage;
@@ -13,7 +14,10 @@ public class Monster extends Entity {
 	private int[] randomWait = new int[2];
 	private int r;
 	
+//	private Ability[] monsterAbility = new Ability[2]; // fixed for two now, later probably it will depend on type of monster
 	private String type;
+	
+	private boolean canUseSkills;
 	
 	private static int monstersAttacked;
 	private static int deathCount;
@@ -40,11 +44,13 @@ public class Monster extends Entity {
 		
 		this.health = 30;
 		this.isAlive = true;
-		this.mana = 5;
+		this.mana = 15;
 		this.level = 1;
 		this.actionPoints = 1;
 		this.defaultActionPoints = actionPoints;
 		this.damage = new int[] {2, 5};
+//		this.monsterAbility[0] = new Ability(1, this);
+//		this.monsterAbility[1] = new Ability(3, this);
 		
 		this.defaultTarget = defaultTarget;
 		this.isWaiting = true;
@@ -53,11 +59,15 @@ public class Monster extends Entity {
 		
 		this.stage = Stage.getStage();
 		
+		this.needsRemove = false;
 		this.deathCount = 0;
+		this.abilityCount = 2;
+		
+		initAbilities();
 		
 		}
 	
-public Monster() {
+	public Monster() {
 		// DUMMY MONSTER
 	
 		this.spawnSlot = -1;
@@ -86,13 +96,34 @@ public Monster() {
 		
 		}
 
+	public void initAbilities() {
+		unlockAbility(this, 1);
+		unlockAbility(this, 3);
+	}
+	
 	public void update() {
 //		System.out.println(id);
 //		System.out.println("Waiting? " + isWaiting);
 		isWaiting = true;
 //		System.out.println(isWaiting);
 		
-		if (Gamestats.isMonsterTurn && isAlive && (this.actionPoints > 0) && defaultTarget.isAlive) {
+		//if dead 0 ap since checkIfDone() looks for ap
+		// extend this into a method for additional death-related stuff
+		// e.g. new sprite for dead ppl
+		if (!isAlive) { 
+			actionPoints = 0;
+			sprite = Sprite.monster_demo;
+		}
+		
+		// use heal
+		aiBehaviorUseHeal();
+		
+		// use stun
+		aiBehaviorUseStun();
+		
+		
+		// basic attack
+		if (checkCanUseSkills() && defaultTarget.isAlive) {
 			monsterWait(r);
 		if (!isWaiting) {
 				while (actionPoints > 0) {
@@ -101,12 +132,42 @@ public Monster() {
 				}
 			}			
 		}
+		
+		// monster entity removal code 
+		if (health <= 0 && Game.getGameplay().getCurrentTurn() == 1) needsRemove = true;
+		else needsRemove = false;
 	
+//		System.out.println("MONSTER UPDATE");
+		
+	}
+
+	private void aiBehaviorUseStun() {
+		if (checkCanUseSkills() && (defaultTarget.getMana() < 20 && !defaultTarget.isStunned) && defaultTarget.isAlive) {
+			monsterWait(r);
+			if (!isWaiting) {
+				useAbility(this, abilities.get(1));
+			}
+		}
+	}
+
+	private void aiBehaviorUseHeal() {
+		if (checkCanUseSkills() && this.health < 20) {
+			monsterWait(r);
+			if (!isWaiting) {
+				useAbility(this, abilities.get(0));
+			}
+		}
 	}
 	
 	public void render(Screen screen) {
 		screen.renderSprite(x, y, sprite, 1);
 	}
+	
+	private boolean checkCanUseSkills() {
+		if (Gamestats.isMonsterTurn && isAlive && actionPoints > 0) return canUseSkills = true;
+		else return canUseSkills = false;
+	}
+	
 	
 	private int[] setXY(int spawnSlot) {
 		if (spawnSlot < 1 || spawnSlot > 5) { XY[0] = 100; XY[1] = 250; }

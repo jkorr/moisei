@@ -1,0 +1,5 @@
+1 0 TestHeal spell-1 1 10 10 0 0 false 0 0 0 1 false
+2 1 TestDamage spell-2 1 10 0 10 0 true 0 2 2 1 false
+3 2 TestStun spell-3 1 15 0 0 100 false 0 0 0 1 true
+4 1 TestFireRain spell-0 1 25 0 15 0 true 0 1 3 3 false
+5 1 TestULTIKILL spell-0 0 0 10 10 0 true 0 5 2 1 false

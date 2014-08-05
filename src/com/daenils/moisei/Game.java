@@ -60,15 +60,15 @@ public Game() {
 	frame = new JFrame();
 	key = new Keyboard();
 	
-	stage = new Stage(Stage.getStage(), player);
-	stage = Stage.getStage(); // not sure if it's really needed though
+	stage = new Stage(null, player);
+	stage = Stage.getStage(); // currently needed for targeting to work, might wanna look into it later
 	
 	gameplay = new Gameplay(key, stage);
 	System.out.println("Gameplay control is running.");
 	
 	dummyMonster = new Monster(); // WTF CODE?
 	player = new Player(key, null);
-	monsterAI = new MonsterAI();
+	monsterAI = new MonsterAI(stage);
 //	monster1.setDefaultTarget(player); // repeated due to lack of better solution for now (chicken-egg issue otherwise)
 
 	gamestats = new Gamestats(player, stage, dummyMonster);
@@ -160,7 +160,7 @@ public void render() {
 
 	stage.render(screen);
 	
-	player.render();
+	player.render(screen);
 //	dummyMonster.render(screen);
 	
 	gameplay.render(screen);
