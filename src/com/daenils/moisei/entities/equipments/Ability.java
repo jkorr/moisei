@@ -1,7 +1,10 @@
 package com.daenils.moisei.entities.equipments;
 
 import java.io.FileNotFoundException;
+import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -9,24 +12,15 @@ import com.daenils.moisei.entities.Entity;
 import com.daenils.moisei.graphics.Sprite;
 
 public class Ability extends Equipment {
-	Map<Integer, Integer> mapAbilityTypes = new HashMap<Integer, Integer>();
-	Map<Integer, String> mapAbilityNames = new HashMap<Integer, String>();
-	Map<Integer, String> mapAbilityDescriptions = new HashMap<Integer, String>(); // not yet used
-	Map<Integer, String> mapAbilityIcons = new HashMap<Integer, String>();
-	Map<Integer, Integer> mapAbilityAPcosts = new HashMap<Integer, Integer>();
-	Map<Integer, Integer> mapAbilityMPcosts = new HashMap<Integer, Integer>();
-	Map<Integer, Integer> mapAbilityHealValues = new HashMap<Integer, Integer>();
-	Map<Integer, Integer> mapAbilityDamageValues = new HashMap<Integer, Integer>();
-	Map<Integer, Integer> mapAbilityUtilityValues = new HashMap<Integer, Integer>();
-	Map<Integer, Boolean> mapAbilityIsOTs = new HashMap<Integer, Boolean>();
-	Map<Integer, Integer> mapAbilityHotValues = new HashMap<Integer, Integer>();
-	Map<Integer, Integer> mapAbilityDotValues = new HashMap<Integer, Integer>();
-	Map<Integer, Integer> mapAbilityTurnCounts = new HashMap<Integer, Integer>();
-	Map<Integer, Byte> mapAbilityTargetTypes = new HashMap<Integer, Byte>();
-	Map<Integer, Boolean> mapAbilityIsStuns = new HashMap<Integer, Boolean>();
+	private static int abilityCount;
 	
-	
+	private static Map<Integer, String> mapAbilities = new HashMap<Integer, String>();
 	private int abilityType;
+	
+	// ABILITY COOLDOWN HANDLING
+	private boolean onCooldown;
+	private long lastUsed;
+	
 	/*
 	 * 0 - heal 
 	 * 1 - damage
@@ -38,38 +32,33 @@ public class Ability extends Equipment {
 
 	
 	// CONSTRUCTORS
-	
-	public Ability(int id) {
-		// CONSTRUCTOR TO GRAB AN ABILITY BY ID
-	}
-	
-	public Ability(String name) {
-		// CONSTRUCTOR TO GRAB AN ABILITY BY NAME
-	}
-	
-	public Ability(int id, Entity u) {
-		load();
+	public Ability(int id, Entity u) {	
+		load(); // remove if you no longer want to load the abilities more than once
 		this.hotbarSlot = -1; // 1-4: Q-W-E-R
 		
 		this.user = u;
 		this.id = id;
 		
-		this.abilityType = mapAbilityTypes.get(id);
-		this.name = mapAbilityNames.get(id);
-//		this.description = mapAbilityDescriptions.get(id);
-		this.icon = Sprite.getSpellSprite(mapAbilityIcons.get(id));
-		this.APcost = mapAbilityAPcosts.get(id);
-		this.MPcost = mapAbilityMPcosts.get(id);
-		this.healValue = mapAbilityHealValues.get(id);
-		this.damageValue = mapAbilityDamageValues.get(id);
-		this.utilityValue = mapAbilityUtilityValues.get(id);
-		this.isOT = mapAbilityIsOTs.get(id);
-		this.hotValue = mapAbilityHotValues.get(id);
-		this.dotValue = mapAbilityDotValues.get(id);
-		this.turnCount = mapAbilityTurnCounts.get(id);
-		this.targetType = mapAbilityTargetTypes.get(id);
-		this.isStun = mapAbilityIsStuns.get(id);
-		
+		String[] tempString = mapAbilities.get(id).split(",");
+
+		this.abilityType = Byte.parseByte(tempString[0]);
+		this.name = tempString[1];
+		this.description = tempString[2];
+		this.icon = Sprite.getSpellSprite(tempString[3]);
+		this.APcost = Integer.parseInt(tempString[4]);
+		this.MPcost = Integer.parseInt(tempString[5]);
+		this.cooldown = Integer.parseInt(tempString[6]);
+		this.healValue = Integer.parseInt(tempString[7]);
+		this.damageValue = Integer.parseInt(tempString[8]);
+		this.utilityValue = Integer.parseInt(tempString[9]);
+		this.isOT = Boolean.parseBoolean(tempString[10]);
+		this.hotValue = Integer.parseInt(tempString[11]);
+		this.dotValue = Integer.parseInt(tempString[12]);
+		this.turnCount = Integer.parseInt(tempString[13]);
+		this.targetType = Byte.parseByte(tempString[14]);
+		this.isStun = Boolean.parseBoolean(tempString[15]);
+		this.isDrainMP = Boolean.parseBoolean(tempString[16]);
+		this.isShield = Boolean.parseBoolean(tempString[17]);
 	}
 	
 	// GETTERS
@@ -78,56 +67,54 @@ public class Ability extends Equipment {
 	}
 	
 	// LOAD ABILITIES
-	public void load() {
+	/*
+	 * Later you might want to make this static and call it from Game.java -- only once, after the Game has launched.
+	 * But since that would make hot swapping abilities no longer possible, I keep it this way for now.
+	 */
+	public static void load() {
 		String path = "res/data/abilities.txt";
+		List<String> lines = new ArrayList<String>();
 		
-		java.io.File fileAbilities = new java.io.File(path);
-		int currentID = 0;
-		// currently no delimiter because I was not yet able to solve it
-		// but it means that currently no space in ability names
+		java.io.File fileAbilitiesNew = new java.io.File(path);
+		
+		Scanner in;
 		try {
-			Scanner input = new Scanner(fileAbilities);
-			while (input.hasNext()) {
-				currentID = input.nextInt();
-				mapAbilityTypes.put(currentID, input.nextInt());
-				mapAbilityNames.put(currentID, input.next());
-				mapAbilityIcons.put(currentID, input.next());
-				mapAbilityAPcosts.put(currentID, input.nextInt());
-				mapAbilityMPcosts.put(currentID, input.nextInt());
-				mapAbilityHealValues.put(currentID, input.nextInt());
-				mapAbilityDamageValues.put(currentID, input.nextInt());
-				mapAbilityUtilityValues.put(currentID, input.nextInt());
-				mapAbilityIsOTs.put(currentID, input.nextBoolean());
-				mapAbilityHotValues.put(currentID, input.nextInt());
-				mapAbilityDotValues.put(currentID, input.nextInt());
-				mapAbilityTurnCounts.put(currentID, input.nextInt());
-				mapAbilityTargetTypes.put(currentID, input.nextByte());
-				mapAbilityIsStuns.put(currentID, input.nextBoolean());
+			in = new Scanner(fileAbilitiesNew);
+			while (in.hasNextLine()) {
+				lines.add(in.nextLine());
+				abilityCount++;
+				for (int i = 0; i < lines.size(); i++) {
+					String[] toSplit = lines.get(i).split(":");
+					mapAbilities.put(Integer.parseInt(toSplit[0]), toSplit[1]);
+				}
 			}
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
-		
-		/*
-		
-		// ABILITY ONE
-		mapAbilityTypes.put(0, 0);
-		mapAbilityNames.put(0, "Test Heal");
-		mapAbilityAPcosts.put(0, 1);
-		mapAbilityMPcosts.put(0, 10);
-		mapAbilityHealValues.put(0, 20);
-		mapAbilityDamageValues.put(0, 0);
-		
-		//ABILITY TWO
-		mapAbilityTypes.put(1, 1);
-		mapAbilityNames.put(1, "Test Fireball");
-		mapAbilityAPcosts.put(1, 1);
-		mapAbilityMPcosts.put(1, 20);
-		mapAbilityHealValues.put(1, 0);
-		mapAbilityDamageValues.put(1, 15);
-		
-		*/
+
 	}
 
+	// GETTERS
 	
+	public static int getAbilityCount() {
+		return abilityCount;
+	}
+	
+	public boolean isOnCooldown() {
+		return onCooldown;
+	}
+	
+	public long getLastUsed() {
+		return lastUsed;
+	}
+	
+	// SETTERS
+	
+	public void setLastUsed(long n) {
+		lastUsed = n;
+	}
+	
+	public void setOnCooldown(boolean b) {
+		onCooldown = b;
+	}
 }

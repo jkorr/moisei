@@ -20,6 +20,7 @@ public class Equipment {
 	protected String description;
 	protected int APcost; 
 	protected int MPcost;
+	protected int cooldown;
 	
 	protected int healValue;
 	protected int damageValue;
@@ -57,6 +58,10 @@ public class Equipment {
 		return MPcost;
 	}
 	
+	public int getCooldown() {
+		return cooldown;
+	}
+	
 	public int getHealValue() {
 		return healValue;
 	}
@@ -91,6 +96,14 @@ public class Equipment {
 	
 	public boolean getIsStun() {
 		return isStun;
+	}
+	
+	public boolean getIsDrainMP() {
+		return isDrainMP;
+	}
+	
+	public boolean getIsShield() {
+		return isShield;
 	}
 	
 	// SETTERS

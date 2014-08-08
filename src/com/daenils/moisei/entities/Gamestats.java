@@ -19,7 +19,7 @@ public class Gamestats {
 	private Stage stage;
 	
 	// PLAYER STUFF
-	public static int playerHP, playerMana, playerXP;
+	public static int playerHP, playerMana, playerShield, playerXP;
 	public static boolean playerIsAlive;
 	public static byte playerActionPoints, playerDefaultActionPoints, playerLevel;
 	public static int[] playerDamage; // temporary stuff before implementing weapons
@@ -31,10 +31,13 @@ public class Gamestats {
 	
 	public static boolean playerCanUseSkills;
 	public static boolean playerNeverCycled;
+
+	public static int playerLastHitReceived;
 	
 	// MONSTER STUFF
 	public static int[] monsterHP = new int[6];
 	public static int[] monsterMana = new int[6];
+	public static int[] monsterShield = new int[6];
 	public static boolean[] monsterIsAlive = new boolean[6];
 	public static byte[] monsterActionPoints = new byte[6];
 	public static byte[] monsterDefaultActionPoints = new byte[6];
@@ -72,12 +75,9 @@ public class Gamestats {
 	public static int monstersAttacked;
 	public static boolean monstersAllDead;
 	public static int monstersAlive;
+	public static int monstersVulnerableToDots;
 	
-	public static boolean spawnSlotFilled1;
-	public static boolean spawnSlotFilled2;
-	public static boolean spawnSlotFilled3;
-	public static boolean spawnSlotFilled4;
-	public static boolean spawnSlotFilled5;
+	public static boolean[] spawnSlotFilled = new boolean[5];
 	
 	// SAVED STUFF
 	public static long savedTurnCount;
@@ -102,6 +102,7 @@ public class Gamestats {
 		// Player
 		playerHP = player.getHealth();
 		playerMana = player.getMana();
+		playerShield = player.getShield();
 		playerXP = player.getXP();
 		playerDamage = player.damage;
 
@@ -119,6 +120,8 @@ public class Gamestats {
 		
 		playerTargetCycled = player.getTargetCycled();
 		playerNeverCycled = ((Player) player).neverCycled;
+		playerLastHitReceived = (playerLastHealth - playerHP) * -1;
+		if (playerLastHitReceived == 100) playerLastHitReceived = 0;
 		
 //		playerCanUseSkills = ((Player) player).getCanUseSkills();
 		
@@ -128,6 +131,7 @@ public class Gamestats {
 		for (int i = 0; i < monsterCount; i++) {
 			monsterHP[i] = stage.getMonsters().get(i).health;
 			monsterMana[i] = stage.getMonsters().get(i).mana;
+			monsterShield[i] = stage.getMonsters().get(i).shield;
 			
 			monsterIsAlive[i] = stage.getMonsters().get(i).isAlive;
 			monsterActionPoints[i] = stage.getMonsters().get(i).actionPoints;
@@ -185,11 +189,11 @@ public class Gamestats {
 		deltaTurnTime = Game.getGameplay().getDeltaTurnTime();
 		deltaGameTime = Game.getGameplay().getDeltaGameTime();
 		
-		spawnSlotFilled1 = Game.getGameplay().getSpawnSlotFilled(1);
-		spawnSlotFilled2 = Game.getGameplay().getSpawnSlotFilled(2);
-		spawnSlotFilled3 = Game.getGameplay().getSpawnSlotFilled(3);
-		spawnSlotFilled4 = Game.getGameplay().getSpawnSlotFilled(4);
-		spawnSlotFilled5 = Game.getGameplay().getSpawnSlotFilled(5);
+		spawnSlotFilled[0] = Game.getGameplay().getSpawnSlotFilled(1);
+		spawnSlotFilled[1] = Game.getGameplay().getSpawnSlotFilled(2);
+		spawnSlotFilled[2] = Game.getGameplay().getSpawnSlotFilled(3);
+		spawnSlotFilled[3] = Game.getGameplay().getSpawnSlotFilled(4);
+		spawnSlotFilled[4] = Game.getGameplay().getSpawnSlotFilled(5);
 		}
 	
 		public static void submitGameStats() {
@@ -220,6 +224,5 @@ public class Gamestats {
 			}
 			return n;
 		}
-	
 	
 }

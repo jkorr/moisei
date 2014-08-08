@@ -137,4 +137,8 @@ public class Stage {
 		
 		return st_1a;
 	}
+	
+	public void forceRemove() {
+		remove();
+	}
 }

@@ -39,6 +39,11 @@ public class Gameplay {
 	private double deltaGameTime;
 	private double pauseGameTime;
 	
+	// WAVE TIMER STUFF
+	private double startWaveTimer;
+	private double deltaWaveTime;
+	private double pauseWaveTime;
+	
 	
 	// MONSTER WAIT TIMER STUFF
 	private double startWaitTimer;
@@ -62,6 +67,7 @@ public class Gameplay {
 		this.startTurnTimer = System.currentTimeMillis();
 		resetGameplayTime();
 		this.startWaitTimer = System.currentTimeMillis();
+		this.startWaveTimer = System.currentTimeMillis();
 		
 		this.waveCount = 0;
 		
@@ -87,33 +93,7 @@ public class Gameplay {
 			System.out.print("\n+T" + turnCount + " | ");
 			}
 		
-		nowTime = System.currentTimeMillis();
-
-		if (continueGame) {
-		
-		deltaTurnTime = (int) (nowTime - startTurnTimer) / 100;
-		deltaTurnTime = deltaTurnTime / 10;
-		
-		deltaGameTime = (int) (nowTime - startGameTimer) / 100;
-		deltaGameTime = deltaGameTime / 10;		
-		
-		deltaWaitTime = (int) (nowTime - startWaitTimer) / 100;
-		deltaWaitTime = deltaWaitTime / 10;
-//		System.out.println(deltaWaitTime);
-		}
-		
-		deltaGlobalCooldownTime = (int) (nowTime - startGlobalCooldownTimer) / 100;
-		deltaGlobalCooldownTime = deltaGlobalCooldownTime / 10; // not sure why I can't make it work in the previous line though
-		
-		
-		if (deltaGlobalCooldownTime > 0 && deltaGlobalCooldownTime % globalCooldown == 0) {
-			onGlobalCooldown = false;
-			// this whole stuff needs revision, it becomes imprecise very quickly
-			// (but it's good enough for now) | test line:
-			// 2014-07-27: actually it's not like it's imprecise, but for some weird
-			// reason the value gets double such as: 0.4, 0.8, 1.6, 3.2, 6.4, ...
-//			 System.out.println(deltaGameplayTime);
-		}
+		handleTimers();
 		
 		if (input.debugLockAbility && !onGlobalCooldown) {
 			Gamestats.player.removeLastAbility();
@@ -122,7 +102,7 @@ public class Gameplay {
 		
 		if (input.debugUnlockAbility && !onGlobalCooldown) {
 			Random rand = new Random();
-			int r = rand.nextInt((5 - 1) + 1) + 1;
+			int r = rand.nextInt((8 - 0) + 0) + 0;
 			Gamestats.player.unlockAbility(Gamestats.player, r);
 			enableGlobalCooldown();
 		}
@@ -138,35 +118,105 @@ public class Gameplay {
 			showActionsLeft = actionSum;
 		}
 		
-		if (Gamestats.playerDamage[0] > 0) weaponString = "\nWeapon damage: " + Gamestats.playerDamage[0] + "-" + Gamestats.playerDamage[1];
+		if (Gamestats.playerDamage[0] > 0) weaponString = "\nWEAPON DAMAGE: " + Gamestats.playerDamage[0] + "-" + Gamestats.playerDamage[1];
 		else weaponString = "N / A";
 		
 		if (deltaGameTime < 2.0) newWave = true;
 		else newWave = false;
 		
+		
+		checkForCooldowns();
 	}
 
+	private void checkForCooldowns() {
+		// TODO: rewrite it with Entity e, like resetCooldowns() in Entity
+		// ability cooldown check
+		// multiplied by two so its for the casters' turn only
+		// player:
+		for (int i = 0; i < Gamestats.player.abilities.size(); i++) {
+			if (Gamestats.player.abilities.get(i).getLastUsed() > 0 && Gamestats.player.abilities.get(i).getCooldown() > 0) {
+				if (Gamestats.player.abilities.get(i).getLastUsed()
+						+ (Gamestats.player.abilities.get(i).getCooldown() * 2) + 1
+						> Gamestats.turnCount) {
+					Gamestats.player.abilities.get(i).setOnCooldown(true);
+				}
+				else Gamestats.player.abilities.get(i).setOnCooldown(false);
+			}
+		}
+		
+		// monster:
+		for (int i = 0; i < stage.getMonsters().size(); i++) {
+			for (int l = 0; l < stage.getMonsters().get(i).abilities.size(); l++) {
+				if (stage.getMonsters().get(i).abilities.get(l).getLastUsed() > 0 && stage.getMonsters().get(i).abilities.get(l).getCooldown() > 0) {
+					if (stage.getMonsters().get(i).abilities.get(l).getLastUsed()
+							+ (stage.getMonsters().get(i).abilities.get(l).getCooldown() * 2) + 1
+							> Gamestats.turnCount) {
+						stage.getMonsters().get(i).abilities.get(l).setOnCooldown(true);
+					}
+					else stage.getMonsters().get(i).abilities.get(l).setOnCooldown(false);
+				}
+			}
+		}
+		
+	}
+
+	public void handleTimers() {
+		nowTime = System.currentTimeMillis();
+
+		if (continueGame) {
+		
+		deltaTurnTime = (int) (nowTime - startTurnTimer) / 100;
+		deltaTurnTime = deltaTurnTime / 10;
+		
+		deltaGameTime = (int) (nowTime - startGameTimer) / 100;
+		deltaGameTime = deltaGameTime / 10;		
+		
+		deltaWaitTime = (int) (nowTime - startWaitTimer) / 100;
+		deltaWaitTime = deltaWaitTime / 10;
+//		System.out.println(deltaWaitTime);
+		
+		deltaWaveTime = (int) (nowTime - startWaveTimer) / 100;
+		deltaWaveTime = deltaWaveTime / 10;
+		}
+		
+		deltaGlobalCooldownTime = (int) (nowTime - startGlobalCooldownTimer) / 100;
+		deltaGlobalCooldownTime = deltaGlobalCooldownTime / 10; // not sure why I can't make it work in the previous line though
+		
+		
+		if (deltaGlobalCooldownTime > 0 && deltaGlobalCooldownTime % globalCooldown == 0) {
+			onGlobalCooldown = false;
+			// this whole stuff needs revision, it becomes imprecise very quickly
+			// (but it's good enough for now) | test line:
+			// 2014-07-27: actually it's not like it's imprecise, but for some weird
+			// reason the value gets double such as: 0.4, 0.8, 1.6, 3.2, 6.4, ...
+//			 System.out.println(deltaGameplayTime);
+		}
+	}
+	
 	// rendering the GUI text is probably temporary
 	public void render(Screen screen) {
 		// TURN INFO BOX
 
-		font.render(645, 572, -6, 0xffffff00, "- Turn Info -", screen);  
-		font.render(GUI.screenTurninfoPos, 572, -6, 0xffffff00,
-				"\nTurn " + turnCount + " - " + getDeltaTurnTime() +
-				"\n" + printWhosTurn() +
-				"\nEnergy left: " + showActionsLeft + "" +
-				"\nGame time: " + getDeltaGameTime()
+		font.render(600, 300, -8, 0, "TEST STRING", screen);
+		font.render(645, 572, -6, 0xffffff00, "- TURN INFO -", screen);  
+		font.render(GUI.screenTurninfoPos, 572, -7, 0xffffff00,
+				"\n\n-> " + printWhosTurn() +
+				"\nACTIONS LEFT: " + showActionsLeft + "" +
+				"\n\nTURN " + turnCount + " - " + getDeltaTurnTime() +
+				"\nWAVE " + waveCount + " - " + getDeltaWaveTime() +
+				"\nGAME TIME: " + getDeltaGameTime()
 				, screen);
 		
 		// PLAYER INFO BOX
-		font.render(GUI.screenPlayerinfoPos+110, 572, -6, 0xffffff00, "- Player Info -"
+		font.render(GUI.screenPlayerinfoPos+135, 572, -8, 0xffffff00, "- PLAYER INFO -"
 				, screen);
-		font.render(GUI.screenPlayerinfoPos, 572, -6, 0xffffff00, ""
-				+ "\nHealth: " + Gamestats.playerHP
-				+ " (" + (Gamestats.playerLastHealth - Gamestats.playerHP) *-1 + ")"
-				+ "\nMana: " + Gamestats.playerMana
+		font.render(GUI.screenPlayerinfoPos, 572, -7, 0xffffff00, ""
+				+ "\n\nHEALTH: " + Gamestats.playerHP
+				+ " (" + Gamestats.playerLastHitReceived + ")"
+				+ " | SHIELD: " + Gamestats.playerShield
+				+ "\nMANA: " + Gamestats.playerMana
 				+ "\nXP: " + Gamestats.playerXP
-				+ "\nWeapon name: " + "Default Dagger"
+				+ "\n\nWEAPON NAME: " + "Default Dagger"
 				+ weaponString
 				+ " (" + Gamestats.playerHitDamage + ")"
 				, screen);
@@ -174,15 +224,19 @@ public class Gameplay {
 		
 		// MONSTER INFO #3
 		int n = 0;
-		if (Gamestats.playerTargetCycled < Gamestats.monsterCount && Gamestats.playerTargetCycled > 0) n = Gamestats.playerTargetCycled - 1;
-		else if (Gamestats.playerNeverCycled) n = Gamestats.monsterCount - 1;
+//		if (Gamestats.playerTargetCycled < Gamestats.monsterCount && Gamestats.playerTargetCycled > 0) n = Gamestats.playerTargetCycled - 1;
+//		else if (Gamestats.playerNeverCycled) n = Gamestats.monsterCount - 1;
 		
 		for (int i = 0; i < Gamestats.monsterCount; i++) {
 			
-			if (Gamestats.monsterIsAlive[i] && (n) == i && (Gamestats.playerNeverCycled) ) {
-				font.render(stage.getMonsters().get(i).x + 15, 290 + 210, -6, 0xffff0000, "" + Gamestats.monsterId[i]
-						+ "\n HP: " + Gamestats.monsterHP[i]
-						+ " MP: " + Gamestats.monsterMana[i]
+			// first if line is the new code, second one is the old code which only works with cycling
+			
+			if (Gamestats.monsterIsAlive[i] && Gamestats.player.currentTarget == stage.getMonsters().get(i)) {
+//			if (Gamestats.monsterIsAlive[i] && (n) == i && (Gamestats.playerNeverCycled) ) {
+				font.render(stage.getMonsters().get(i).x + 5, 290 - 120, -7, 0xffdd0010, "" + Gamestats.monsterId[i]
+						+ "\nH:" + Gamestats.monsterHP[i]
+						+ "|M:" + Gamestats.monsterMana[i]
+						+ "|S:" + Gamestats.monsterShield[i] + ""
 //						+ " (" + Gamestats.playerHitDamage*-1 + ")"
 							
 						, screen);
@@ -207,7 +261,7 @@ public class Gameplay {
 		
 		// FLOATING PLAYERDAMAGE
 		if (Gamestats.playerLastActionPoints > Gamestats.playerActionPoints && deltaGlobalCooldownTime < 0.9)
-			font.render(580 + 40, 290 - 10, -6, 0xffff1100, "\n\n" + Gamestats.playerHitDamage*-1, screen);
+			font.render(580 + 40, 290 - 10, -8, 0xffff1100, "\n\n" + Gamestats.playerHitDamage*-1, screen);
 		
 		
 		// STRICTLY DEBUG
@@ -215,9 +269,10 @@ public class Gameplay {
 	}
 	
 	protected void renderDebugInfo(Screen screen) {
-		font.render(25, 25, -6, 0xff00ff00, "DEBUG STUFF"
+		font.render(25, 25, -8, 0xff00deff, "DEBUG STUFF\n"
 				//			+ "\nRandom Wait: " + Gamestats.monsterRW
 							+ "\nMonsters spawned: " + Gamestats.monsterCount
+							+ "\nMonsters alive: " + Gamestats.monstersAlive
 							+ "\nMonster HP: " + Gamestats.monsterHP[0] + "-" + Gamestats.monsterHP[1] + "-" + Gamestats.monsterHP[2]
 									+ "-" + Gamestats.monsterHP[3] + "-" + Gamestats.monsterHP[4]
 							+ "\nMonster Mana: " + Gamestats.monsterMana[0] + "-" + Gamestats.monsterMana[1] + "-" + Gamestats.monsterMana[2]
@@ -240,11 +295,13 @@ public class Gameplay {
 							+ "\nTotal GameTime: " + Gamestats.getTotalGameTime()
 							+ "\nMonster deathcount: " + Gamestats.monsterDeathCount
 							+ "\nTotal Monster deathcount: " + Gamestats.getTotalMonsterDeathCount()
-		//					+ "\nPl Ability 1 last used: " + Gamestats.player.abilities.get(0).getLastUsed() // these 3 lines are poorly written
+							+ "\nPl Ability 1 last used: " + Gamestats.player.abilities.get(0).getLastUsed() // these 3 lines are poorly written
 			//				+ "\nPl Ability 2 last used: " + Gamestats.player.abilities.get(1).getLastUsed() // they should be removed/changed
-				//			+ "\nPl Ability 3 last used: " + Gamestats.player.abilities.get(2).getLastUsed() // as soon as possible
+			//				+ "\nPl Ability 4 last used: " + Gamestats.player.abilities.get(3).getLastUsed() // as soon as possible
 							+ "\nCurrent wave: " + Gamestats.waveCount
 							+ "\nGlobalCooldown: " + deltaGlobalCooldownTime 
+							+ "\nTargetCycled: " + Gamestats.player.targetCycled
+	
 							
 				//			+ "\nMONSTER ATTACKED: " + Gamestats.monstersAttacked
 							, screen);
@@ -252,19 +309,21 @@ public class Gameplay {
 	
 	protected void renderNotifications(Screen screen) {
 		if (Gamestats.turnCount > 1 && Gamestats.deltaTurnTime < 1.2)
-			font.render(560, 160, +5, 0xffff6a05, printWhosTurnTop(), screen);
+			font.render(590, 160, -4, 0xffff6a05, printWhosTurnTop(), screen);
 			
 			if (Gamestats.turnCount < 2 && Gamestats.deltaTurnTime < 2)
-				font.render(500, 160, -4, 0xffff6a05, "Press SPACE to hit your enemy", screen);
+				font.render(495, 160, -4, 0xffff6a05, "Press SPACE to hit your enemy", screen);
 			if (Gamestats.turnCount < 2 && Gamestats.deltaTurnTime > 3 && Gamestats.deltaTurnTime < 5)
-				font.render(500, 160, -4, 0xffff6a05, "Press ENTER to end your turn", screen);
+				font.render(495, 160, -4, 0xffff6a05, "Press ENTER to end your turn", screen);
+			if (Gamestats.turnCount < 2 && Gamestats.deltaTurnTime > 6 && Gamestats.deltaTurnTime < 8)
+				font.render(470, 160, -4, 0xffff6a05, "Press Q,W,E,R to use your abilities", screen);
 			
-			if (Gamestats.monsterHP[5] < 1)
-				font.render(580 - 10, 160, -4, 0xffa30300, "Monster DIED", screen);
+		//	if (Gamestats.monsterHP[5] < 1)
+		//		font.render(580 - 10, 160, -8, 0xffa30300, "Monster DIED", screen);
 	}
 	
 	protected void renderAbilityText(Screen screen, int n) {
-		font.render(20 + n * 130, GUI.screenBottomElements + 97, -4, 0, Gamestats.player.abilities.get(n).getName(), screen);
+		font.render(20 + n * 130, GUI.screenBottomElements + 97, -8, 0, "[#" + Gamestats.player.abilities.get(n).getID() + "] " + Gamestats.player.abilities.get(n).getName(), screen);
 	}
 	
 	protected void newTurn() {
@@ -282,9 +341,11 @@ public class Gameplay {
 //		System.out.println("\nA new turn has began! (Turn " + turnCount + ")");
 		
 		// reset dot flags
-		Gamestats.player.oneDotPerTurn = false;
+		Gamestats.player.appliedDots = false;
+		Gamestats.player.appliedHots = false;
 		for (int i = 0; i < stage.getMonsters().size(); i++) {
-			stage.getMonsters().get(i).oneDotPerTurn = false;
+			stage.getMonsters().get(i).appliedDots = false;
+			stage.getMonsters().get(i).appliedHots = false;
 		}
 		
 		// reset isStunned
@@ -339,13 +400,26 @@ public class Gameplay {
 	}
 	
 	protected void newMonsterWave() {
+		newMonsterWave(1);
+	}
+	
+	protected void newMonsterWave(int n) {
 		if (Gamestats.monstersAllDead) {
 			resetGame();
+			for (int i = 0; i < stage.getMonsters().size(); i++) {
+				stage.getMonsters().get(i).forceRemove(stage.getMonsters().get(i), 1);
+				stage.forceRemove();
+			}
 		}
 		if (!(Gamestats.turnCount == 0)) buffPlayer();
+		
 		waveCount++;
-		spawnMonster();
-	}
+		
+		for (int i = 0; i < n; i++) {
+			spawnMonster();
+			if (stage.getMonsters().size() > 2) onGlobalCooldown = false;
+		}
+ 	}
 	
 	private void addMonster(int slot) {
 		Monster emma = new Monster(slot, Gamestats.player);
@@ -357,35 +431,34 @@ public class Gameplay {
 	}
 	
 	protected void spawnMonster() {
-		if (getSpawnSlotFilled(5)) {
-			System.out.println("All done here: " + 
-		Gamestats.spawnSlotFilled1 + Gamestats.spawnSlotFilled2 + Gamestats.spawnSlotFilled3
-		+ Gamestats.spawnSlotFilled4 + Gamestats.spawnSlotFilled5);
-			Game.getGameplay().enableGlobalCooldown(); 
+			if (getSpawnSlotFilled(5)) {
+				System.out.println("All done here: " + 
+			Gamestats.spawnSlotFilled[0] + Gamestats.spawnSlotFilled[1] + Gamestats.spawnSlotFilled[2]
+			+ Gamestats.spawnSlotFilled[3] + Gamestats.spawnSlotFilled[4]);
+				Game.getGameplay().enableGlobalCooldown(); 
+				}
+			
+			
+			if (!getSpawnSlotFilled(1) && !onGlobalCooldown) {
+				addMonster(1);
+				enableGlobalCooldown();
 			}
-		
-		
-		if (!getSpawnSlotFilled(3) && !onGlobalCooldown) {
-			addMonster(3);
-			enableGlobalCooldown();
-		}
-		if (!getSpawnSlotFilled(2) && getSpawnSlotFilled(3) && !onGlobalCooldown) {
-			addMonster(2);
-			enableGlobalCooldown();
-		}		
-		if (!getSpawnSlotFilled(4) && getSpawnSlotFilled(2) && !onGlobalCooldown) {
-			addMonster(4);
-			enableGlobalCooldown();
-		}
-		if (!getSpawnSlotFilled(1) && getSpawnSlotFilled(4) && !onGlobalCooldown) {
-			addMonster(1);
-			enableGlobalCooldown();
-		}			
-		if (!getSpawnSlotFilled(5) && getSpawnSlotFilled(1) && !onGlobalCooldown) {
-			addMonster(5);
-			enableGlobalCooldown();
-		}
-		
+			if (!getSpawnSlotFilled(2) && getSpawnSlotFilled(1) && !onGlobalCooldown) {
+				addMonster(2);
+				enableGlobalCooldown();
+			}		
+			if (!getSpawnSlotFilled(3) && getSpawnSlotFilled(2) && !onGlobalCooldown) {
+				addMonster(3);
+				enableGlobalCooldown();
+			}
+			if (!getSpawnSlotFilled(4) && getSpawnSlotFilled(3) && !onGlobalCooldown) {
+				addMonster(4);
+				enableGlobalCooldown();
+			}			
+			if (!getSpawnSlotFilled(5) && getSpawnSlotFilled(4) && !onGlobalCooldown) {
+				addMonster(5);
+				enableGlobalCooldown();
+			}
 	}
 
 	
@@ -393,9 +466,14 @@ public class Gameplay {
 		Gamestats.submitGameStats();
 	//	resetGameplayTime();
 		resetTurnTime();
+		resetWaveTime();
 		Gamestats.player.resetActionPoints(Gamestats.player); // this is not really a nice solution
-		Gamestats.player.defaultTarget = null;
+		Gamestats.player.currentTarget = null;
 		resetTurnCount();
+		// reset cooldowns:
+		Gamestats.player.resetCooldowns(Gamestats.player);
+		for (int i = 0; i < stage.getMonsters().size(); i++)
+			stage.getMonsters().get(i).resetCooldowns(stage.getMonsters().get(i));
 	}
 	
 	protected void buffPlayer() {
@@ -420,14 +498,14 @@ public class Gameplay {
 	
 	public String printWhosTurn() {
 		String whosTurn = "N / A";
-		if (getIsMonsterTurn()) whosTurn = "Monster turn";
-		if (getIsPlayerTurn()) whosTurn = "Player turn";
+		if (getIsMonsterTurn()) whosTurn = "AI TURN";
+		if (getIsPlayerTurn()) whosTurn = "YOUR TURN";
 		return whosTurn;
 	}
 	
 	public String printWhosTurnTop() {
 		String whosTurn = "N / A";
-		if (getIsMonsterTurn()) whosTurn = "AI TURN";
+		if (getIsMonsterTurn()) whosTurn = " AI TURN";
 		if (getIsPlayerTurn()) whosTurn = "YOUR TURN";
 		return whosTurn;
 	}
@@ -475,6 +553,14 @@ public class Gameplay {
 		return spawnSlotFilled[n - 1];
 	}
 	
+	public double getStartWaveTimer() {
+		return startWaveTimer;
+	}
+	
+	public double getDeltaWaveTime() {
+		return deltaWaveTime;
+	}
+	
 	public int getWaveCount() {
 		return waveCount;
 	}
@@ -501,6 +587,10 @@ public class Gameplay {
 	
 	public void resetTurnTime() {
 		this.startTurnTimer = System.currentTimeMillis();
+	}
+	
+	public void resetWaveTime() {
+		this.startWaveTimer = System.currentTimeMillis();
 	}
 	
 	public void setStartWaitTimer(double n) {

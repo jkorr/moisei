@@ -12,13 +12,14 @@ import com.daenils.moisei.graphics.Stage;
 
 public class Entity {
 	protected String name;
+	protected String type;
 	protected int id;
 	protected int x, y;
 	protected int width, height;
 	protected Sprite sprite;
 	protected Stage stage;
 	
-	protected int health, mana, xp;
+	protected int health, mana, shield, xp;
 	protected byte abilityCount;
 	protected boolean isAlive;
 	protected boolean needsRemove;
@@ -34,15 +35,15 @@ public class Entity {
 	
 	protected boolean isStunned;
 	
-	protected Entity defaultTarget;
+	protected Entity currentTarget;
 	protected boolean testFlagMonsterAdded;
 	protected int targetCycled = 0;
 
 	protected List<Ability> abilities = new ArrayList<Ability>();
 	
-	protected int dotValue;
-	protected int dotTurnCount;
-	protected boolean oneDotPerTurn;
+	protected int dotValue, hotValue; // the damage from dots that should be applied
+	protected int dotTurnCount, hotTurnCount; // the duration while the damage should be applied
+	protected boolean appliedDots, appliedHots; // this is the flag for applying dots once per turnó
 	
 	public void update() {
 	}
@@ -63,10 +64,18 @@ public class Entity {
 	}
 	
 	protected void dealDamage(Entity e1, Entity e2, int d) {
-		dealDamage(e1, e2, null, d);
+		dealDamage(e1, e2, null, d, false);
+	}
+	
+	protected void dealDamage(Entity e1, Entity e2, int d, Boolean mute) {
+		dealDamage(e1, e2, null, d, mute);
 	}
 	
 	protected void dealDamage(Entity e1, Entity e2, Ability a, int d) {
+		dealDamage(e1, e2, a, d, false);
+	}
+	
+	protected void dealDamage(Entity e1, Entity e2, Ability a, int d, Boolean mute) {
 		// deal with this double copied code, for some reason (a != null) won't work
 		if(a == null) {
 			decreaseHealth(e1, e2, d);
@@ -77,6 +86,7 @@ public class Entity {
 			decreaseHealth(e1, e2, d);
 			stillAlive(e2, e1);
 		}
+		if (!mute) System.out.print("" + e1.name + " --> " + e2.name + " (" + d + " damage) | ");
 	}
 	
 	protected boolean affordToUseAbility(Entity e1, Ability a) {
@@ -90,26 +100,72 @@ public class Entity {
 	
 	protected void doUtility(Entity e1, Entity e2, Ability a) {
 			if (a.getIsStun()) abilityStun(e1, e2, a);
+			if (a.getIsDrainMP()) abilityDrainMP(e1, e2, a);
+			if (a.getIsShield()) abilityShield(e1, e1, a); // e1 twice = currently self-target only
 	}
-	
+
 	private void abilityStun(Entity e1, Entity e2, Ability a) {
 		// currently this only works for the next turn, cannot just extend it for 2 or more
 		e2.actionPoints -= e2.actionPoints * ((double) a.getUtilityValue() / 100.0);
 		e2.isStunned = true;
 	}
-
-	protected void decreaseHealth(Entity e1, Entity e2, int d) {
-		e2.lastHealth = e2.health;
-		e2.health -= d;
+	
+	private void abilityDrainMP(Entity e1, Entity e2, Ability a) {
+		decreaseMana(e1, e2, a.getUtilityValue());
+		increaseMana(e1, e1, a.getUtilityValue());
+	}
+	
+	private void abilityShield(Entity e1, Entity e2, Ability a) {
+		increaseShield(e1, e2, a.getUtilityValue());
+	}
+	
+	protected void decreaseMana(Entity e1, Entity e2, int amount) {
+		e2.mana -= amount;
+		if (e2.mana < 0) e2.mana = 0; // failsafe line against negative mana effect
 		e2.lastAttacker = e1.name;
-		System.out.print("" + e1.name + " --> " + e2.name + " (" + d + " damage) | ");
 		}
 	
+	protected void increaseMana(Entity e1, Entity e2, int amount) {
+		e2.mana += amount;
+		}
+	
+	protected void decreaseHealth(Entity e1, Entity e2, int d) {
+		if (e2.shield > 0 && d < e2.shield)
+			e2.shield -= d;
+		else if (e2.shield > 0 && d >= e2.shield) {
+			e2.shield -= d;
+			d = e2.shield * -1;
+			e2.shield = 0;
+			
+			// this line copy-paste is not nice, pls do something about it later!
+			e2.lastHealth = e2.health;
+			e2.health -= d;
+			e2.lastAttacker = e1.name;
+		} else {
+			e2.lastHealth = e2.health;
+			e2.health -= d;
+			e2.lastAttacker = e1.name;
+		}
+	}
+	
 	protected void increaseHealth(Entity e1, Entity e2, int h) {
+		increaseHealth(e1, e2, h, false);
+	}
+	
+	protected void increaseHealth(Entity e1, Entity e2, int h, boolean mute) {
 		e2.lastHealth = e2.health;
 		e2.health += h;
-		System.out.print("" + e1.name + " heals " + e2.name + " (" + h + " health) | ");
+		if (!mute) System.out.print("" + e1.name + " heals " + e2.name + " (" + h + " health) | ");
 		}
+	
+	protected void decreaseShield(Entity e1, Entity e2, int s) {
+		e2.shield -= s;
+	}
+	
+	protected void increaseShield(Entity e1, Entity e2, int s) {
+		e2.shield += s;
+		System.out.print("" + e1.name + " gives " + e2.name + " " + s + " shield points.");
+	}
 	
 	protected void compensateForCosts(Entity e1, Entity e2) {
 		// currently has both entities, but why? check it out, is it really necessary?
@@ -154,33 +210,104 @@ public class Entity {
 		 * 
 		 * */
 		
-		if (affordToUseAbility(e1, a)) {
-			if (a.getHealValue() > 0) doHealing(this, this, a, a.getHealValue());
-			if (a.getDamageValue() > 0) dealDamage(this, defaultTarget, a, a.getDamageValue());
-			if (a.getUtilityValue() > 0) doUtility(this, defaultTarget, a);
-			
-			if (a.getDotValue() > 0) dealDot(this, defaultTarget, a);
+		if (affordToUseAbility(e1, a) && !a.isOnCooldown()) {
+			if (e1.type.startsWith("mon")) {
+				doAbility(a, e1.currentTarget);}
+			else {
+				if (a.getTargetType() == 1)
+					doAbility(a, e1.currentTarget);
+				if (a.getTargetType() == 3) {
+					int n = this.currentTarget.id - 1;
+					doAbility(a, stage.getMonsters().get(n));
+					if (n == 0) {
+						if (aoeCheckRightNeighbor(n))
+							aoeDoAbilityRightNeighbor(a, n);
+					}
+					if (n > 0 && n < 4) {
+						if (aoeCheckRightNeighbor(n))
+							aoeDoAbilityRightNeighbor(a, n);
+						if (aoeCheckLeftNeighbor(n))
+							aoeDoAbilityLeftNeighbor(a, n);
+					}
+					if (n == 4) {
+						if (aoeCheckLeftNeighbor(n))
+							aoeDoAbilityLeftNeighbor(a, n);
+					}
+				}
+				if (a.getTargetType() == 5) {
+					for (int i = 0; i < stage.getMonsters().size(); i++) {
+						doAbility(a, stage.getMonsters().get(i));
+					}
+				}
+			}
 			
 			compensateForCosts(this, this, a);
 			System.out.print(" | Ability (" + a.getName() + ") used.");
 			a.setLastUsed(Gamestats.turnCount);
-		}	
+		}
+
+	}
+
+	
+	private boolean aoeCheckRightNeighbor(int n) {
+		if (Gamestats.spawnSlotFilled[n + 1] && stage.getMonsters().get(n + 1).isAlive) {
+			return true;
+		}
+		return false;
+	}
+	
+	private boolean aoeCheckLeftNeighbor(int n) {
+		if (Gamestats.spawnSlotFilled[n - 1] && stage.getMonsters().get(n - 1).isAlive) {
+			return true;
+		}
+		return false;
+	}
+
+	private void aoeDoAbilityRightNeighbor(Ability a, int n) {
+		doAbility(a, stage.getMonsters().get(n + 1));
+		
+	}
+	
+	private void aoeDoAbilityLeftNeighbor(Ability a, int n) {
+		doAbility(a, stage.getMonsters().get(n - 1));
+	}
+	
+	private void doAbility(Ability a, Entity e) {
+		a.setLastUsed(Gamestats.turnCount); // TODO: add this reset to resetGame() ! (+ maybe dots/hots as well?)
+		if (a.getHealValue() > 0) doHealing(this, this, a, a.getHealValue());
+		if (a.getDamageValue() > 0) dealDamage(this, e, a, a.getDamageValue());
+		if (a.getUtilityValue() > 0) doUtility(this, e, a);
+		
+		if (a.getDotValue() > 0) dealDot(this, e, a);
+		if (a.getHotValue() > 0) dealHot(this, this, a);
 	}
 	
 	protected void dealDot(Entity e1, Entity e2, Ability a) {
-		e1.dotValue = a.getDotValue();
-		e1.dotTurnCount = a.getTurnCount();
-		e1.oneDotPerTurn = true;
-	}
+		e2.dotValue = a.getDotValue();
+		e2.dotTurnCount = a.getTurnCount();
+		e2.appliedDots = true;
+		}
 	
-	protected void dealDots() {
+	protected void dealHot(Entity e1, Entity e2, Ability a) {
+		e2.hotValue = a.getHotValue();
+		e2.hotTurnCount = a.getTurnCount();
+		e2.appliedHots = true;
+		}
+	
+	protected void applyDots() {
 		// this is the actual method that should be called from Player/Monster
-		if (dotValue > 0 && dotTurnCount > 0 && defaultTarget != null && !oneDotPerTurn) {
-			dealDamage(this, defaultTarget, dotValue);
-			System.out.println("Dealt dot damage of " + dotValue + " for " + dotTurnCount + " turns");
+		if (dotValue > 0 && dotTurnCount > 0 && health > 0 && !appliedDots) {
+			dealDamage(currentTarget, this, dotValue, true); // first defaultTarget probably not right, that should be the entity that used the dot ability
+			System.out.println("Received DoT damage of " + dotValue + " for " + dotTurnCount + " turns");
 			dotTurnCount--;
-			oneDotPerTurn = true;
+			appliedDots = true;
 			}
+		if (hotValue > 0 && hotTurnCount > 0 && health > 0 && !appliedHots) {
+			increaseHealth(currentTarget, this, hotValue, true); // first defaultTarget probably not right, that should be the entity that used the dot ability
+			System.out.println("Received HoT hitpoints of " + (hotValue) + " for " + hotTurnCount + " more turn(s)");
+			hotTurnCount--;
+			appliedHots = true;
+		}
 	}
 	
 	private void giveXP(Entity e) {
@@ -188,7 +315,7 @@ public class Entity {
 	}
 
 	public void setDefaultTarget(Entity e) {
-		this.defaultTarget = e;	
+		this.currentTarget = e;	
 	}
 	
 	protected int getRandomHitDamage(Entity e) {
@@ -203,6 +330,12 @@ public class Entity {
 	
 	protected void resetMonsterWait() {
 	
+	}
+	
+	protected void resetCooldowns(Entity e) {
+		for (int i = 0; i < e.abilities.size(); i++) {
+			e.abilities.get(i).setLastUsed(0);
+		}
 	}
 	
 	// ABILITIES
@@ -243,6 +376,10 @@ public class Entity {
 		return health;
 	}
 	
+	public int getShield() {
+		return shield;
+	}
+	
 	protected int getMana() {
 		return mana;
 	}
@@ -277,8 +414,10 @@ public class Entity {
 	}
 	
 	protected void setTarget(Entity e) {
-		this.defaultTarget = e.getTarget();
-		System.out.print(" | Targeted " + e.name + " | ");
+		if (e.getTarget().isAlive) {
+			this.currentTarget = e.getTarget();
+			System.out.print(" | Targeted " + e.name + " | ");
+		}
 	}
 	
 	protected void cycleTarget(Entity e) {

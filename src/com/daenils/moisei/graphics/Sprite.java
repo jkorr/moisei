@@ -25,6 +25,7 @@ public class Sprite {
 	public static Sprite monster_demo = new Sprite("/textures/entities/monster_demo.png", 128, 208);
 	public static Sprite monster_demo2 = new Sprite("/textures/entities/monster_demo2.png", 128, 208);
 	public static Sprite monster_demo3 = new Sprite("/textures/entities/monster_demo3.png", 128, 208);
+	public static Sprite monster_demo4 = new Sprite("/textures/entities/monA3.gif", 128, 208);
 	
 	/* 
 	 * --------------

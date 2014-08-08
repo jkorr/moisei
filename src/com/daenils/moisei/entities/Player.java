@@ -16,6 +16,7 @@ public class Player extends Entity {
 
 	public Player(Keyboard input, Entity defaultTarget) {
 		this.name = "Player";
+		this.type = "player";
 		this.id = -1;
 		
 		this.x = 0;
@@ -34,6 +35,7 @@ public class Player extends Entity {
 		
 		this.damage = new int[] {5, 11};
 		this.health = 100;
+		this.shield = 0;
 		this.isAlive = true;
 		this.mana = 25;
 		this.xp = 0;
@@ -43,23 +45,27 @@ public class Player extends Entity {
 		
 		this.stage = Stage.getStage();
 		
-		this.defaultTarget = defaultTarget;
+		this.currentTarget = defaultTarget;
 		
 
 	}
 	
 	public void initAbilities() {
-		unlockAbility(this, 1);
+		unlockAbility(this, 0);
 		unlockAbility(this, 2);
 		unlockAbility(this, 3);
+		unlockAbility(this, 4);
 	}
 	
 	public void update() {
 		updateAbilities();
-		dealDots();
+		applyDots();
+		
+//		System.out.println("A3 LAST: " + abilities.get(3).getLastUsed());
+//		System.out.println("A3 CD: " + abilities.get(3).isOnCooldown());
 		
 		// set a default target
-		if (defaultTarget == null) newCycledTarget();
+		if (currentTarget == null) newCycledTarget();
 		
 		
 		// Check if it's the player turn and no cooldown and alive:
@@ -70,7 +76,7 @@ public class Player extends Entity {
 		// KEY BINDINGS
 		// BASIC ATTACK
 		if (input.playerBasicAttack && canUseSkills) {
-			basicAttack(this, defaultTarget);
+			basicAttack(this, currentTarget);
 			Game.getGameplay().enableGlobalCooldown();
 		}
 		
@@ -113,6 +119,7 @@ public class Player extends Entity {
 		
 		if (input.debugForceNewWave && !Game.getGameplay().onGlobalCooldown) {
 			Game.getGameplay().newMonsterWave();
+		//	((Monster) currentTarget).forceRemove(currentTarget, 0);
 		}
 
 		inputTargeting();
@@ -131,6 +138,7 @@ public class Player extends Entity {
 			for (int i = 0; i < Gamestats.monsterCount; i++) {
 				if (input.playerTarget[i] && !Game.getGameplay().onGlobalCooldown) {
 					setTarget(stage.getMonsters().get(i));
+					targetCycled = i + 1;
 					Game.getGameplay().enableGlobalCooldown();
 				}
 			}

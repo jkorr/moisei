@@ -14,37 +14,41 @@ public class Monster extends Entity {
 	private int[] randomWait = new int[2];
 	private int r;
 	
+	public int[] spawnSlot1;
+	public int[] spawnSlot2;
+	public int[] spawnSlot3;
+	public int[] spawnSlot4;
+	public int[] spawnSlot5;
+	
 //	private Ability[] monsterAbility = new Ability[2]; // fixed for two now, later probably it will depend on type of monster
-	private String type;
 	
 	private boolean canUseSkills;
+	private boolean forceRemoved;
 	
 	private static int monstersAttacked;
 	private static int deathCount;
-	
-	public int[] spawnSlot1 = new int[] {100, 250};
-	public int[] spawnSlot2 = new int[] {335, 320};
-	public int[] spawnSlot3 = new int[] {580, 290};
-	public int[] spawnSlot4 = new int[] {810, 250};
-	public int[] spawnSlot5 = new int[] {1050, 210};
 		
 	public Monster(int spawnSlot, Entity defaultTarget) {
+		updateSpawnSlots();
 		
 		this.spawnSlot = spawnSlot;
 		Game.getGameplay().spawnSlotFilled[spawnSlot - 1] = true;
 		
-		this.name = "DemoMonster[" + (spawnSlot) + "]";
 		this.id = spawnSlot;
+		this.name = "DemoM0nster[" + (id) + "]";
+		this.type = "mon_default";
+		
 		
 		setXY(spawnSlot);
 		this.x = XY[0];
 		this.y = XY[1];
 		
-		this.sprite = Sprite.monster_demo2;
+		this.sprite = Sprite.monster_demo4;
 		
 		this.health = 30;
+		this.shield = 0;
 		this.isAlive = true;
-		this.mana = 15;
+		this.mana = 10;
 		this.level = 1;
 		this.actionPoints = 1;
 		this.defaultActionPoints = actionPoints;
@@ -52,7 +56,7 @@ public class Monster extends Entity {
 //		this.monsterAbility[0] = new Ability(1, this);
 //		this.monsterAbility[1] = new Ability(3, this);
 		
-		this.defaultTarget = defaultTarget;
+		this.currentTarget = defaultTarget;
 		this.isWaiting = true;
 		this.randomWait = new int[] {1, 3};
 		this.r = newRandomWait();
@@ -61,11 +65,51 @@ public class Monster extends Entity {
 		
 		this.needsRemove = false;
 		this.deathCount = 0;
-		this.abilityCount = 2;
+		this.abilityCount = 4;
 		
 		initAbilities();
 		
 		}
+
+	private void updateSpawnSlots() {
+		if (Gamestats.monsterCount == 1) {
+			spawnSlot1 = new int[] {580, 290};
+			spawnSlot2 = new int[] {335, 320};
+		}
+		else if (Gamestats.monsterCount == 2) { 
+			spawnSlot1 = new int[] {335, 320};
+			spawnSlot2 = new int[] {580, 290};
+			spawnSlot3 = new int[] {810, 250};
+		}
+		else if (Gamestats.monsterCount == 3) {
+			spawnSlot1 = new int[] {335, 320};
+			spawnSlot2 = new int[] {580, 290};
+			spawnSlot3 = new int[] {810, 250};
+			spawnSlot4 = new int[] {100, 250};
+		}
+		else if (Gamestats.monsterCount == 4) {
+			spawnSlot1 = new int[] {100, 250};
+			spawnSlot2 = new int[] {335, 320};
+			spawnSlot3 = new int[] {580, 290};
+			spawnSlot4 = new int[] {810, 250};
+			spawnSlot5 = new int[] {1050, 210};
+		}
+		else if (Gamestats.monsterCount == 5) {
+			spawnSlot1 = new int[] {100, 250};
+			spawnSlot2 = new int[] {335, 320};
+			spawnSlot3 = new int[] {580, 290};
+			spawnSlot4 = new int[] {810, 250};
+			spawnSlot5 = new int[] {1050, 210};
+		}
+		else {
+		spawnSlot1 = new int[] {100, 250};
+		spawnSlot2 = new int[] {335, 320};
+		spawnSlot3 = new int[] {580, 290};
+		spawnSlot4 = new int[] {810, 250};
+		spawnSlot5 = new int[] {1050, 210};
+		}
+		
+	}
 	
 	public Monster() {
 		// DUMMY MONSTER
@@ -99,9 +143,23 @@ public class Monster extends Entity {
 	public void initAbilities() {
 		unlockAbility(this, 1);
 		unlockAbility(this, 3);
+		unlockAbility(this, 4);
+		unlockAbility(this, 8);
+	}
+	
+	public void updateXY() {
+		this.x = XY[0];
+		this.y = XY[1];
 	}
 	
 	public void update() {
+		applyDots();
+		
+		// the following 3 lines make the dynamic monster changing possible:
+		updateSpawnSlots();
+		setXY(spawnSlot);
+		updateXY();
+	
 //		System.out.println(id);
 //		System.out.println("Waiting? " + isWaiting);
 		isWaiting = true;
@@ -119,22 +177,27 @@ public class Monster extends Entity {
 		aiBehaviorUseHeal();
 		
 		// use stun
-		aiBehaviorUseStun();
+	//	aiBehaviorUseStun();
 		
+		// use dots
+	//	aiBehaviorUseDots();
+		
+		// use shield
+		aiBehaviorUseShield();	
 		
 		// basic attack
-		if (checkCanUseSkills() && defaultTarget.isAlive) {
+		if (checkCanUseSkills() && currentTarget.isAlive) {
 			monsterWait(r);
 		if (!isWaiting) {
 				while (actionPoints > 0) {
-					basicAttack(this, defaultTarget);
+					basicAttack(this, currentTarget);
 					monstersAttacked++;
 				}
 			}			
 		}
 		
 		// monster entity removal code 
-		if (health <= 0 && Game.getGameplay().getCurrentTurn() == 1) needsRemove = true;
+		if ((health <= 0 && Game.getGameplay().getCurrentTurn() == 1) || forceRemoved) needsRemove = true;
 		else needsRemove = false;
 	
 //		System.out.println("MONSTER UPDATE");
@@ -142,7 +205,8 @@ public class Monster extends Entity {
 	}
 
 	private void aiBehaviorUseStun() {
-		if (checkCanUseSkills() && (defaultTarget.getMana() < 20 && !defaultTarget.isStunned) && defaultTarget.isAlive) {
+
+		if (checkCanUseSkills() && (currentTarget.getMana() < 20 && !currentTarget.isStunned) && currentTarget.isAlive) {
 			monsterWait(r);
 			if (!isWaiting) {
 				useAbility(this, abilities.get(1));
@@ -155,6 +219,24 @@ public class Monster extends Entity {
 			monsterWait(r);
 			if (!isWaiting) {
 				useAbility(this, abilities.get(0));
+			}
+		}
+	}
+	
+	private void aiBehaviorUseDots() {
+		if (checkCanUseSkills() && currentTarget.health < 150) {
+			monsterWait(r);
+			if (!isWaiting) {
+				useAbility(this, abilities.get(2));
+			}
+		}
+	}
+	
+	private void aiBehaviorUseShield() {
+		if (checkCanUseSkills()) {
+			monsterWait(r);
+			if (!isWaiting) {
+				useAbility(this, abilities.get(3));
 			}
 		}
 	}
@@ -239,6 +321,16 @@ public class Monster extends Entity {
 	
 	public static int getDeathCount() {
 		return deathCount;
+	}
+	
+	public void forceRemove(Entity e1, int n) {
+		if (e1 instanceof Monster) {
+			if (n == 0) ((Monster) e1).forceRemoved = true; // hard remove
+			else if (n == 1) {
+				if (e1.getHealth() <= 0) ((Monster) e1).forceRemoved = true; // soft remove
+			}
+		}
+		
 	}
 }
 

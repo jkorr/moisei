@@ -1,6 +1,7 @@
 package com.daenils.moisei;
 
 import java.awt.Canvas;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
@@ -14,198 +15,203 @@ import com.daenils.moisei.entities.Gamestats;
 import com.daenils.moisei.entities.Monster;
 import com.daenils.moisei.entities.MonsterAI;
 import com.daenils.moisei.entities.Player;
+import com.daenils.moisei.entities.equipments.Ability;
 import com.daenils.moisei.graphics.Font;
 import com.daenils.moisei.graphics.Screen;
 import com.daenils.moisei.graphics.Stage; // probably it should be in its own package later (e.g. moisei.stage.stage)
 import com.daenils.moisei.input.Keyboard;
 
 public class Game extends Canvas implements Runnable {
-	
+
 	private static final long serialVersionUID = 1L;
 	private static int scale = 1;
 	private static int width = 1280 * scale;
 	private static int height = (width / 16 * 9) * scale;
 	private static String title = "Moisei";
-	
+
 	private Thread thread;
 	private JFrame frame;
-	
+
 	private Screen screen;
 	private Keyboard key;
-	
+
 	// I'll see if this works out, but I currently don't have any other idea
 	// other than having this as static. I mean it only has ONE instance
 	// under any given circumstances, so I guess no harm's done, right?
 	private static Gameplay gameplay;
 	private Gamestats gamestats;
 	private String temp_turninfo;
-	
+
 	private Stage stage;
-	
+
 	private Player player;
 	private MonsterAI monsterAI;
 	private Monster dummyMonster;
-	
+
 	private boolean running = false;
-	
-	private BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-	private int[] pixels = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
 
-public Game() {
-	Dimension size = new Dimension(width * scale, height * scale);
-	setPreferredSize(size);
-	
-	screen = new Screen(width, height);	
-	System.out.println("Rendering screen at the resolution of " + (width * scale) + "x" + (height * scale) + ".");
-	frame = new JFrame();
-	key = new Keyboard();
-	
-	stage = new Stage(null, player);
-	stage = Stage.getStage(); // currently needed for targeting to work, might wanna look into it later
-	
-	gameplay = new Gameplay(key, stage);
-	System.out.println("Gameplay control is running.");
-	
-	dummyMonster = new Monster(); // WTF CODE?
-	player = new Player(key, null);
-	monsterAI = new MonsterAI(stage);
-//	monster1.setDefaultTarget(player); // repeated due to lack of better solution for now (chicken-egg issue otherwise)
+	private BufferedImage image = new BufferedImage(width, height,
+			BufferedImage.TYPE_INT_RGB);
+	private int[] pixels = ((DataBufferInt) image.getRaster().getDataBuffer())
+			.getData();
 
-	gamestats = new Gamestats(player, stage, dummyMonster);
-	System.out.println("Statistics collection is running.");
-	
-	
+	public Game() {
+		Dimension size = new Dimension(width * scale, height * scale);
+		setPreferredSize(size);
 
-	gameplay.setFirst();
-	
+		screen = new Screen(width, height);
+		System.out.println("Rendering screen at the resolution of "
+				+ (width * scale) + "x" + (height * scale) + ".");
+		frame = new JFrame();
+		key = new Keyboard();
 
+		stage = new Stage(null, player);
+		stage = Stage.getStage(); // currently needed for targeting to work,
+									// might wanna look into it later
 
-	String temp_turninfo = "playerturn: " + gameplay.getIsPlayerTurn() + " | monsterturn: " + gameplay.getIsMonsterTurn();
-
-	
-	
-	addKeyListener(key);
-}
-
-public synchronized void start() {
-	running = true;
-	thread = new Thread(this, "Display");
-	thread.start();
-	requestFocus();
-}
-
-public synchronized void stop() {
-	running = false;
-	try {
-		thread.join();
-	} catch (InterruptedException e) {
-		e.printStackTrace();
-	}
-}
-
-public void run() {
-
-	long lastTime = System.nanoTime();
-	long timer = System.currentTimeMillis();
-	final double ns = 1000000000.0 / 60.0;
-	double delta = 0;
-	int frames = 0, updates = 0;
-	
-	requestFocus();
-	while (running) {
-		long now = System.nanoTime();
-		delta += ( now - lastTime ) / ns;
-		lastTime = now;
-		while (delta >= 1) {
-			update();
-			updates++;
-			delta--;
-		}
-		render();
-		frames++;
+		gameplay = new Gameplay(key, stage);
+		System.out.println("Gameplay control is running.");
 		
-		if (System.currentTimeMillis() - timer > 1000) {
-			timer += 1000;
-			frame.setTitle(title + " | " + updates + " ups, " + frames + " fps | " + temp_turninfo);
-			updates = 0;
-			frames = 0;
+/*
+ * 		Later you might want to load the abilities only once, so:
+ * 		Ability.load();	
+ */
+
+		dummyMonster = new Monster(); // WTF CODE?
+		player = new Player(key, null);
+		monsterAI = new MonsterAI(stage);
+		// monster1.setDefaultTarget(player); // repeated due to lack of better
+		// solution for now (chicken-egg issue otherwise)
+
+		gamestats = new Gamestats(player, stage, dummyMonster);
+		System.out.println("Statistics collection is running.");
+
+		gameplay.setFirst();
+
+		String temp_turninfo = "playerturn: " + gameplay.getIsPlayerTurn()
+				+ " | monsterturn: " + gameplay.getIsMonsterTurn();
+
+		addKeyListener(key);
+	}
+
+	public synchronized void start() {
+		running = true;
+		thread = new Thread(this, "Display");
+		thread.start();
+		requestFocus();
+	}
+
+	public synchronized void stop() {
+		running = false;
+		try {
+			thread.join();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 	}
-	stop();
-}
 
-public void update() {
-// don't forget to drop the other objects' update() methods here
-	key.update();
-	stage.update();
-	player.update();
-	monsterAI.update();
-//	dummyMonster.update();
-	gamestats.update();
-	gameplay.update();
-	// temporarily here
-	temp_turninfo = "playerturn: " + gameplay.getIsPlayerTurn() + " | monsterturn: " + gameplay.getIsMonsterTurn();
+	public void run() {
 
-}
+		long lastTime = System.nanoTime();
+		long timer = System.currentTimeMillis();
+		final double ns = 1000000000.0 / 60.0;
+		double delta = 0;
+		int frames = 0, updates = 0;
 
-public void render() {
-	BufferStrategy bs = getBufferStrategy();
-	if (bs == null) {
-		createBufferStrategy(3);
-		return;
+		requestFocus();
+		while (running) {
+			long now = System.nanoTime();
+			delta += (now - lastTime) / ns;
+			lastTime = now;
+			while (delta >= 1) {
+				update();
+				updates++;
+				delta--;
+			}
+			render();
+			frames++;
+
+			if (System.currentTimeMillis() - timer > 1000) {
+				timer += 1000;
+				frame.setTitle(title + " | " + updates + " ups, " + frames
+						+ " fps | " + temp_turninfo);
+				updates = 0;
+				frames = 0;
+			}
+		}
+		stop();
 	}
-	
-	screen.clear();
-	screen.render();
 
-	stage.render(screen);
-	
-	player.render(screen);
-//	dummyMonster.render(screen);
-	
-	gameplay.render(screen);
-	
-// don't forget to drop the other objects' render() methods here
+	public void update() {
+		// don't forget to drop the other objects' update() methods here
+		key.update();
+		stage.update();
+		player.update();
+		monsterAI.update();
+		// dummyMonster.update();
+		gamestats.update();
+		gameplay.update();
+		// temporarily here
+		temp_turninfo = "playerturn: " + gameplay.getIsPlayerTurn()
+				+ " | monsterturn: " + gameplay.getIsMonsterTurn();
 
-	
-	for (int i = 0; i < pixels.length; i++)
-		pixels[i] = screen.getPixels()[i];
-	
-	Graphics g = bs.getDrawGraphics();
-	g.drawImage(image, 0, 0, getWidth(), getHeight(), null);
-	
-	g.dispose();
-	bs.show();
-}
+	}
 
-public static int getScale() {
-	return scale;
-}
+	public void render() {
+		BufferStrategy bs = getBufferStrategy();
+		if (bs == null) {
+			createBufferStrategy(3);
+			return;
+		}
 
-public static int getRenderWidth() {
-	return width;
-}
+		screen.clear();
+		screen.render();
 
-public static int getRenderHeight() {
-	return height;
-}
+		stage.render(screen);
 
-public static Gameplay getGameplay() {
-	return gameplay;
-}
+		player.render(screen);
+		// dummyMonster.render(screen);
 
+		gameplay.render(screen);
 
+		// don't forget to drop the other objects' render() methods here
 
-public static void main(String[] args) {
-	Game game = new Game();
-	game.frame.setResizable(false);
-	game.frame.setTitle(title);
-	game.frame.add(game);
-	game.frame.pack();
-	game.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-	game.frame.setLocationRelativeTo(null);
-	game.frame.setVisible(true);
-	
-	game.start();
-}
+		for (int i = 0; i < pixels.length; i++)
+			pixels[i] = screen.getPixels()[i];
+
+		Graphics g = bs.getDrawGraphics();
+		g.drawImage(image, 0, 0, getWidth(), getHeight(), null);
+
+		g.dispose();
+		bs.show();
+	}
+
+	public static int getScale() {
+		return scale;
+	}
+
+	public static int getRenderWidth() {
+		return width;
+	}
+
+	public static int getRenderHeight() {
+		return height;
+	}
+
+	public static Gameplay getGameplay() {
+		return gameplay;
+	}
+
+	public static void main(String[] args) {
+		Game game = new Game();
+		game.frame.setResizable(false);
+		game.frame.setTitle(title);
+		game.frame.add(game);
+		game.frame.pack();
+		game.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		game.frame.setLocationRelativeTo(null);
+		game.frame.setVisible(true);
+
+		game.start();
+	}
 }
