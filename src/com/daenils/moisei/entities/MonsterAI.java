@@ -19,6 +19,11 @@ public class MonsterAI {
 */
 	
 	public void update() {
+		
+		for (int i = 0; i < stage.getMonsters().size(); i++) {
+			stage.getMonsters().get(i).update();
+		}
+		
 		checkIfAllDone();
 		endTurnIfAllDone();
 	}

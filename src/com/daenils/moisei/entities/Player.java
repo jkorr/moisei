@@ -1,5 +1,6 @@
 package com.daenils.moisei.entities;
 
+import com.daenils.moisei.CombatLog;
 import com.daenils.moisei.Game;
 import com.daenils.moisei.graphics.GUI;
 import com.daenils.moisei.graphics.Screen;
@@ -34,14 +35,17 @@ public class Player extends Entity {
 		initAbilities();
 		
 		this.damage = new int[] {5, 11};
-		this.health = 100;
+		this.maxHealth = 100;
+		this.maxMana = 25;
+		this.maxActionPoints = 1;
 		this.shield = 0;
 		this.isAlive = true;
-		this.mana = 25;
 		this.xp = 0;
 		this.level = 1;
-		this.actionPoints = 1;
-		this.defaultActionPoints = actionPoints;
+		
+		this.actionPoints = maxActionPoints;
+		this.health = (int) (maxHealth * 0.75);
+		this.mana = maxMana;
 		
 		this.stage = Stage.getStage();
 		
@@ -51,21 +55,21 @@ public class Player extends Entity {
 	}
 	
 	public void initAbilities() {
-		unlockAbility(this, 0);
+		unlockAbility(this, 1);
 		unlockAbility(this, 2);
 		unlockAbility(this, 3);
-		unlockAbility(this, 4);
+		unlockAbility(this, 0);
 	}
 	
 	public void update() {
 		updateAbilities();
-		applyDots();
+	//	applyDots();
 		
 //		System.out.println("A3 LAST: " + abilities.get(3).getLastUsed());
 //		System.out.println("A3 CD: " + abilities.get(3).isOnCooldown());
 		
 		// set a default target
-		if (currentTarget == null) newCycledTarget();
+		if (currentTarget == null && Gamestats.monstersAlive > 0) newCycledTarget();
 		
 		
 		// Check if it's the player turn and no cooldown and alive:
@@ -107,7 +111,11 @@ public class Player extends Entity {
 		
 		if (input.playerEndTurn && !Game.getGameplay().onGlobalCooldown && Game.getGameplay().getIsPlayerTurn()) {
 			// System.out.println("!!!");
-			Game.getGameplay().endTurn(this);
+			if (Gamestats.monstersAlive > 0) Game.getGameplay().endTurn(this);
+			else {
+				Game.getGameplay().setContinueGame(true);
+			//	Game.getGameplay().gameFlow();
+			}
 			// every keybind available to the player has to contain this line:
 			Game.getGameplay().enableGlobalCooldown(); 
 		}
@@ -118,8 +126,12 @@ public class Player extends Entity {
 		}
 		
 		if (input.debugForceNewWave && !Game.getGameplay().onGlobalCooldown) {
-			Game.getGameplay().newMonsterWave();
-		//	((Monster) currentTarget).forceRemove(currentTarget, 0);
+		//	Game.getGameplay().newMonsterWave();
+		//	((Monster) currentTarget).isAlive = false;
+		//	Game.getGameplay().playerOverride = true;
+			stage.setRandomStage();
+			Game.getGameplay().enableGlobalCooldown(); 
+
 		}
 
 		inputTargeting();

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import com.daenils.moisei.CombatLog;
 import com.daenils.moisei.Game;
 import com.daenils.moisei.entities.equipments.Ability;
 import com.daenils.moisei.graphics.Screen;
@@ -14,22 +15,25 @@ public class Entity {
 	protected String name;
 	protected String type;
 	protected int id;
+	protected int localId;
 	protected int x, y;
 	protected int width, height;
 	protected Sprite sprite;
 	protected Stage stage;
 	
+	protected int maxHealth, maxMana;
 	protected int health, mana, shield, xp;
+	protected int lastHealth;
+	protected String description;
 	protected byte abilityCount;
 	protected boolean isAlive;
 	protected boolean needsRemove;
-	protected byte actionPoints, defaultActionPoints;
+	protected byte actionPoints, maxActionPoints;
 	protected byte lastActionPoints; // for "flagging" actions via comparison of these values
 	protected byte level;
 	protected  int[] damage; // temporary way to add a damage range, before implementing a weapon system
 	protected int hitDamage;
 	protected String lastAttacker;
-	protected int lastHealth;
 	
 	protected boolean isWaiting;
 	
@@ -41,9 +45,7 @@ public class Entity {
 
 	protected List<Ability> abilities = new ArrayList<Ability>();
 	
-	protected int dotValue, hotValue; // the damage from dots that should be applied
-	protected int dotTurnCount, hotTurnCount; // the duration while the damage should be applied
-	protected boolean appliedDots, appliedHots; // this is the flag for applying dots once per turnó
+	
 	
 	public void update() {
 	}
@@ -80,13 +82,14 @@ public class Entity {
 		if(a == null) {
 			decreaseHealth(e1, e2, d);
 			stillAlive(e2, e1);
+			CombatLog.println("" + e1.name + " --> " + e2.name + " (" + d + " damage)");
 		}
 		
 		else {
 			decreaseHealth(e1, e2, d);
 			stillAlive(e2, e1);
+			if (!mute) CombatLog.print("" + e1.name + " --> " + e2.name + " (" + d + " damage)");
 		}
-		if (!mute) System.out.print("" + e1.name + " --> " + e2.name + " (" + d + " damage) | ");
 	}
 	
 	protected boolean affordToUseAbility(Entity e1, Ability a) {
@@ -108,6 +111,7 @@ public class Entity {
 		// currently this only works for the next turn, cannot just extend it for 2 or more
 		e2.actionPoints -= e2.actionPoints * ((double) a.getUtilityValue() / 100.0);
 		e2.isStunned = true;
+		CombatLog.print(e1.name + " stuns " + e2.name + " for the next turn.");
 	}
 	
 	private void abilityDrainMP(Entity e1, Entity e2, Ability a) {
@@ -126,7 +130,8 @@ public class Entity {
 		}
 	
 	protected void increaseMana(Entity e1, Entity e2, int amount) {
-		e2.mana += amount;
+		if (e2.maxMana >= e2.mana + amount) e2.mana += amount;
+		else e2.mana = e2.maxMana;
 		}
 	
 	protected void decreaseHealth(Entity e1, Entity e2, int d) {
@@ -150,13 +155,21 @@ public class Entity {
 	
 	protected void increaseHealth(Entity e1, Entity e2, int h) {
 		increaseHealth(e1, e2, h, false);
-	}
+		}
 	
 	protected void increaseHealth(Entity e1, Entity e2, int h, boolean mute) {
-		e2.lastHealth = e2.health;
-		e2.health += h;
-		if (!mute) System.out.print("" + e1.name + " heals " + e2.name + " (" + h + " health) | ");
+		if (e2.maxHealth >= e2.health + h) {
+			e2.lastHealth = e2.health;
+			e2.health += h;
 		}
+		else {
+			e2.lastHealth = e2.health;
+			e2.health = e2.maxHealth;
+		}
+		if (!mute)
+			CombatLog.print("" + e1.name + " heals " + e2.name + " (" + h
+					+ " health) | ");
+	}
 	
 	protected void decreaseShield(Entity e1, Entity e2, int s) {
 		e2.shield -= s;
@@ -164,7 +177,7 @@ public class Entity {
 	
 	protected void increaseShield(Entity e1, Entity e2, int s) {
 		e2.shield += s;
-		System.out.print("" + e1.name + " gives " + e2.name + " " + s + " shield points.");
+		CombatLog.print("" + e1.name + " shields " + e2.name + " for " + s + ".");
 	}
 	
 	protected void compensateForCosts(Entity e1, Entity e2) {
@@ -188,6 +201,7 @@ public class Entity {
 	}
 	
 	protected void death(Entity checked, Entity attacker) {
+		int buffXp = 10;
 		checked.isAlive = false;
 		
 		if (checked instanceof Monster) {
@@ -196,8 +210,8 @@ public class Entity {
 			((Player) attacker).newCycledTarget();
 		}
  
-		System.out.print(checked.name + " died.");
-		giveXP(attacker);
+		giveXP(attacker, buffXp);
+		CombatLog.println(checked.name + " died. " + attacker.name + " receives " + xp + " XP for the kill.");
 	}
 	
 	protected void useAbility(Entity e1, Ability a) {
@@ -210,14 +224,16 @@ public class Entity {
 		 * 
 		 * */
 		
+		// the last condition (only use healing spell if its 
 		if (affordToUseAbility(e1, a) && !a.isOnCooldown()) {
+			CombatLog.println("Ability (" + a.getName() + ") used: ");
 			if (e1.type.startsWith("mon")) {
 				doAbility(a, e1.currentTarget);}
 			else {
 				if (a.getTargetType() == 1)
 					doAbility(a, e1.currentTarget);
 				if (a.getTargetType() == 3) {
-					int n = this.currentTarget.id - 1;
+					int n = this.currentTarget.localId - 1;
 					doAbility(a, stage.getMonsters().get(n));
 					if (n == 0) {
 						if (aoeCheckRightNeighbor(n))
@@ -242,7 +258,6 @@ public class Entity {
 			}
 			
 			compensateForCosts(this, this, a);
-			System.out.print(" | Ability (" + a.getName() + ") used.");
 			a.setLastUsed(Gamestats.turnCount);
 		}
 
@@ -277,41 +292,27 @@ public class Entity {
 		if (a.getHealValue() > 0) doHealing(this, this, a, a.getHealValue());
 		if (a.getDamageValue() > 0) dealDamage(this, e, a, a.getDamageValue());
 		if (a.getUtilityValue() > 0) doUtility(this, e, a);
+	}
+	
+	public void applyOTs(Ability a) {
+		if (health > 0 && a.getDotValue() > 0) {
+			dealDamage(this, currentTarget, a.getDotValue(), true);
+			CombatLog.println("[Tick N] " + this.name + " dealt a DoT of " + a.getDotValue());
+		}
 		
-		if (a.getDotValue() > 0) dealDot(this, e, a);
-		if (a.getHotValue() > 0) dealHot(this, this, a);
-	}
-	
-	protected void dealDot(Entity e1, Entity e2, Ability a) {
-		e2.dotValue = a.getDotValue();
-		e2.dotTurnCount = a.getTurnCount();
-		e2.appliedDots = true;
+		if (health > 0 && a.getHotValue() > 0) {
+			increaseHealth(this, this, a.getHotValue(), true);
+			CombatLog.println("[Tick N] " + this.name + " heals HoT of " + a.getHotValue());
 		}
-	
-	protected void dealHot(Entity e1, Entity e2, Ability a) {
-		e2.hotValue = a.getHotValue();
-		e2.hotTurnCount = a.getTurnCount();
-		e2.appliedHots = true;
-		}
-	
-	protected void applyDots() {
-		// this is the actual method that should be called from Player/Monster
-		if (dotValue > 0 && dotTurnCount > 0 && health > 0 && !appliedDots) {
-			dealDamage(currentTarget, this, dotValue, true); // first defaultTarget probably not right, that should be the entity that used the dot ability
-			System.out.println("Received DoT damage of " + dotValue + " for " + dotTurnCount + " turns");
-			dotTurnCount--;
-			appliedDots = true;
-			}
-		if (hotValue > 0 && hotTurnCount > 0 && health > 0 && !appliedHots) {
-			increaseHealth(currentTarget, this, hotValue, true); // first defaultTarget probably not right, that should be the entity that used the dot ability
-			System.out.println("Received HoT hitpoints of " + (hotValue) + " for " + hotTurnCount + " more turn(s)");
-			hotTurnCount--;
-			appliedHots = true;
+		
+		if (health > 0 && a.getMotValue() > 0) {
+			increaseMana(this, this, a.getMotValue());
+			CombatLog.println("[Tick N] " + this.name + " restores mana MoT of " + a.getMotValue());
 		}
 	}
 	
-	private void giveXP(Entity e) {
-		e.xp += 10;
+	private void giveXP(Entity e, int n) {
+		e.xp += n;
 	}
 
 	public void setDefaultTarget(Entity e) {
@@ -325,7 +326,7 @@ public class Entity {
 	}
 	
 	protected void resetActionPoints(Entity e) {
-		e.actionPoints = defaultActionPoints;
+		e.actionPoints = maxActionPoints;
 	}
 	
 	protected void resetMonsterWait() {
@@ -357,12 +358,12 @@ public class Entity {
 		if (e.abilities.size() < e.abilityCount) {
 			Ability abi = new Ability(id, e);
 			this.addAbility(abi);
-			System.out.println(e.name + "'s " + abi.getName() + " unlocked.");
+			CombatLog.println(e.name + "'s " + abi.getName() + " unlocked.");
 		}
 	}
 	
 	protected void lockAbility(Entity e, int n) {
-		System.out.println(e.name + "'s " + abilities.get(n).getName() + " locked.");
+		CombatLog.println(e.name + "'s " + abilities.get(n).getName() + " locked.");
 		removeAbility(n);
 	}
 	
@@ -380,11 +381,11 @@ public class Entity {
 		return shield;
 	}
 	
-	protected int getMana() {
+	public int getMana() {
 		return mana;
 	}
 	
-	protected int getXP() {
+	public int getXP() {
 		return xp;
 	}
 	
@@ -416,7 +417,7 @@ public class Entity {
 	protected void setTarget(Entity e) {
 		if (e.getTarget().isAlive) {
 			this.currentTarget = e.getTarget();
-			System.out.print(" | Targeted " + e.name + " | ");
+			CombatLog.println("Targeted " + e.name);
 		}
 	}
 	
@@ -429,16 +430,22 @@ public class Entity {
 		this.stage = s;
 	}
 	
-	// ADDERS
+	// ADDERS (TO THE MAX, NOT CURRENT)
 	public void addHealth(int n) {
-		this.health += n;
+		this.maxHealth += n;
+		if (this.maxHealth >= this.health + n) {
+			increaseHealth(this, this, n, false);
+		}
 	}
 	
 	public void addMana(int n) {
-		this.mana += n;
+		this.maxMana += n;
+		if (this.maxMana >= this.mana + n) {
+			increaseMana(this, this, n);
+		}
 	}
 	
-	public void addDefaultActionPoints(int n) {
-		this.defaultActionPoints += n;
+	public void addMaxActionPoints(int n) {
+		this.maxActionPoints += n;
 	}
 }

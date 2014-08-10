@@ -1,0 +1,13 @@
+<?xml version="1.0" ?>
+<!-- Configuration of the Ant build system to generate a Jar file --> 
+<project name="TestMain" default="CreateJar">
+  <target name="CreateJar" description="Create Jar file">
+        <jar jarfile="dist/moisei-latest.jar" basedir="./bin" includes="**/*.class">
+		<manifest>
+	                <attribute name="Main-Class" value="com.daenils.moisei.Game"/>
+                	<attribute name="Class-Path" value="."/>
+            	</manifest>
+            	<fileset dir="D:/Dropbox/sandbox/eclipse-workspace/Moisei/res"/>
+	</jar>
+  </target>
+</project>

@@ -7,8 +7,11 @@ import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.awt.Graphics;
+import java.util.concurrent.locks.Lock;
 
 import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 
 import com.daenils.moisei.entities.Gameplay;
 import com.daenils.moisei.entities.Gamestats;
@@ -16,6 +19,7 @@ import com.daenils.moisei.entities.Monster;
 import com.daenils.moisei.entities.MonsterAI;
 import com.daenils.moisei.entities.Player;
 import com.daenils.moisei.entities.equipments.Ability;
+import com.daenils.moisei.files.FileManager;
 import com.daenils.moisei.graphics.Font;
 import com.daenils.moisei.graphics.Screen;
 import com.daenils.moisei.graphics.Stage; // probably it should be in its own package later (e.g. moisei.stage.stage)
@@ -27,7 +31,10 @@ public class Game extends Canvas implements Runnable {
 	private static int scale = 1;
 	private static int width = 1280 * scale;
 	private static int height = (width / 16 * 9) * scale;
-	private static String title = "Moisei";
+	private static String title = "Project Moisei";
+	private static String version = "0.5";
+	private static String projectStage = "internal alpha";
+	private static boolean fpsLock = false;
 
 	private Thread thread;
 	private JFrame frame;
@@ -40,9 +47,8 @@ public class Game extends Canvas implements Runnable {
 	// under any given circumstances, so I guess no harm's done, right?
 	private static Gameplay gameplay;
 	private Gamestats gamestats;
-	private String temp_turninfo;
-
-	private Stage stage;
+	private FileManager filemanager;
+	private static Stage stage;
 
 	private Player player;
 	private MonsterAI monsterAI;
@@ -64,20 +70,21 @@ public class Game extends Canvas implements Runnable {
 				+ (width * scale) + "x" + (height * scale) + ".");
 		frame = new JFrame();
 		key = new Keyboard();
+		filemanager = new FileManager();
 
-		stage = new Stage(null, player);
+		stage = new Stage(Stage.st_1a, player);
 		stage = Stage.getStage(); // currently needed for targeting to work,
 									// might wanna look into it later
 
-		gameplay = new Gameplay(key, stage);
 		System.out.println("Gameplay control is running.");
 		
+		gameplay = new Gameplay(key, stage);
 /*
  * 		Later you might want to load the abilities only once, so:
  * 		Ability.load();	
  */
 
-		dummyMonster = new Monster(); // WTF CODE?
+	//	dummyMonster = new Monster(); // WTF CODE?
 		player = new Player(key, null);
 		monsterAI = new MonsterAI(stage);
 		// monster1.setDefaultTarget(player); // repeated due to lack of better
@@ -128,13 +135,17 @@ public class Game extends Canvas implements Runnable {
 				updates++;
 				delta--;
 			}
+			
 			render();
 			frames++;
+			
+			if (fpsLock) try{Thread.sleep((lastTime-System.nanoTime() + (long) ns) / 1000000);} catch(Exception e) {};
+			
 
 			if (System.currentTimeMillis() - timer > 1000) {
 				timer += 1000;
-				frame.setTitle(title + " | " + updates + " ups, " + frames
-						+ " fps | " + temp_turninfo);
+				frame.setTitle(title + " " + version + " | " + updates + " ups, " + frames
+						+ " fps");
 				updates = 0;
 				frames = 0;
 			}
@@ -152,8 +163,8 @@ public class Game extends Canvas implements Runnable {
 		gamestats.update();
 		gameplay.update();
 		// temporarily here
-		temp_turninfo = "playerturn: " + gameplay.getIsPlayerTurn()
-				+ " | monsterturn: " + gameplay.getIsMonsterTurn();
+//		temp_turninfo = "playerturn: " + gameplay.getIsPlayerTurn()
+//				+ " | monsterturn: " + gameplay.getIsMonsterTurn();
 
 	}
 
@@ -185,6 +196,11 @@ public class Game extends Canvas implements Runnable {
 		g.dispose();
 		bs.show();
 	}
+	
+	public static void changeStage(Stage s) {
+		stage = null;
+		stage = s;
+	}
 
 	public static int getScale() {
 		return scale;
@@ -201,8 +217,23 @@ public class Game extends Canvas implements Runnable {
 	public static Gameplay getGameplay() {
 		return gameplay;
 	}
+	
+	public static String getTitle() {
+		return title;
+	}
+	
+	public static String getVersion() {
+		return version;
+	}
+	
+	public static String getProjectStage() {
+		return projectStage;
+	}
+	
+	
 
-	public static void main(String[] args) {
+	public static void main(String[] args) {	
+		
 		Game game = new Game();
 		game.frame.setResizable(false);
 		game.frame.setTitle(title);
@@ -212,6 +243,6 @@ public class Game extends Canvas implements Runnable {
 		game.frame.setLocationRelativeTo(null);
 		game.frame.setVisible(true);
 
-		game.start();
+		game.start();		
 	}
 }

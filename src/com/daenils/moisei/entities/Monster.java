@@ -1,9 +1,16 @@
 package com.daenils.moisei.entities;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.Scanner;
 
 import com.daenils.moisei.Game;
 import com.daenils.moisei.entities.equipments.Ability;
+import com.daenils.moisei.files.FileManager;
 import com.daenils.moisei.graphics.Screen;
 import com.daenils.moisei.graphics.Sprite;
 import com.daenils.moisei.graphics.Stage;
@@ -20,42 +27,54 @@ public class Monster extends Entity {
 	public int[] spawnSlot4;
 	public int[] spawnSlot5;
 	
+	private static Map<Integer, String> mapMonsters = new HashMap<Integer, String>();
+	
 //	private Ability[] monsterAbility = new Ability[2]; // fixed for two now, later probably it will depend on type of monster
 	
 	private boolean canUseSkills;
-	private boolean forceRemoved;
+	protected boolean forceRemoved;
+	protected boolean imUp;
+	protected int levelModifier;
 	
 	private static int monstersAttacked;
 	private static int deathCount;
 		
-	public Monster(int spawnSlot, Entity defaultTarget) {
+	public Monster(int id, int spawnSlot, Entity defaultTarget) {
+		load();
 		updateSpawnSlots();
 		
 		this.spawnSlot = spawnSlot;
 		Game.getGameplay().spawnSlotFilled[spawnSlot - 1] = true;
-		
-		this.id = spawnSlot;
-		this.name = "DemoM0nster[" + (id) + "]";
-		this.type = "mon_default";
-		
+		this.localId = spawnSlot;
 		
 		setXY(spawnSlot);
 		this.x = XY[0];
 		this.y = XY[1];
 		
-		this.sprite = Sprite.monster_demo4;
+		this.id = id;
 		
-		this.health = 30;
-		this.shield = 0;
+		String[] tempString = mapMonsters.get(id).split(",");
+		
+		this.type = tempString[0];
+		this.name = tempString[1];
+		this.description = tempString[2];
+		this.sprite = Sprite.parseSprite(tempString[3]);
+		this.maxHealth = Integer.parseInt(tempString[4]);
+		this.maxMana = Integer.parseInt(tempString[5]);
+		this.maxActionPoints = Byte.parseByte(tempString[6]);
+		this.shield = Integer.parseInt(tempString[7]);
+		this.levelModifier = Integer.parseInt(tempString[8]);
+		this.damage = new int[] {Integer.parseInt(tempString[9]), Integer.parseInt(tempString[10])};
+		this.abilityCount = Byte.parseByte(tempString[11]);
+		initAbilities(tempString[12]);
+		
 		this.isAlive = true;
-		this.mana = 10;
 		this.level = 1;
-		this.actionPoints = 1;
-		this.defaultActionPoints = actionPoints;
-		this.damage = new int[] {2, 5};
-//		this.monsterAbility[0] = new Ability(1, this);
-//		this.monsterAbility[1] = new Ability(3, this);
 		
+		this.health = maxHealth;
+		this.mana = maxMana;
+		this.actionPoints = maxActionPoints;
+
 		this.currentTarget = defaultTarget;
 		this.isWaiting = true;
 		this.randomWait = new int[] {1, 3};
@@ -65,9 +84,7 @@ public class Monster extends Entity {
 		
 		this.needsRemove = false;
 		this.deathCount = 0;
-		this.abilityCount = 4;
 		
-		initAbilities();
 		
 		}
 
@@ -111,40 +128,33 @@ public class Monster extends Entity {
 		
 	}
 	
-	public Monster() {
-		// DUMMY MONSTER
-	
-		this.spawnSlot = -1;
-//		Game.getGameplay().spawnSlotFilled[spawnSlot - 1] = true;
+	public void load() {
+		List<String> lines = new ArrayList<String>();
 		
-		this.name = "DemoMonster[" + (spawnSlot) + "]";
-		
-		this.x = 50;
-		this.y = 50;
-		
-		this.sprite = Sprite.monster_demo3;
-		
-		this.health = 1;
-		this.isAlive = true;
-		this.mana = 0;
-		this.level = 0;
-		this.actionPoints = 0;
-		this.defaultActionPoints = actionPoints;
-		this.damage = new int[] {0, 0};
-		
-		this.isWaiting = true;
-		this.randomWait = new int[] {0, 0};
-		this.r = newRandomWait();
-		
-		this.stage = Stage.getStage();
-		
+		Scanner in;
+		try {
+			in = new Scanner(FileManager.fileMonsters);
+			while (in.hasNextLine()) {
+				lines.add(in.nextLine());
+				for (int i = 0; i < lines.size(); i++) {
+					String[] toSplit = lines.get(i).split(":");
+					mapMonsters.put(Integer.parseInt(toSplit[0]), toSplit[1]);
+				}
+			}
+		} catch(IOException e) {
+			e.printStackTrace();
 		}
-
-	public void initAbilities() {
-		unlockAbility(this, 1);
-		unlockAbility(this, 3);
-		unlockAbility(this, 4);
-		unlockAbility(this, 8);
+	}
+	
+	public void initAbilities(String s) {
+		System.out.println(s);
+		if (!s.equals("none")) {
+			String tempString[] = s.split(";");
+			
+			for (int i = 0; i < tempString.length; i++) {
+				unlockAbility(this, Integer.parseInt(tempString[i]));
+			}
+		}
 	}
 	
 	public void updateXY() {
@@ -153,7 +163,9 @@ public class Monster extends Entity {
 	}
 	
 	public void update() {
-		applyDots();
+	//	applyDots();
+	//	if (this.actionPoints > 0) this.imUp = true;
+	//	else this.imUp = false;
 		
 		// the following 3 lines make the dynamic monster changing possible:
 		updateSpawnSlots();
@@ -174,7 +186,7 @@ public class Monster extends Entity {
 		}
 		
 		// use heal
-		aiBehaviorUseHeal();
+	//	aiBehaviorUseHeal();
 		
 		// use stun
 	//	aiBehaviorUseStun();
@@ -183,7 +195,7 @@ public class Monster extends Entity {
 	//	aiBehaviorUseDots();
 		
 		// use shield
-		aiBehaviorUseShield();	
+	//	aiBehaviorUseShield();	
 		
 		// basic attack
 		if (checkCanUseSkills() && currentTarget.isAlive) {
@@ -197,11 +209,13 @@ public class Monster extends Entity {
 		}
 		
 		// monster entity removal code 
-		if ((health <= 0 && Game.getGameplay().getCurrentTurn() == 1) || forceRemoved) needsRemove = true;
-		else needsRemove = false;
+//		if ((!isAlive && Game.getGameplay().getCurrentTurn() == 1) || forceRemoved) needsRemove = true;
+//		else needsRemove = false;
 	
 //		System.out.println("MONSTER UPDATE");
 		
+		
+
 	}
 
 	private void aiBehaviorUseStun() {
@@ -227,7 +241,7 @@ public class Monster extends Entity {
 		if (checkCanUseSkills() && currentTarget.health < 150) {
 			monsterWait(r);
 			if (!isWaiting) {
-				useAbility(this, abilities.get(2));
+				useAbility(this, abilities.get(1));
 			}
 		}
 	}

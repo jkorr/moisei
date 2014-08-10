@@ -25,6 +25,7 @@ public class Font {
 	}
 	
 	public void render(int x, int y, int spacing, int color, String text, Screen screen) {
+		
 		int line = 0;
 		int xOffset = 0, yOffset = 0;
 		for (int i = 0; i < text.length(); i++) {

@@ -7,6 +7,7 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 
+import com.daenils.moisei.CombatLog;
 import com.daenils.moisei.Game;
 import com.daenils.moisei.entities.Entity;
 import com.daenils.moisei.entities.Gamestats;
@@ -14,7 +15,7 @@ import com.daenils.moisei.entities.Monster;
 import com.daenils.moisei.entities.Player;
 
 public class Stage {
-	private Stage playStage;
+	private static Stage playStage;
 	private Player player;
 	
 	
@@ -31,8 +32,8 @@ public class Stage {
 	// STAGES
 //	private static Stage st_demo = new Stage("/textures/stages/st_demo.png");
 //	private static Stage st_altdemo = new Stage("/textures/stages/st_altdemo.png");
-	private static Stage st_1 = new Stage("/textures/stages/st_1.png");
-	private static Stage st_1a = new Stage("/textures/stages/st_1a.png");
+	public static Stage st_1 = new Stage("/textures/stages/st_1.png");
+	public static Stage st_1a = new Stage("/textures/stages/st_1a.png");
 	
 	public Stage(Stage stage, Player player) {
 		this.playStage = stage;
@@ -47,13 +48,10 @@ public class Stage {
 	}
 
 	public void update() {
-		
 		for (int i = 0; i < entities.size(); i++) {
 			entities.get(i).update();
 		}
-		for (int i = 0; i < monsters.size(); i++) {
-			monsters.get(i).update();
-		}
+		
 		
 		remove();
 	}
@@ -91,7 +89,7 @@ public class Stage {
 			for (int i = 0; i < monsters.size(); i++) {
 				if (monsters.get(i).getNeedsRemove()) {
 					monsters.remove(i);
-					System.out.println("Monster removed");
+					CombatLog.println("Monster removed");
 					}
 			}
 	}
@@ -130,15 +128,27 @@ public class Stage {
 	// METHOD to pass a stage to the Screen class
 	// Currently it already has a VERY BASIC "give me a random stage" feature, but its just for fun
 	public static Stage getStage() {
-		/*		
-		if (selector > 5) return st_1;
-		else return st_altdemo;
-		*/
-		
-		return st_1a;
+		 return playStage;
+			//	return st_1a;
 	}
 	
-	public void forceRemove() {
-		remove();
+	public void setRandomStage() {
+		int selector = (int) (Math.random() * 10);
+		System.out.println(selector);
+		if (selector > 5) playStage = st_1;
+		else playStage = st_1a;
+//		if (selector > 1) return st_1;
+//		resetAll();
+	}
+	
+	public void forceRemove(Entity e) {
+		monsters.remove(e);
+		CombatLog.println("Monster removed");
+	}
+	
+	
+	
+	public void resetAll() {
+		
 	}
 }

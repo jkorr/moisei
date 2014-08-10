@@ -2,6 +2,7 @@ package com.daenils.moisei.entities;
 
 import java.util.Random;
 
+import com.daenils.moisei.CombatLog;
 import com.daenils.moisei.Game;
 import com.daenils.moisei.input.Keyboard;
 import com.daenils.moisei.entities.equipments.Ability;
@@ -18,6 +19,8 @@ public class Gameplay {
 	private boolean isMonsterTurn;
 	private int showActionsLeft;
 	private String weaponString; // needed because otherwise nullpointexception (@ gui text rendering)
+	
+	private boolean readyToSpawn;
 	
 	private int waveCount;
 	private boolean newWave;
@@ -51,12 +54,14 @@ public class Gameplay {
 	private boolean isWaitingOn;
 	
 	// GAME CONTINUATION AFTER MONSTERS DIED
-	private boolean continueGame;
+	public boolean continueGame;
 	
 	private Keyboard input;
 	private Font font;
 	
 	protected boolean[] spawnSlotFilled = new boolean[5];
+	
+	protected boolean playerOverride;
 	
 	public Gameplay(Keyboard input, Stage stage) {
 		this.stage = stage;
@@ -77,11 +82,14 @@ public class Gameplay {
 	
 	public void update() {
 //		System.out.println(newWave);
+		gameFlow();
 		
 		if (!Gamestats.monstersAllDead) continueGame = true;
 		if (Gamestats.monstersAllDead) continueGame = false;
 		
-		if (Gamestats.monsterCount == 0 && (continueGame || turnCount == 0)) newMonsterWave();
+		// TODO: temporary solution to the monster spawn before all removed issue
+		if (!continueGame) removeDead();
+		
 		
 //		System.out.println("WaitingOn? " + isWaitingOn);
 		
@@ -90,7 +98,8 @@ public class Gameplay {
 		
 		if (turnCount < 1) {
 			turnCount++;
-			System.out.print("\n+T" + turnCount + " | ");
+			CombatLog.printnt("New turn begins.");
+		//	System.out.print("\n+T" + turnCount + " | ");
 			}
 		
 		handleTimers();
@@ -124,40 +133,42 @@ public class Gameplay {
 		if (deltaGameTime < 2.0) newWave = true;
 		else newWave = false;
 		
+		dealOTValues(Gamestats.player);
+		for (int i = 0; i < stage.getMonsters().size(); i++) {
+			dealOTValues(stage.getMonsters().get(i));
+		}
 		
-		checkForCooldowns();
+		checkForCooldowns(Gamestats.player);
+		for (int i = 0; i < stage.getMonsters().size(); i++) {
+			checkForCooldowns(stage.getMonsters().get(i));
+		}
 	}
 
-	private void checkForCooldowns() {
-		// TODO: rewrite it with Entity e, like resetCooldowns() in Entity
-		// ability cooldown check
-		// multiplied by two so its for the casters' turn only
-		// player:
-		for (int i = 0; i < Gamestats.player.abilities.size(); i++) {
-			if (Gamestats.player.abilities.get(i).getLastUsed() > 0 && Gamestats.player.abilities.get(i).getCooldown() > 0) {
-				if (Gamestats.player.abilities.get(i).getLastUsed()
-						+ (Gamestats.player.abilities.get(i).getCooldown() * 2) + 1
-						> Gamestats.turnCount) {
-					Gamestats.player.abilities.get(i).setOnCooldown(true);
+	
+
+	private void checkForCooldowns(Entity e) {
+		// universal method:
+		for (int i = 0; i < e.abilities.size(); i++) {
+			if (e.abilities.get(i).getLastUsed() > 0 && e.abilities.get(i).getCooldown() > 0) {
+				if (e.abilities.get(i).getLastUsed() + (e.abilities.get(i).getCooldown() * 2) + 1 > Gamestats.turnCount) {
+					e.abilities.get(i).setOnCooldown(true);
 				}
-				else Gamestats.player.abilities.get(i).setOnCooldown(false);
+				else e.abilities.get(i).setOnCooldown(false);
 			}
 		}
-		
-		// monster:
-		for (int i = 0; i < stage.getMonsters().size(); i++) {
-			for (int l = 0; l < stage.getMonsters().get(i).abilities.size(); l++) {
-				if (stage.getMonsters().get(i).abilities.get(l).getLastUsed() > 0 && stage.getMonsters().get(i).abilities.get(l).getCooldown() > 0) {
-					if (stage.getMonsters().get(i).abilities.get(l).getLastUsed()
-							+ (stage.getMonsters().get(i).abilities.get(l).getCooldown() * 2) + 1
-							> Gamestats.turnCount) {
-						stage.getMonsters().get(i).abilities.get(l).setOnCooldown(true);
-					}
-					else stage.getMonsters().get(i).abilities.get(l).setOnCooldown(false);
+	}
+	
+	private void dealOTValues(Entity e) {
+		for (int i = 0; i < e.abilities.size(); i++) {
+			if (e.abilities.get(i).getLastUsed() > 0 && e.abilities.get(i).getIsOT()) {
+				if (e.abilities.get(i).getLastUsed() + e.abilities.get(i).getTurnCount() + 1 >
+				Gamestats.turnCount && !e.abilities.get(i).isAppliedOT() && 
+				(Gamestats.turnCount > e.abilities.get(i).getLastUsed())) {
+					e.applyOTs(e.abilities.get(i));
+					e.abilities.get(i).setAppliedOT(true);
 				}
 			}
 		}
-		
 	}
 
 	public void handleTimers() {
@@ -183,6 +194,7 @@ public class Gameplay {
 		deltaGlobalCooldownTime = deltaGlobalCooldownTime / 10; // not sure why I can't make it work in the previous line though
 		
 		
+		
 		if (deltaGlobalCooldownTime > 0 && deltaGlobalCooldownTime % globalCooldown == 0) {
 			onGlobalCooldown = false;
 			// this whole stuff needs revision, it becomes imprecise very quickly
@@ -193,11 +205,18 @@ public class Gameplay {
 		}
 	}
 	
+	public String newLnLeftPad(int n) {
+		String returnString = "\n";
+		for (int i = 0; i < n; i++) returnString = returnString.concat("\t");
+		return returnString;  
+	}
+	
 	// rendering the GUI text is probably temporary
 	public void render(Screen screen) {
+		// CURRENT VERSION
+		font.render(1147, 0, -8, 0, Game.getTitle() + " " + Game.getVersion()
+				+ newLnLeftPad((Game.getTitle().length() + Game.getVersion().length()) - Game.getProjectStage().length() + 1) + Game.getProjectStage().toUpperCase(), screen);
 		// TURN INFO BOX
-
-		font.render(600, 300, -8, 0, "TEST STRING", screen);
 		font.render(645, 572, -6, 0xffffff00, "- TURN INFO -", screen);  
 		font.render(GUI.screenTurninfoPos, 572, -7, 0xffffff00,
 				"\n\n-> " + printWhosTurn() +
@@ -211,16 +230,22 @@ public class Gameplay {
 		font.render(GUI.screenPlayerinfoPos+135, 572, -8, 0xffffff00, "- PLAYER INFO -"
 				, screen);
 		font.render(GUI.screenPlayerinfoPos, 572, -7, 0xffffff00, ""
-				+ "\n\nHEALTH: " + Gamestats.playerHP
+				+ "\n\nHEALTH: " + Gamestats.playerHP + "/" + Gamestats.playerMaxHP
 				+ " (" + Gamestats.playerLastHitReceived + ")"
 				+ " | SHIELD: " + Gamestats.playerShield
-				+ "\nMANA: " + Gamestats.playerMana
+				+ "\nMANA: " + Gamestats.playerMana + "/" + Gamestats.playerMaxMana
 				+ "\nXP: " + Gamestats.playerXP
 				+ "\n\nWEAPON NAME: " + "Default Dagger"
 				+ weaponString
 				+ " (" + Gamestats.playerHitDamage + ")"
 				, screen);
 
+		// COMBAT LOG
+		if (CombatLog.getLogLength() > 6) {
+			for (int i = 0; i < 7; i++) {
+				font.render(0, 460 + (i*10), -8, 0xffe5e5e5, CombatLog.getLastLines(6 - i), screen);
+			}
+		}
 		
 		// MONSTER INFO #3
 		int n = 0;
@@ -233,10 +258,10 @@ public class Gameplay {
 			
 			if (Gamestats.monsterIsAlive[i] && Gamestats.player.currentTarget == stage.getMonsters().get(i)) {
 //			if (Gamestats.monsterIsAlive[i] && (n) == i && (Gamestats.playerNeverCycled) ) {
-				font.render(stage.getMonsters().get(i).x + 5, 290 - 120, -7, 0xffdd0010, "" + Gamestats.monsterId[i]
-						+ "\nH:" + Gamestats.monsterHP[i]
-						+ "|M:" + Gamestats.monsterMana[i]
-						+ "|S:" + Gamestats.monsterShield[i] + ""
+				font.render(stage.getMonsters().get(i).x + 5, stage.getMonsters().get(i).y + 15, -7, 0xffdd0010, "" + Gamestats.monsterId[i]
+						+ "\nH:" + Gamestats.monsterHP[i] + "/" + Gamestats.monsterMaxHP[i]
+						+ "|M:" + Gamestats.monsterMana[i] + "/" + Gamestats.monsterMaxMana[i]
+						+ "\nS:" + Gamestats.monsterShield[i] + ""
 //						+ " (" + Gamestats.playerHitDamage*-1 + ")"
 							
 						, screen);
@@ -301,6 +326,7 @@ public class Gameplay {
 							+ "\nCurrent wave: " + Gamestats.waveCount
 							+ "\nGlobalCooldown: " + deltaGlobalCooldownTime 
 							+ "\nTargetCycled: " + Gamestats.player.targetCycled
+							+ "\nCombat Log length: " + CombatLog.getSize()
 	
 							
 				//			+ "\nMONSTER ATTACKED: " + Gamestats.monstersAttacked
@@ -327,6 +353,7 @@ public class Gameplay {
 	}
 	
 	protected void newTurn() {
+		CombatLog.printnt("New turn begins.");
 		startTurnTimer = System.currentTimeMillis();
 		if ((!this.isMonsterTurn) && (this.isPlayerTurn)) {
 			this.isMonsterTurn = true;
@@ -337,15 +364,17 @@ public class Gameplay {
 			this.isPlayerTurn = true;
 		}
 		this.turnCount++;
-		System.out.print("\n+T" + turnCount + " | ");
+	//	System.out.print("\n+T" + turnCount + " | ");
 //		System.out.println("\nA new turn has began! (Turn " + turnCount + ")");
 		
-		// reset dot flags
-		Gamestats.player.appliedDots = false;
-		Gamestats.player.appliedHots = false;
+		// reset dot flags new
+		for (int i = 0; i < Gamestats.player.abilities.size(); i++) {
+			Gamestats.player.abilities.get(i).setAppliedOT(false);
+		}
 		for (int i = 0; i < stage.getMonsters().size(); i++) {
-			stage.getMonsters().get(i).appliedDots = false;
-			stage.getMonsters().get(i).appliedHots = false;
+			for (int l = 0; l < stage.getMonsters().get(i).abilities.size(); l++) {
+				stage.getMonsters().get(i).abilities.get(l).setAppliedOT(false);
+			}
 		}
 		
 		// reset isStunned
@@ -358,8 +387,8 @@ public class Gameplay {
 	protected void endTurn() {
 		// THIS METHOD IS SPECIFICALLY TAILORED FOR THE MONSTER
 		// USE THE OTHER ONE WITH THE PLAYER
-		
-		System.out.print("-T" + turnCount + " [" + deltaTurnTime + "s]" + " [" + deltaGameTime + "s]" + " [" + Gamestats.monstersAttacked + " atks]");
+	//	removeDead();
+		CombatLog.printet("Turn " + Gamestats.turnCount + " has ended in " + deltaTurnTime + " seconds" + " (Game time: " + deltaGameTime + "s)");
 		deltaTurnTime = 0;
 		newTurn();
 		
@@ -371,16 +400,16 @@ public class Gameplay {
 	}
 	
 	protected void endTurn(Entity e) {
-		
-		System.out.print("-T" + turnCount + " [" + deltaTurnTime + "s]" + " [" + deltaGameTime + "s]" + " [" + Gamestats.monstersAttacked + " atks]");
+	//	removeDead();
+		CombatLog.printet("Turn " + Gamestats.turnCount + " has ended in " + deltaTurnTime + " seconds" + " (Game time: " + deltaGameTime + "s)");
 		deltaTurnTime = 0;
 		
-
+ 
 		if(turnCount > 0) {
 			
 //		System.out.println("Turn " + turnCount + " has ended.");
 		}
-		
+		 
 		
 		newTurn();
 		
@@ -389,7 +418,7 @@ public class Gameplay {
 		// TODO: THIS BELOW IS A TEMPORARY FIX
 		// IT SHOULD BE CHANGED LATER ON OR
 		// THE VERY LEAST MOVED FROM HERE
-		
+		 
 		if (e instanceof Monster) {
 			for (int i = 0; i < Gamestats.monsterCount; i++) {
 				stage.getMonsters().get(i).resetActionPoints(stage.getMonsters().get(i));
@@ -399,66 +428,80 @@ public class Gameplay {
 		
 	}
 	
-	protected void newMonsterWave() {
+	public void newMonsterWave() {
 		newMonsterWave(1);
 	}
-	
-	protected void newMonsterWave(int n) {
-		if (Gamestats.monstersAllDead) {
+
+	public void newMonsterWave(int n) {
+		if (stage.checkIfAllDead()) {
 			resetGame();
-			for (int i = 0; i < stage.getMonsters().size(); i++) {
-				stage.getMonsters().get(i).forceRemove(stage.getMonsters().get(i), 1);
-				stage.forceRemove();
-			}
 		}
+			spawnMonster(n);
+			
 		if (!(Gamestats.turnCount == 0)) buffPlayer();
-		
 		waveCount++;
 		
-		for (int i = 0; i < n; i++) {
-			spawnMonster();
-			if (stage.getMonsters().size() > 2) onGlobalCooldown = false;
+
+	}
+
+	private void removeDead() {
+		for (int i = 0; i < stage.getMonsters().size(); i++) {
+			if ((!stage.getMonsters().get(i).isAlive) || stage.getMonsters().get(i).forceRemoved) stage.getMonsters().get(i).needsRemove = true;
+			else stage.getMonsters().get(i).needsRemove = false;
 		}
- 	}
+	}
 	
 	private void addMonster(int slot) {
-		Monster emma = new Monster(slot, Gamestats.player);
+		Random rand = new Random();
+		int r = rand.nextInt((4 - 1) + 1) + 1;
+		Monster emma = new Monster(r, slot, Gamestats.player);
 		stage.add(emma);
-		System.out.print("" + emma.name + "spawned.");
+		CombatLog.println("" + emma.name + "spawned.");
 		Game.getGameplay().enableGlobalCooldown(); 
 
 
 	}
 	
 	protected void spawnMonster() {
+		spawnMonster(1);
+	}
+	
+	protected void spawnMonster(int n) {
 			if (getSpawnSlotFilled(5)) {
-				System.out.println("All done here: " + 
+	/*			System.out.println("All done here: " + 
 			Gamestats.spawnSlotFilled[0] + Gamestats.spawnSlotFilled[1] + Gamestats.spawnSlotFilled[2]
-			+ Gamestats.spawnSlotFilled[3] + Gamestats.spawnSlotFilled[4]);
+			+ Gamestats.spawnSlotFilled[3] + Gamestats.spawnSlotFilled[4]); */
 				Game.getGameplay().enableGlobalCooldown(); 
 				}
 			
-			
+		for (int i = 0; i < n; i++) {
+		//	System.out.println("SPAWNING...");
+			onGlobalCooldown = false;
 			if (!getSpawnSlotFilled(1) && !onGlobalCooldown) {
 				addMonster(1);
 				enableGlobalCooldown();
 			}
-			if (!getSpawnSlotFilled(2) && getSpawnSlotFilled(1) && !onGlobalCooldown) {
+			else if (!getSpawnSlotFilled(2) && getSpawnSlotFilled(1)
+					&& !onGlobalCooldown) {
 				addMonster(2);
 				enableGlobalCooldown();
-			}		
-			if (!getSpawnSlotFilled(3) && getSpawnSlotFilled(2) && !onGlobalCooldown) {
+			}
+			else if (!getSpawnSlotFilled(3) && getSpawnSlotFilled(2)
+					&& !onGlobalCooldown) {
 				addMonster(3);
 				enableGlobalCooldown();
 			}
-			if (!getSpawnSlotFilled(4) && getSpawnSlotFilled(3) && !onGlobalCooldown) {
+			else if (!getSpawnSlotFilled(4) && getSpawnSlotFilled(3)
+					&& !onGlobalCooldown) {
 				addMonster(4);
 				enableGlobalCooldown();
-			}			
-			if (!getSpawnSlotFilled(5) && getSpawnSlotFilled(4) && !onGlobalCooldown) {
+			}
+			else if (!getSpawnSlotFilled(5) && getSpawnSlotFilled(4)
+					&& !onGlobalCooldown) {
 				addMonster(5);
 				enableGlobalCooldown();
 			}
+		}
 	}
 
 	
@@ -477,12 +520,16 @@ public class Gameplay {
 	}
 	
 	protected void buffPlayer() {
-		System.out.println("Player buffed!");
-		Gamestats.player.addHealth(10);
-		Gamestats.player.addMana(10);
+		int buffHp = 10;
+		int buffMp = 10;
+		Gamestats.player.addHealth(buffHp);
+		Gamestats.player.addMana(buffMp);
+		CombatLog.println("Player buffed for +" + buffHp + " health and +" + buffMp +" mana" );
 		
-		if (Gamestats.waveCount % 3 == 0)
-		Gamestats.player.addDefaultActionPoints(1);
+		if (Gamestats.waveCount % 4 == 0) {
+			Gamestats.player.addMaxActionPoints(1);
+			Gamestats.player.actionPoints++;
+		}
 	}
 	
 	// currently public, because Game.java should be able to handle it for now
@@ -609,6 +656,10 @@ public class Gameplay {
 		turnCount = 0;
 	}
 	
+	public void setContinueGame(boolean b) {
+		continueGame = b;
+	}
+	
 	// DEBUG STUFF
 	
 	public void setMonsterTurn() {
@@ -619,6 +670,19 @@ public class Gameplay {
 	public void setPlayerTurn() {
 		if (!this.isPlayerTurn) this.isPlayerTurn = true;
 		else if (this.isPlayerTurn) this.isPlayerTurn = false;
+	}
+	
+	// GAMEFLOW CONTROL
+	public void gameFlow() {
+		if (Gamestats.monsterCount < 1 && isBetween(Gamestats.playerXP, 0, 30) && (continueGame || Gamestats.turnCount == 0)) {newMonsterWave(1);}
+		else if (Gamestats.monsterCount < 1 && isBetween(Gamestats.playerXP, 30, 110) && continueGame) newMonsterWave(2);
+		else if (Gamestats.monsterCount < 1 && isBetween(Gamestats.playerXP, 110, 230) && continueGame) newMonsterWave(3);
+		else if (Gamestats.monsterCount < 1 && isBetween(Gamestats.playerXP, 230, 350) && continueGame) newMonsterWave(4);
+		else if (Gamestats.monsterCount < 1 && Gamestats.playerXP >= 350 && continueGame) newMonsterWave(5);
+	}
+	
+	public boolean isBetween(int comparedNum, int min, int max) {
+		return (comparedNum >= min && comparedNum < max);
 	}
 
 }

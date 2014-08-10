@@ -8,12 +8,12 @@ import java.util.Map;
 import javax.imageio.ImageIO;
 
 public class Sprite {
-	private String path;
+	private String path, name;
 	protected int width, height;
 	
 	protected int[] pixels;
 	// had to make it static unfortunately(?)
-	private static Map<Integer, Sprite> mapSpellIcons = new HashMap<Integer, Sprite>();
+	private static Map<String, Sprite> mapSprites = new HashMap<String, Sprite>();
 	
 	/* 
 	 * --------------
@@ -25,7 +25,7 @@ public class Sprite {
 	public static Sprite monster_demo = new Sprite("/textures/entities/monster_demo.png", 128, 208);
 	public static Sprite monster_demo2 = new Sprite("/textures/entities/monster_demo2.png", 128, 208);
 	public static Sprite monster_demo3 = new Sprite("/textures/entities/monster_demo3.png", 128, 208);
-	public static Sprite monster_demo4 = new Sprite("/textures/entities/monA3.gif", 128, 208);
+	public static Sprite monster_demo4 = new Sprite("/textures/entities/monster_demo4.gif", 128, 208);
 	
 	/* 
 	 * --------------
@@ -42,8 +42,14 @@ public class Sprite {
 	
 	public Sprite(String path, int w, int h) {
 		this.path = path;
+		this.name = path.split("/")[path.split("/").length - 1];
+	//	System.out.println(name.split(".gif")[0]);
 		this.width = w;
 		this.height = h;
+		
+		if (path.contains(".gif")) mapSprites.put(this.name.split(".gif")[0],this);
+		if (path.contains(".png")) mapSprites.put(this.name.split(".png")[0],this);
+		
 		load();
 	}
 
@@ -54,25 +60,17 @@ public class Sprite {
 		}
 		this.width = spriteWidth;
 		this.height = spriteHeight;
-		
-		loadSpellMap();
 	}
 
 	public void update() {	
 	}
-	
-	public void loadSpellMap() {
-		mapSpellIcons.put(0, spell0);
-		mapSpellIcons.put(1, spell1);
-		mapSpellIcons.put(2, spell2);
-		mapSpellIcons.put(3, spell3);
-//		mapSpellIcons.put(999, spell999); // THIS SHOULD BE A DEFAULT ICON
-	}
 
 	public void load() {
 		pixels = new int[width * height];
+	//	System.out.println("HEY: " + Sprite.class.getResource(path));
 		try {
 			BufferedImage image = ImageIO.read(Sprite.class.getResource(path));
+
 			int w = image.getWidth();
 			int h = image.getHeight();
 		
@@ -116,9 +114,7 @@ public class Sprite {
 		return height;
 	}
 	
-	public static Sprite getSpellSprite(String string) {
-		String[] stringToSplit = string.split("-");
-		int n = Integer.parseInt(stringToSplit[1]);
-		return mapSpellIcons.get(n);
+	public static Sprite parseSprite(String string) {
+		return mapSprites.get(string);
 	}
 }

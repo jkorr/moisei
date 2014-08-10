@@ -1,6 +1,7 @@
 package com.daenils.moisei.entities.equipments;
 
 import java.io.FileNotFoundException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,7 +9,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
+import com.daenils.moisei.CombatLog;
 import com.daenils.moisei.entities.Entity;
+import com.daenils.moisei.files.FileManager;
 import com.daenils.moisei.graphics.Sprite;
 
 public class Ability extends Equipment {
@@ -19,6 +22,8 @@ public class Ability extends Equipment {
 	
 	// ABILITY COOLDOWN HANDLING
 	private boolean onCooldown;
+	private boolean OTActive;
+	private boolean appliedOT;
 	private long lastUsed;
 	
 	/*
@@ -44,7 +49,7 @@ public class Ability extends Equipment {
 		this.abilityType = Byte.parseByte(tempString[0]);
 		this.name = tempString[1];
 		this.description = tempString[2];
-		this.icon = Sprite.getSpellSprite(tempString[3]);
+		this.icon = Sprite.parseSprite(tempString[3]);
 		this.APcost = Integer.parseInt(tempString[4]);
 		this.MPcost = Integer.parseInt(tempString[5]);
 		this.cooldown = Integer.parseInt(tempString[6]);
@@ -54,11 +59,12 @@ public class Ability extends Equipment {
 		this.isOT = Boolean.parseBoolean(tempString[10]);
 		this.hotValue = Integer.parseInt(tempString[11]);
 		this.dotValue = Integer.parseInt(tempString[12]);
-		this.turnCount = Integer.parseInt(tempString[13]);
-		this.targetType = Byte.parseByte(tempString[14]);
-		this.isStun = Boolean.parseBoolean(tempString[15]);
-		this.isDrainMP = Boolean.parseBoolean(tempString[16]);
-		this.isShield = Boolean.parseBoolean(tempString[17]);
+		this.motValue = Integer.parseInt(tempString[13]);
+		this.turnCount = Integer.parseInt(tempString[14]);
+		this.targetType = Byte.parseByte(tempString[15]);
+		this.isStun = Boolean.parseBoolean(tempString[16]);
+		this.isDrainMP = Boolean.parseBoolean(tempString[17]);
+		this.isShield = Boolean.parseBoolean(tempString[18]);
 	}
 	
 	// GETTERS
@@ -72,23 +78,21 @@ public class Ability extends Equipment {
 	 * But since that would make hot swapping abilities no longer possible, I keep it this way for now.
 	 */
 	public static void load() {
-		String path = "res/data/abilities.txt";
 		List<String> lines = new ArrayList<String>();
-		
-		java.io.File fileAbilitiesNew = new java.io.File(path);
-		
+				
 		Scanner in;
 		try {
-			in = new Scanner(fileAbilitiesNew);
-			while (in.hasNextLine()) {
-				lines.add(in.nextLine());
-				abilityCount++;
-				for (int i = 0; i < lines.size(); i++) {
-					String[] toSplit = lines.get(i).split(":");
-					mapAbilities.put(Integer.parseInt(toSplit[0]), toSplit[1]);
-				}
+			in = new Scanner(FileManager.fileAbilities);
+		while (in.hasNextLine()) {
+			lines.add(in.nextLine());
+			abilityCount++;
+			for (int i = 0; i < lines.size(); i++) {
+				String[] toSplit = lines.get(i).split(":");
+				mapAbilities.put(Integer.parseInt(toSplit[0]), toSplit[1]);
 			}
+		}
 		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -104,6 +108,14 @@ public class Ability extends Equipment {
 		return onCooldown;
 	}
 	
+	public boolean isOTActive() {
+		return OTActive;
+	}
+	
+	public boolean isAppliedOT() {
+		return appliedOT;
+	}
+	
 	public long getLastUsed() {
 		return lastUsed;
 	}
@@ -116,5 +128,13 @@ public class Ability extends Equipment {
 	
 	public void setOnCooldown(boolean b) {
 		onCooldown = b;
+	}
+	
+	public void setOTActive(boolean b) {
+		OTActive = b;
+	}
+
+	public void setAppliedOT(boolean appliedOT) {
+		this.appliedOT = appliedOT;
 	}
 }

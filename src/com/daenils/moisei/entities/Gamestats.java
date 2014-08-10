@@ -14,14 +14,15 @@ import com.daenils.moisei.graphics.Stage;
  */
 
 public class Gamestats {
-	protected static Entity player;
+	public static Entity player;
 	private Entity monster1;
 	private Stage stage;
 	
 	// PLAYER STUFF
 	public static int playerHP, playerMana, playerShield, playerXP;
+	public static int playerMaxHP, playerMaxMana;
 	public static boolean playerIsAlive;
-	public static byte playerActionPoints, playerDefaultActionPoints, playerLevel;
+	public static byte playerActionPoints, playerMaxActionPoints, playerLevel;
 	public static int[] playerDamage; // temporary stuff before implementing weapons
 	public static int playerHitDamage;
 	public static String playerLastAttacker;
@@ -36,11 +37,13 @@ public class Gamestats {
 	
 	// MONSTER STUFF
 	public static int[] monsterHP = new int[6];
+	public static int[] monsterMaxHP = new int[6];
 	public static int[] monsterMana = new int[6];
+	public static int[] monsterMaxMana = new int[6];
 	public static int[] monsterShield = new int[6];
 	public static boolean[] monsterIsAlive = new boolean[6];
 	public static byte[] monsterActionPoints = new byte[6];
-	public static byte[] monsterDefaultActionPoints = new byte[6];
+	public static byte[] monsterMaxActionPoints = new byte[6];
 	public static byte[] monsterLevel = new byte[6];
 	public static int[][] monsterDamage = new int[6][2]; // temporary stuff
 	public static int[] monsterHitDamage = new int[6];
@@ -101,7 +104,9 @@ public class Gamestats {
 		
 		// Player
 		playerHP = player.getHealth();
+		playerMaxHP = player.maxHealth;
 		playerMana = player.getMana();
+		playerMaxMana = player.maxMana;
 		playerShield = player.getShield();
 		playerXP = player.getXP();
 		playerDamage = player.damage;
@@ -109,7 +114,7 @@ public class Gamestats {
 		
 		playerIsAlive = player.isAlive;
 		playerActionPoints = player.actionPoints;
-		playerDefaultActionPoints = player.defaultActionPoints;
+		playerMaxActionPoints = player.maxActionPoints;
 		playerLevel = player.level;
 		
 		playerDamage = player.damage;
@@ -130,12 +135,14 @@ public class Gamestats {
 		
 		for (int i = 0; i < monsterCount; i++) {
 			monsterHP[i] = stage.getMonsters().get(i).health;
+			monsterMaxHP[i] = stage.getMonsters().get(i).maxHealth;
 			monsterMana[i] = stage.getMonsters().get(i).mana;
+			monsterMaxMana[i] = stage.getMonsters().get(i).maxMana;
 			monsterShield[i] = stage.getMonsters().get(i).shield;
 			
 			monsterIsAlive[i] = stage.getMonsters().get(i).isAlive;
 			monsterActionPoints[i] = stage.getMonsters().get(i).actionPoints;
-			monsterDefaultActionPoints[i] = stage.getMonsters().get(i).defaultActionPoints;
+			monsterMaxActionPoints[i] = stage.getMonsters().get(i).maxActionPoints;
 			monsterLevel[i] = stage.getMonsters().get(i).level;
 			
 			monsterDamage[i][0] = stage.getMonsters().get(i).damage[0];
@@ -151,7 +158,7 @@ public class Gamestats {
 			monsterRW[i] = ((Monster) stage.getMonsters().get(i)).getRandomWait();
 		}
 		
-		monsterHP[5] = monster1.getHealth();
+/*		monsterHP[5] = monster1.getHealth();
 		monsterMana[5] = monster1.getMana();
 		
 		monsterIsAlive[5] = monster1.isAlive;
@@ -163,22 +170,22 @@ public class Gamestats {
 		monsterHitDamage[5] = monster1.hitDamage;
 		monsterLastAttacker[5] = monster1.lastAttacker;
 		monsterLastHealth[5] = monster1.lastHealth;
-		monsterLastActionPoints[5] = monster1.lastActionPoints;
+		monsterLastActionPoints[5] = monster1.lastActionPoints; */
 		
 		monsterDeathCount = Monster.getDeathCount();
 		monstersAllDead = stage.checkIfAllDead();
 		
 //		monsterTarget = player;
 		
-		monsterIsWaiting[5] = monster1.isWaiting;
+	/*	monsterIsWaiting[5] = monster1.isWaiting;
 //		monsterSpawnSlot[5] = ((Monster) monster1).getSpawnSlot();
-		monsterRW[5] = ((Monster) monster1).getRandomWait();
+		monsterRW[5] = ((Monster) monster1).getRandomWait(); */
 		
-		spawnSlot1 =  ((Monster) monster1).spawnSlot1;
+/*		spawnSlot1 =  ((Monster) monster1).spawnSlot1;
 		spawnSlot2 =  ((Monster) monster1).spawnSlot2;
 		spawnSlot3 =  ((Monster) monster1).spawnSlot3;
 		spawnSlot4 =  ((Monster) monster1).spawnSlot4;
-		spawnSlot5 =  ((Monster) monster1).spawnSlot5;
+		spawnSlot5 =  ((Monster) monster1).spawnSlot5; */
 		
 		// Game
 		turnCount = Game.getGameplay().getCurrentTurn();
@@ -225,4 +232,6 @@ public class Gamestats {
 			return n;
 		}
 	
+		
+		
 }

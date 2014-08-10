@@ -27,7 +27,7 @@ public class Equipment {
 	protected int utilityValue;
 	
 	protected boolean isOT;
-	protected int hotValue, dotValue, turnCount;
+	protected int hotValue, dotValue, motValue, turnCount;
 	
 	protected byte targetType; // 0:self, 1:single, 2:dual, 3:aoe-3, 5:aoe-5
 	
@@ -84,6 +84,10 @@ public class Equipment {
 	
 	public int getDotValue() {
 		return dotValue;
+	}
+	
+	public int getMotValue() {
+		return motValue;
 	}
 	
 	public int getTurnCount() {
