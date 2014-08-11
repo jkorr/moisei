@@ -19,12 +19,10 @@ public class Ability extends Equipment {
 	
 	private static Map<Integer, String> mapAbilities = new HashMap<Integer, String>();
 	private int abilityType;
+	private static boolean abilitiesCounted;
 	
 	// ABILITY COOLDOWN HANDLING
 	private boolean onCooldown;
-	private boolean OTActive;
-	private boolean appliedOT;
-	private long lastUsed;
 	
 	/*
 	 * 0 - heal 
@@ -75,7 +73,7 @@ public class Ability extends Equipment {
 	// LOAD ABILITIES
 	/*
 	 * Later you might want to make this static and call it from Game.java -- only once, after the Game has launched.
-	 * But since that would make hot swapping abilities no longer possible, I keep it this way for now.
+	 * But since that would make hot swapping ability values no longer possible, let's keep it this way for now.
 	 */
 	public static void load() {
 		List<String> lines = new ArrayList<String>();
@@ -85,7 +83,7 @@ public class Ability extends Equipment {
 			in = new Scanner(FileManager.fileAbilities);
 		while (in.hasNextLine()) {
 			lines.add(in.nextLine());
-			abilityCount++;
+			if (!abilitiesCounted) abilityCount++;
 			for (int i = 0; i < lines.size(); i++) {
 				String[] toSplit = lines.get(i).split(":");
 				mapAbilities.put(Integer.parseInt(toSplit[0]), toSplit[1]);
@@ -95,7 +93,9 @@ public class Ability extends Equipment {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
+		
+		abilitiesCounted = true;
+		
 	}
 
 	// GETTERS
@@ -108,33 +108,8 @@ public class Ability extends Equipment {
 		return onCooldown;
 	}
 	
-	public boolean isOTActive() {
-		return OTActive;
-	}
-	
-	public boolean isAppliedOT() {
-		return appliedOT;
-	}
-	
-	public long getLastUsed() {
-		return lastUsed;
-	}
-	
 	// SETTERS
-	
-	public void setLastUsed(long n) {
-		lastUsed = n;
-	}
-	
 	public void setOnCooldown(boolean b) {
 		onCooldown = b;
-	}
-	
-	public void setOTActive(boolean b) {
-		OTActive = b;
-	}
-
-	public void setAppliedOT(boolean appliedOT) {
-		this.appliedOT = appliedOT;
 	}
 }

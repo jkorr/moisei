@@ -7,6 +7,8 @@ import java.util.Random;
 import com.daenils.moisei.CombatLog;
 import com.daenils.moisei.Game;
 import com.daenils.moisei.entities.equipments.Ability;
+import com.daenils.moisei.entities.equipments.Equipment;
+import com.daenils.moisei.entities.equipments.Weapon;
 import com.daenils.moisei.graphics.Screen;
 import com.daenils.moisei.graphics.Sprite;
 import com.daenils.moisei.graphics.Stage;
@@ -35,6 +37,8 @@ public class Entity {
 	protected int hitDamage;
 	protected String lastAttacker;
 	
+	protected Weapon weapon;
+	
 	protected boolean isWaiting;
 	
 	protected boolean isStunned;
@@ -44,6 +48,7 @@ public class Entity {
 	protected int targetCycled = 0;
 
 	protected List<Ability> abilities = new ArrayList<Ability>();
+	protected List<Weapon> weapons = new ArrayList<Weapon>();
 	
 	
 	
@@ -53,31 +58,59 @@ public class Entity {
 	public void render(Screen screen) {
 	}
 	
-	protected void basicAttack(Entity e1, Entity e2) {
-		if (e2.health > 0) {
-			hitDamage = getRandomHitDamage(e1);
-//			System.out.println(hitDamage);
-			dealDamage(e1, e2, hitDamage);
-			compensateForCosts(e1, e2);
-			
-//			System.out.println(e1 + " hits " + e2 + " for " + hitDamage + " damage.");
-//			System.out.println(e2 + " has " + e2.health + " hp left." );
-		}
+	protected void basicAttack (Entity e1, Entity e2) {
+		basicAttack(e1, e2, null);
 	}
 	
+	protected void basicAttack(Entity e1, Entity e2, Weapon w) {
+		if (w == null) {
+			if (e2.health > 0) {
+				hitDamage = getRandomHitDamage(e1);
+//				System.out.println(hitDamage);
+				dealDamage(e1, e2, hitDamage);
+				compensateForCosts(e1, e2);
+				
+//				System.out.println(e1 + " hits " + e2 + " for " + hitDamage + " damage.");
+//				System.out.println(e2 + " has " + e2.health + " hp left." );
+			}	
+		}
+		else {
+			if (w.getWeaponCharges() > 0) {
+				doWeaponAbility(w, e2);
+			}
+			boolean doHit = false;
+			if (w.getHitChance() < 100) doHit = isHitSuccessful(w.getHitChance());
+			if (doHit || w.getHitChance() >= 100) {
+				hitDamage = getRandomHitDamage(e1, w);
+				dealDamage(e1, e2, hitDamage);
+				compensateForCosts(e1, e2, w);
+			}
+			else {
+				compensateForCosts(e1, e2, w);
+				CombatLog.println(e1.name + " missed.");
+			}
+		}
+		
+		
+	}
+	
+	// LEGACY METHOD (not muted by default)
 	protected void dealDamage(Entity e1, Entity e2, int d) {
 		dealDamage(e1, e2, null, d, false);
 	}
 	
+	// METHOD FOR NON-ABILITIES (mutable by the 4th argument)
 	protected void dealDamage(Entity e1, Entity e2, int d, Boolean mute) {
 		dealDamage(e1, e2, null, d, mute);
 	}
 	
-	protected void dealDamage(Entity e1, Entity e2, Ability a, int d) {
+	// METHOD FOR ABILITIES (with Ability as 3rd argument and unmuted by default)
+	protected void dealDamage(Entity e1, Entity e2, Equipment a, int d) {
 		dealDamage(e1, e2, a, d, false);
 	}
 	
-	protected void dealDamage(Entity e1, Entity e2, Ability a, int d, Boolean mute) {
+	// GENERAL METHOD
+	protected void dealDamage(Entity e1, Entity e2, Equipment a, int d, Boolean mute) {
 		// deal with this double copied code, for some reason (a != null) won't work
 		if(a == null) {
 			decreaseHealth(e1, e2, d);
@@ -96,30 +129,30 @@ public class Entity {
 		return a.getAPcost() <= e1.actionPoints && a.getMPcost() <= e1.mana;
 	}
 	
-	protected void doHealing(Entity e1, Entity e2, Ability a, int h) {
+	protected void doHealing(Entity e1, Entity e2, Equipment a, int h) {
 		// it has targeting because in the future it would be nice to have monster heal other monster
 			increaseHealth(e1, e2, h);
 	}
 	
-	protected void doUtility(Entity e1, Entity e2, Ability a) {
+	protected void doUtility(Entity e1, Entity e2, Equipment a) {
 			if (a.getIsStun()) abilityStun(e1, e2, a);
 			if (a.getIsDrainMP()) abilityDrainMP(e1, e2, a);
 			if (a.getIsShield()) abilityShield(e1, e1, a); // e1 twice = currently self-target only
 	}
 
-	private void abilityStun(Entity e1, Entity e2, Ability a) {
+	private void abilityStun(Entity e1, Entity e2, Equipment a) {
 		// currently this only works for the next turn, cannot just extend it for 2 or more
 		e2.actionPoints -= e2.actionPoints * ((double) a.getUtilityValue() / 100.0);
 		e2.isStunned = true;
 		CombatLog.print(e1.name + " stuns " + e2.name + " for the next turn.");
 	}
 	
-	private void abilityDrainMP(Entity e1, Entity e2, Ability a) {
+	private void abilityDrainMP(Entity e1, Entity e2, Equipment a) {
 		decreaseMana(e1, e2, a.getUtilityValue());
 		increaseMana(e1, e1, a.getUtilityValue());
 	}
 	
-	private void abilityShield(Entity e1, Entity e2, Ability a) {
+	private void abilityShield(Entity e1, Entity e2, Equipment a) {
 		increaseShield(e1, e2, a.getUtilityValue());
 	}
 	
@@ -167,8 +200,8 @@ public class Entity {
 			e2.health = e2.maxHealth;
 		}
 		if (!mute)
-			CombatLog.print("" + e1.name + " heals " + e2.name + " (" + h
-					+ " health) | ");
+			CombatLog.println("" + e1.name + " heals " + e2.name + " (" + h
+					+ " health)");
 	}
 	
 	protected void decreaseShield(Entity e1, Entity e2, int s) {
@@ -180,21 +213,26 @@ public class Entity {
 		CombatLog.print("" + e1.name + " shields " + e2.name + " for " + s + ".");
 	}
 	
+	// METHOD FOR NON-ABILITIES
 	protected void compensateForCosts(Entity e1, Entity e2) {
 		// currently has both entities, but why? check it out, is it really necessary?
 		compensateForCosts(e1, e2, null);
 		}
 	
-	protected void compensateForCosts(Entity e1, Entity e2, Ability a) {
+	// METHOD FOR WEAPONS & ABILITIES
+	protected void compensateForCosts(Entity e1, Entity e2, Equipment a) {
 		int n = 0;
 		if (a == null) n = 1;
 		else n = a.getAPcost();
-		
+
 		e1.lastActionPoints = e1.actionPoints;
 		e1.actionPoints -= n;
-		
-		if (a != null && a.getMPcost() > 0) e1.mana -= a.getMPcost();
+
+		if (a != null && a.getMPcost() > 0)	e1.mana -= a.getMPcost();
+		if (a != null && (a instanceof Weapon) && ((Weapon) a).getWeaponCharges() > 0) {
+			((Weapon) a).decreaseWeaponCharges();
 		}
+	}
 	
 	protected void stillAlive(Entity checked, Entity attacker) {
 		if (checked.health < 1) death(checked, attacker);
@@ -211,7 +249,7 @@ public class Entity {
 		}
  
 		giveXP(attacker, buffXp);
-		CombatLog.println(checked.name + " died. " + attacker.name + " receives " + xp + " XP for the kill.");
+		CombatLog.println(checked.name + " died. " + attacker.name + " receives " + buffXp + " XP for the kill.");
 	}
 	
 	protected void useAbility(Entity e1, Ability a) {
@@ -287,14 +325,18 @@ public class Entity {
 		doAbility(a, stage.getMonsters().get(n - 1));
 	}
 	
-	private void doAbility(Ability a, Entity e) {
+	private void doAbility(Equipment a, Entity e) {
 		a.setLastUsed(Gamestats.turnCount); // TODO: add this reset to resetGame() ! (+ maybe dots/hots as well?)
 		if (a.getHealValue() > 0) doHealing(this, this, a, a.getHealValue());
 		if (a.getDamageValue() > 0) dealDamage(this, e, a, a.getDamageValue());
 		if (a.getUtilityValue() > 0) doUtility(this, e, a);
 	}
 	
-	public void applyOTs(Ability a) {
+	private void doWeaponAbility(Equipment a, Entity e) {
+		doAbility(a, e);
+	}
+	
+	public void applyOTs(Equipment a) {
 		if (health > 0 && a.getDotValue() > 0) {
 			dealDamage(this, currentTarget, a.getDotValue(), true);
 			CombatLog.println("[Tick N] " + this.name + " dealt a DoT of " + a.getDotValue());
@@ -319,10 +361,30 @@ public class Entity {
 		this.currentTarget = e;	
 	}
 	
+	// LEGACY METHOD (NO WEAPON)
 	protected int getRandomHitDamage(Entity e) {
+		return getRandomHitDamage(e, null);
+	}
+	
+	// NEW METHOD (HAS WEAPON)
+	protected int getRandomHitDamage(Entity e, Weapon w) {
 		Random rand = new Random();
-	    int r = rand.nextInt((e.damage[1] - e.damage[0]) + 1) + e.damage[0];		
+		if (w != null) {
+	    int r = rand.nextInt((w.getMaxDamage() - w.getMinDamage()) + 1) + w.getMinDamage();		
 		return r;
+		}
+		else {
+			int r = rand.nextInt((e.damage[1] - e.damage[0]) + 1) + e.damage[0];	
+			return r;
+		}
+	}
+	
+	protected boolean isHitSuccessful(int hitchance) {
+		Random rand = new Random();
+		int r = rand.nextInt((100 - 0) + 1) - 0;
+		CombatLog.println("Hit chance roll: " + r);
+		if (r >= (100 - hitchance)) return true;
+		else return false;
 	}
 	
 	protected void resetActionPoints(Entity e) {
@@ -367,6 +429,34 @@ public class Entity {
 		removeAbility(n);
 	}
 	
+	// WEAPONS
+	protected void addWeapon(Weapon a) {
+		// this is a vanilla method, DO NOT use this directly, use unlockWeapon() instead!
+		weapons.add(a);
+	}
+	
+	protected void removeWeapon(int n) {
+		// this is a vanilla method, DO NOT use this directly, use lockWeapon() instead!
+		weapons.remove(n);
+	}
+	
+	protected void removeLastWeapon() {
+		if (weapons.size() > 0) lockWeapon(this, weapons.size() - 1);
+	}
+	
+	protected void unlockWeapon(Entity e, int id) {
+		if (e.weapons.size() < e.abilityCount) {
+			Weapon wep = new Weapon(e, id);
+			this.addWeapon(wep);
+			CombatLog.println(e.name + "'s " + wep.getName() + " unlocked.");
+		}
+	}
+	
+	protected void lockWeapon(Entity e, int n) {
+		CombatLog.println(e.name + "'s " + weapons.get(n).getName() + " locked.");
+		removeWeapon(n);
+	}
+	
 	
 	// GETTERS
 	public Entity getEntity() {
@@ -407,6 +497,10 @@ public class Entity {
 	
 	public int getTargetCycled() {
 		return targetCycled;
+	}
+	
+	public Weapon getWeapon() {
+		return weapon;
 	}
 	
 	// SETTERS

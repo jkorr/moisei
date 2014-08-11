@@ -12,11 +12,13 @@ public class FileManager {
 	
 	public static File fileAbilities = null;
 	public static File fileMonsters = null;
+	public static File fileWeapons = null;
 
 	//CONSTRUCTOR
 	public FileManager() {
 		loadAbilities();
 		loadMonsters();
+		loadWeapons();
 	}
 	
 	//LOADERS
@@ -38,6 +40,19 @@ public class FileManager {
 		
 		try {
 			fileMonsters = new File(url.toURI());
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
+		
+		System.out.println("File (" + url + ") has loaded successfully.");
+	}
+	
+	public void loadWeapons() {
+		this.path = "/data/weapons.txt";
+		this.url = FileManager.class.getResource(path);
+		
+		try {
+			fileWeapons = new File(url.toURI());
 		} catch (URISyntaxException e) {
 			e.printStackTrace();
 		}

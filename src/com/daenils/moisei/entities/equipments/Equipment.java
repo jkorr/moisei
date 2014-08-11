@@ -9,7 +9,6 @@ public class Equipment {
 	protected int x, y; // for rendering, but grab it from hotBarSlot
 	
 	protected Entity user;
-	protected long lastUsed; // turn count
 	
 	// the costs, the heal/damage values probably should be refactored to 'base' (e.g. baseMPcost, baseHealValue, etc.)
 	// then make new variables with the prefix 'actual' (e.g. actualMPcost)
@@ -33,11 +32,13 @@ public class Equipment {
 	
 	protected boolean isStun, isDrainMP, isShield, isResurrect, isNecro, isAttackBuff, isHealthBuff, isManaBuff, isAPBuff;
 
-	// GETTERS
-	public long getLastUsed() {
-		return lastUsed;
-	}
-	
+
+	// OVER-TURN EFFECT HANDLING
+	protected long lastUsed; // turn count
+	protected boolean OTActive;
+	protected boolean appliedOT;
+
+	// GETTERS	
 	public int getID() {
 		return id;
 	}
@@ -110,10 +111,31 @@ public class Equipment {
 		return isShield;
 	}
 	
+	// OT/CD GETTERS
+	public boolean isOTActive() {
+		return OTActive;
+	}
+	
+	public boolean isAppliedOT() {
+		return appliedOT;
+	}
+	
+	public long getLastUsed() {
+		return lastUsed;
+	}
+	
 	// SETTERS
 	public void setLastUsed(long n) {
 		lastUsed = n;
 	//	System.out.println("I've been called");
+	}
+
+	public void setOTActive(boolean b) {
+		OTActive = b;
+	}
+
+	public void setAppliedOT(boolean appliedOT) {
+		this.appliedOT = appliedOT;
 	}
 	
 }

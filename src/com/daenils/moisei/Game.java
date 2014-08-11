@@ -145,7 +145,7 @@ public class Game extends Canvas implements Runnable {
 			if (System.currentTimeMillis() - timer > 1000) {
 				timer += 1000;
 				frame.setTitle(title + " " + version + " | " + updates + " ups, " + frames
-						+ " fps");
+						+ " fps" );
 				updates = 0;
 				frames = 0;
 			}
@@ -230,7 +230,19 @@ public class Game extends Canvas implements Runnable {
 		return projectStage;
 	}
 	
+	public static boolean isFpsLocked() {
+		return fpsLock;
+	}
 	
+	public static String isFpsLockedString() {
+		if(Game.isFpsLocked()) return "FPS LOCKED";
+		else return "FPS UNLOCKED";
+	}
+	
+	public static void toggleFpsLock() {
+		if (fpsLock) fpsLock = false;
+		else if (!fpsLock) fpsLock = true;
+	}
 
 	public static void main(String[] args) {	
 		

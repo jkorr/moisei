@@ -10,6 +10,7 @@ import java.util.Scanner;
 
 import com.daenils.moisei.Game;
 import com.daenils.moisei.entities.equipments.Ability;
+import com.daenils.moisei.entities.equipments.Weapon;
 import com.daenils.moisei.files.FileManager;
 import com.daenils.moisei.graphics.Screen;
 import com.daenils.moisei.graphics.Sprite;
@@ -68,6 +69,8 @@ public class Monster extends Entity {
 		this.abilityCount = Byte.parseByte(tempString[11]);
 		initAbilities(tempString[12]);
 		
+		this.weapon = new Weapon(this, 3);
+		
 		this.isAlive = true;
 		this.level = 1;
 		
@@ -84,7 +87,6 @@ public class Monster extends Entity {
 		
 		this.needsRemove = false;
 		this.deathCount = 0;
-		
 		
 		}
 
@@ -202,8 +204,9 @@ public class Monster extends Entity {
 			monsterWait(r);
 		if (!isWaiting) {
 				while (actionPoints > 0) {
-					basicAttack(this, currentTarget);
+					basicAttack(this, currentTarget, weapon);
 					monstersAttacked++;
+					
 				}
 			}			
 		}

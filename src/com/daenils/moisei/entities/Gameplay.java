@@ -1,5 +1,8 @@
 package com.daenils.moisei.entities;
 
+import java.text.DateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Random;
 
 import com.daenils.moisei.CombatLog;
@@ -42,6 +45,8 @@ public class Gameplay {
 	private double deltaGameTime;
 	private double pauseGameTime;
 	
+	private Date d;
+	
 	// WAVE TIMER STUFF
 	private double startWaveTimer;
 	private double deltaWaveTime;
@@ -81,6 +86,7 @@ public class Gameplay {
 	}
 	
 	public void update() {
+				
 //		System.out.println(newWave);
 		gameFlow();
 		
@@ -111,7 +117,7 @@ public class Gameplay {
 		
 		if (input.debugUnlockAbility && !onGlobalCooldown) {
 			Random rand = new Random();
-			int r = rand.nextInt((8 - 0) + 0) + 0;
+			int r = rand.nextInt((Ability.getAbilityCount() - 0) + 0) + 0;
 			Gamestats.player.unlockAbility(Gamestats.player, r);
 			enableGlobalCooldown();
 		}
@@ -127,7 +133,13 @@ public class Gameplay {
 			showActionsLeft = actionSum;
 		}
 		
-		if (Gamestats.playerDamage[0] > 0) weaponString = "\nWEAPON DAMAGE: " + Gamestats.playerDamage[0] + "-" + Gamestats.playerDamage[1];
+		if (Gamestats.player.weapon != null) weaponString = "\n\nWEAPON: " + Gamestats.player.getWeapon().getName() + " (" + Gamestats.player.getWeapon().getWeaponTypeString() +")"
+				+ "\nphDMG: " + Gamestats.player.getWeapon().getDmgRange() + " | HIT CHANCE: " + Gamestats.player.getWeapon().getHitChance() + "%" + " | mDMG: " + Gamestats.player.getWeapon().getDamageValue() + " | heal: " + Gamestats.player.getWeapon().getHealValue()
+				+ "\nCHARGES: " + Gamestats.player.getWeapon().getWeaponCharges() + " | HoT: " + Gamestats.player.getWeapon().getHotValue() + " | DoT: " + Gamestats.player.getWeapon().getDotValue() + " | MoT: " + Gamestats.player.getWeapon().getMotValue();
+		else if (Gamestats.playerDamage[0] > 0) {
+			weaponString = "\n\nWEAPON: " + "Bare hands" + " (null)"
+					+ "\nphDMG: " + Gamestats.playerDamage[0] + "-" + Gamestats.playerDamage[1];
+		}
 		else weaponString = "N / A";
 		
 		if (deltaGameTime < 2.0) newWave = true;
@@ -142,6 +154,12 @@ public class Gameplay {
 		for (int i = 0; i < stage.getMonsters().size(); i++) {
 			checkForCooldowns(stage.getMonsters().get(i));
 		}
+		
+		if (deltaGameTime % 1 == 0) { 
+			d = new Date((long) nowTime - (long) startGameTimer - 3600000);
+		//	System.out.println(d.toString().split(" ")[3].split(":")[2]);
+		}
+		
 	}
 
 	
@@ -159,6 +177,7 @@ public class Gameplay {
 	}
 	
 	private void dealOTValues(Entity e) {
+		// universal method (abilities):
 		for (int i = 0; i < e.abilities.size(); i++) {
 			if (e.abilities.get(i).getLastUsed() > 0 && e.abilities.get(i).getIsOT()) {
 				if (e.abilities.get(i).getLastUsed() + e.abilities.get(i).getTurnCount() + 1 >
@@ -166,6 +185,18 @@ public class Gameplay {
 				(Gamestats.turnCount > e.abilities.get(i).getLastUsed())) {
 					e.applyOTs(e.abilities.get(i));
 					e.abilities.get(i).setAppliedOT(true);
+				}
+			}
+		}
+		
+		// universal method (weapons):
+		if (e.weapon != null) {
+			if (e.weapon.getLastUsed() > 0 && e.weapon.getIsOT()) {
+				if (e.weapon.getLastUsed() + e.weapon.getTurnCount() + 1 >
+				Gamestats.turnCount && !e.weapon.isAppliedOT() &&
+				(Gamestats.turnCount > e.weapon.getLastUsed())) {
+					e.applyOTs(e.weapon);
+					e.weapon.setAppliedOT(true);
 				}
 			}
 		}
@@ -213,9 +244,15 @@ public class Gameplay {
 	
 	// rendering the GUI text is probably temporary
 	public void render(Screen screen) {
+		// TODO: move it to the hell outta here and make it nicer and make it work with all the timers
+		String timeString = "00:00";
+		if (d != null) timeString = d.toString().split(" ")[3].split(":")[1] + ":" + d.toString().split(" ")[3].split(":")[2];
+	
 		// CURRENT VERSION
 		font.render(1147, 0, -8, 0, Game.getTitle() + " " + Game.getVersion()
-				+ newLnLeftPad((Game.getTitle().length() + Game.getVersion().length()) - Game.getProjectStage().length() + 1) + Game.getProjectStage().toUpperCase(), screen);
+				+ newLnLeftPad((Game.getTitle().length() + Game.getVersion().length()) - Game.getProjectStage().length() + 1) + Game.getProjectStage().toUpperCase()
+				+ newLnLeftPad(Game.getProjectStage().length() - Game.isFpsLockedString().length() + 4) + Game.isFpsLockedString(), screen);
+		
 		// TURN INFO BOX
 		font.render(645, 572, -6, 0xffffff00, "- TURN INFO -", screen);  
 		font.render(GUI.screenTurninfoPos, 572, -7, 0xffffff00,
@@ -223,7 +260,8 @@ public class Gameplay {
 				"\nACTIONS LEFT: " + showActionsLeft + "" +
 				"\n\nTURN " + turnCount + " - " + getDeltaTurnTime() +
 				"\nWAVE " + waveCount + " - " + getDeltaWaveTime() +
-				"\nGAME TIME: " + getDeltaGameTime()
+		//		"\nGAME TIME: " + getDeltaGameTime()
+				"\nGAME TIME: " + timeString
 				, screen);
 		
 		// PLAYER INFO BOX
@@ -234,10 +272,8 @@ public class Gameplay {
 				+ " (" + Gamestats.playerLastHitReceived + ")"
 				+ " | SHIELD: " + Gamestats.playerShield
 				+ "\nMANA: " + Gamestats.playerMana + "/" + Gamestats.playerMaxMana
-				+ "\nXP: " + Gamestats.playerXP
-				+ "\n\nWEAPON NAME: " + "Default Dagger"
+				+ "\nLEVEL: " + Gamestats.playerLevel + " | XP: " + Gamestats.playerXP
 				+ weaponString
-				+ " (" + Gamestats.playerHitDamage + ")"
 				, screen);
 
 		// COMBAT LOG
@@ -343,6 +379,8 @@ public class Gameplay {
 				font.render(495, 160, -4, 0xffff6a05, "Press ENTER to end your turn", screen);
 			if (Gamestats.turnCount < 2 && Gamestats.deltaTurnTime > 6 && Gamestats.deltaTurnTime < 8)
 				font.render(470, 160, -4, 0xffff6a05, "Press Q,W,E,R to use your abilities", screen);
+			if (Gamestats.turnCount < 2 && Gamestats.deltaTurnTime > 9 && Gamestats.deltaTurnTime < 11)
+				font.render(470, 160, -4, 0xffff6a05, "Press G to switch between weapons", screen);
 			
 		//	if (Gamestats.monsterHP[5] < 1)
 		//		font.render(580 - 10, 160, -8, 0xffa30300, "Monster DIED", screen);
@@ -367,13 +405,15 @@ public class Gameplay {
 	//	System.out.print("\n+T" + turnCount + " | ");
 //		System.out.println("\nA new turn has began! (Turn " + turnCount + ")");
 		
-		// reset dot flags new
+		// reset dot flags
 		for (int i = 0; i < Gamestats.player.abilities.size(); i++) {
 			Gamestats.player.abilities.get(i).setAppliedOT(false);
+			if (Gamestats.player.weapon != null) Gamestats.player.weapon.setAppliedOT(false);
 		}
 		for (int i = 0; i < stage.getMonsters().size(); i++) {
 			for (int l = 0; l < stage.getMonsters().get(i).abilities.size(); l++) {
 				stage.getMonsters().get(i).abilities.get(l).setAppliedOT(false);
+				if (stage.getMonsters().get(i).weapon != null) stage.getMonsters().get(i).weapon.setAppliedOT(false);
 			}
 		}
 		

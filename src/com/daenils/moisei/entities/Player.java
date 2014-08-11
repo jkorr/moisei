@@ -1,5 +1,8 @@
 package com.daenils.moisei.entities;
 
+import java.util.Calendar;
+import java.util.Date;
+
 import com.daenils.moisei.CombatLog;
 import com.daenils.moisei.Game;
 import com.daenils.moisei.graphics.GUI;
@@ -7,6 +10,7 @@ import com.daenils.moisei.graphics.Screen;
 import com.daenils.moisei.graphics.Stage;
 import com.daenils.moisei.input.Keyboard;
 import com.daenils.moisei.entities.equipments.Ability;
+import com.daenils.moisei.entities.equipments.Weapon;
 
 public class Player extends Entity {
 	private Keyboard input;
@@ -14,6 +18,7 @@ public class Player extends Entity {
 //	private Ability[] playerAbility = new Ability[4];
 	
 	protected boolean neverCycled;
+	protected int weaponSwitcher = 0;
 
 	public Player(Keyboard input, Entity defaultTarget) {
 		this.name = "Player";
@@ -33,8 +38,9 @@ public class Player extends Entity {
 //		this.playerAbility[3] = new Ability(1, this);
 		
 		initAbilities();
+		initWeapons();
 		
-		this.damage = new int[] {5, 11};
+		this.damage = new int[] {3, 7};
 		this.maxHealth = 100;
 		this.maxMana = 25;
 		this.maxActionPoints = 1;
@@ -44,14 +50,13 @@ public class Player extends Entity {
 		this.level = 1;
 		
 		this.actionPoints = maxActionPoints;
-		this.health = (int) (maxHealth * 0.75);
+		this.health = maxHealth;
 		this.mana = maxMana;
 		
 		this.stage = Stage.getStage();
 		
 		this.currentTarget = defaultTarget;
 		
-
 	}
 	
 	public void initAbilities() {
@@ -59,6 +64,13 @@ public class Player extends Entity {
 		unlockAbility(this, 2);
 		unlockAbility(this, 3);
 		unlockAbility(this, 0);
+	}
+	
+	public void initWeapons() {
+		unlockWeapon(this, 1);
+		unlockWeapon(this, 2);
+	//	unlockWeapon(this, 4);
+		if (this.weapons.size() > 0) this.weapon = weapons.get(0);
 	}
 	
 	public void update() {
@@ -80,7 +92,7 @@ public class Player extends Entity {
 		// KEY BINDINGS
 		// BASIC ATTACK
 		if (input.playerBasicAttack && canUseSkills) {
-			basicAttack(this, currentTarget);
+			basicAttack(this, currentTarget, weapon);
 			Game.getGameplay().enableGlobalCooldown();
 		}
 		
@@ -120,6 +132,22 @@ public class Player extends Entity {
 			Game.getGameplay().enableGlobalCooldown(); 
 		}
 		
+		if (input.playerSwitchWeapon && !Game.getGameplay().onGlobalCooldown && Game.getGameplay().getIsPlayerTurn()) {
+			if (this.weapons.size() > 0) {
+				if (weaponSwitcher == weapons.size() - 1) {
+					this.weapon = null;
+					weaponSwitcher = -1;
+					}
+				else {
+					weaponSwitcher++;
+					this.weapon = weapons.get(weaponSwitcher);
+				}
+				CombatLog.println(this.name + " switched weapons.");
+				Game.getGameplay().enableGlobalCooldown();
+			}
+				
+		}
+		
 		if (input.debugAddMonster && !Game.getGameplay().onGlobalCooldown) {
 			if (Gamestats.monstersAlive > 0) Game.getGameplay().spawnMonster();
 			else Game.getGameplay().newMonsterWave();
@@ -129,10 +157,20 @@ public class Player extends Entity {
 		//	Game.getGameplay().newMonsterWave();
 		//	((Monster) currentTarget).isAlive = false;
 		//	Game.getGameplay().playerOverride = true;
-			stage.setRandomStage();
+		//	stage.setRandomStage();
 			Game.getGameplay().enableGlobalCooldown(); 
-
 		}
+		
+		if (input.debugToggleFpsLock && !Game.getGameplay().onGlobalCooldown) {
+			// DEBUG FUNCTION TO TOGGLE FPS LOCK ON/OFF
+				Game.toggleFpsLock();
+				System.err.print("\n" + Game.isFpsLockedString());
+		//		if(Game.isFpsLocked()) System.err.print("\nFPS LOCKED.");
+		//		else System.err.print("\nFPS UNLOCKED.");
+		
+				Game.getGameplay().enableGlobalCooldown(); 
+
+			}
 
 		inputTargeting();
 
