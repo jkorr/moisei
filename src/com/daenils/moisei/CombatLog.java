@@ -55,7 +55,11 @@ public class CombatLog {
 		return combatlog.size();
 	}
 	
-	public static void saveLogToDisk() {
-		// TODO: save combat logs
+	public static String saveLogToDisk() {
+		String s = "";
+		for (int i = 0; i < combatlog.size(); i++) {
+			s = s.concat(combatlog.get(i) + "\n");
+		}
+		return s;
 	}
 }

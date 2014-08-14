@@ -78,19 +78,16 @@ public class Weapon extends Equipment {
 		List<String> lines = new ArrayList<String>();
 		
 		Scanner in;
-		try {
-			in = new Scanner(FileManager.fileWeapons);
+
+			in = new Scanner(FileManager.inWeapons);
 			while (in.hasNextLine()) {
 				lines.add(in.nextLine());
-				
 				for (int i = 0; i < lines.size(); i++) {
 					String[] toSplit = lines.get(i).split(":");
 					mapWeapons.put(Integer.parseInt(toSplit[0]), toSplit[1]);
 				}
 			}
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
+			in.close();
 	}
 	
 	// GETTERS

@@ -84,8 +84,15 @@ public class Gamestats {
 	
 	// SAVED STUFF
 	public static long savedTurnCount;
+	public static int savedWaveCount;
 	public static double savedDeltaGameTime;
 	public static int savedMonsterDeathCount;
+	
+	public static int savedPlayerLevel;
+	public static int savedPlayerTotalXP;
+	public static int savedPlayerMaxHP;
+	public static int savedPlayerMaxMana;
+	public static int savedPlayerMaxAP;
 	
 	// SAVED STUFF -- BUT NOT YET IMPLEMENTED
 	public static int savedMonsterCount;
@@ -203,10 +210,33 @@ public class Gamestats {
 		spawnSlotFilled[4] = Game.getGameplay().getSpawnSlotFilled(5);
 		}
 	
-		public static void submitGameStats() {
+		public static void submitStats_endWave() {
 			savedTurnCount += turnCount;
-			savedDeltaGameTime += deltaGameTime;
+			savedWaveCount = waveCount;
+			savedDeltaGameTime = deltaGameTime;
 			savedMonsterDeathCount += monsterDeathCount;
+			savedPlayerLevel = playerLevel;
+			savedPlayerTotalXP = playerXP;
+			savedPlayerMaxHP = playerMaxHP;
+			savedPlayerMaxMana = playerMaxMana;
+			savedPlayerMaxAP = playerMaxActionPoints;	
+		}
+		
+		public static void submitStats_endStage() {
+			
+		}
+		
+		public static String readGameStats() {
+			String s = "Turn count: " + savedTurnCount
+					+ "\nWave count: " + savedWaveCount
+					+ "\nPlaytime: " + savedDeltaGameTime
+					+ "\nKills: " + savedMonsterDeathCount
+					+ "\nPlayer level: " + savedPlayerLevel
+					+ "\nTotal XP: " + savedPlayerTotalXP
+					+ "\nMax HP: " + savedPlayerMaxHP
+					+ "\nMax Mana: " + savedPlayerMaxMana
+					+ "\nMax AP: " + savedPlayerMaxAP;
+			return s;
 		}
 		
 		// GETTERS

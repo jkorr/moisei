@@ -16,12 +16,16 @@ public class Keyboard implements KeyListener {
 	
 	public boolean playerEndTurn;
 	public boolean playerSwitchWeapon;
+	
+	// gui control
+	public boolean playerSwitchGUIView;
+	public boolean playerPauseGame;
 
 	// debug stuff
 	public boolean debugLockAbility, debugUnlockAbility;
 	public boolean debugAddMonster;
 	public boolean debugForceNewWave;
-	public boolean debugToggleFpsLock;
+	public boolean debugToggleFpsLock, debugShowDebugInfo;
 	
 	public long[] keysPressTime = new long[300];
 	public long[] keysRelTime = new long[300];
@@ -43,6 +47,10 @@ public class Keyboard implements KeyListener {
 		playerTarget[3] = keys[KeyEvent.VK_4];
 		playerTarget[4] = keys[KeyEvent.VK_5];
 		
+		playerSwitchGUIView = keys[KeyEvent.VK_F1];
+		playerPauseGame = keys[KeyEvent.VK_P];
+		
+		debugShowDebugInfo = keys[KeyEvent.VK_F11];
 		debugLockAbility = keys[KeyEvent.VK_PAGE_UP];
 		debugUnlockAbility = keys[KeyEvent.VK_PAGE_DOWN];
 		debugAddMonster = keys[KeyEvent.VK_M];

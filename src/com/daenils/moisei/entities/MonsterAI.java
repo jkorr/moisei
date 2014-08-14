@@ -7,6 +7,7 @@ public class MonsterAI {
 	
 	private Stage stage;
 	private boolean allDone;
+	private boolean isWaiting = true;
 
 	public MonsterAI(Stage stage) {
 		this.stage = stage;
@@ -43,9 +44,40 @@ public class MonsterAI {
 	
 	private void endTurnIfAllDone() {
 		if (allDone) {
-			Game.getGameplay().endTurn();
-			allDone = false;
+			monsterAIWait(1.5);
+			if (!isWaiting) {
+				Game.getGameplay().endTurn();
+				allDone = false;
+			}
 		}
 	}
+	
+	// WAIT STUFF
+		protected void monsterAIWait(double n) {
+			beginMonsterAIWait();
+//			System.out.println(startWaitTimer);
+			if (Game.getGameplay().getDeltaWaitTime() >= n) endWait(this);
+			
+		}
+		
+		protected void resetMonsterAIWait() {
+			Game.getGameplay().setStartWaitTimer(System.currentTimeMillis());
+			Game.getGameplay().setDeltaWaitTime(0);
+//			r = newRandomAIWait();
+		}
+		
+		protected void beginMonsterAIWait() {
+			if (!Game.getGameplay().getIsWaitingOn()) {
+				resetMonsterAIWait();
+				Game.getGameplay().setIsWaitingOn(true);
+			}
+					
+		}
+		
+		protected void endWait(MonsterAI m) {
+			m.resetMonsterAIWait();
+			m.isWaiting = false;
+			Game.getGameplay().setIsWaitingOn(false);
+		}
 	
 }

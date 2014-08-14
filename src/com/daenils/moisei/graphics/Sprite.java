@@ -26,12 +26,11 @@ public class Sprite {
 	public static Sprite monster_demo2 = new Sprite("/textures/entities/monster_demo2.png", 128, 208);
 	public static Sprite monster_demo3 = new Sprite("/textures/entities/monster_demo3.png", 128, 208);
 	public static Sprite monster_demo4 = new Sprite("/textures/entities/monster_demo4.gif", 128, 208);
+	public static Sprite monster_generic_dead = new Sprite("/textures/entities/monster_generic_dead.gif", 128, 208);
 	
 	/* 
 	 * --------------
 	 * 2. SPELLS
-	 * !!! don't forget: when you add new spells you'll need new icons
-	 * and those icons need to be put in the HashMap (mapSpellIcons) !!!
 	 * --------------
 	 */
 	
@@ -41,11 +40,10 @@ public class Sprite {
 	public static Sprite spell3 = new Sprite("/textures/gui/spells/spell3.png", 120, 120);
 	
 	public Sprite(String path, int w, int h) {
-		this.path = path;
-		this.name = path.split("/")[path.split("/").length - 1];
-	//	System.out.println(name.split(".gif")[0]);
 		this.width = w;
 		this.height = h;
+		this.path = path;
+		this.name = path.split("/")[path.split("/").length - 1];
 		
 		if (path.contains(".gif")) mapSprites.put(this.name.split(".gif")[0],this);
 		if (path.contains(".png")) mapSprites.put(this.name.split(".png")[0],this);

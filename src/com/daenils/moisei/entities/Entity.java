@@ -23,11 +23,14 @@ public class Entity {
 	protected Sprite sprite;
 	protected Stage stage;
 	
+	
 	protected int maxHealth, maxMana;
 	protected int health, mana, shield, xp;
+	protected int xpNeeded; // the amount of xp needed for the next level
 	protected int lastHealth;
 	protected String description;
 	protected byte abilityCount;
+	protected byte weaponCount;
 	protected boolean isAlive;
 	protected boolean needsRemove;
 	protected byte actionPoints, maxActionPoints;
@@ -50,6 +53,11 @@ public class Entity {
 	protected List<Ability> abilities = new ArrayList<Ability>();
 	protected List<Weapon> weapons = new ArrayList<Weapon>();
 	
+	
+	protected byte pHealth;
+	protected byte pMana;
+	protected byte pAP;
+	protected byte pXP;
 	
 	
 	public void update() {
@@ -82,7 +90,7 @@ public class Entity {
 			if (w.getHitChance() < 100) doHit = isHitSuccessful(w.getHitChance());
 			if (doHit || w.getHitChance() >= 100) {
 				hitDamage = getRandomHitDamage(e1, w);
-				dealDamage(e1, e2, hitDamage);
+				dealDamage(e1, e2, w, hitDamage, false);
 				compensateForCosts(e1, e2, w);
 			}
 			else {
@@ -121,7 +129,7 @@ public class Entity {
 		else {
 			decreaseHealth(e1, e2, d);
 			stillAlive(e2, e1);
-			if (!mute) CombatLog.print("" + e1.name + " --> " + e2.name + " (" + d + " damage)");
+			if (!mute) CombatLog.println("" + e1.name + " hits " + e2.name + " with " + a.getName() + " (" + d + " damage)");
 		}
 	}
 	
@@ -336,20 +344,20 @@ public class Entity {
 		doAbility(a, e);
 	}
 	
-	public void applyOTs(Equipment a) {
+	public void applyOTs(Equipment a, int tick) {
 		if (health > 0 && a.getDotValue() > 0) {
 			dealDamage(this, currentTarget, a.getDotValue(), true);
-			CombatLog.println("[Tick N] " + this.name + " dealt a DoT of " + a.getDotValue());
+			CombatLog.println("[Tick " + tick + "] " + this.name + " dealt a DoT of " + a.getDotValue());
 		}
 		
 		if (health > 0 && a.getHotValue() > 0) {
 			increaseHealth(this, this, a.getHotValue(), true);
-			CombatLog.println("[Tick N] " + this.name + " heals HoT of " + a.getHotValue());
+			CombatLog.println("[Tick " + tick + "] " + this.name + " heals HoT of " + a.getHotValue());
 		}
 		
 		if (health > 0 && a.getMotValue() > 0) {
 			increaseMana(this, this, a.getMotValue());
-			CombatLog.println("[Tick N] " + this.name + " restores mana MoT of " + a.getMotValue());
+			CombatLog.println("[Tick " + tick + "] " + this.name + " restores mana MoT of " + a.getMotValue());
 		}
 	}
 	
@@ -445,7 +453,7 @@ public class Entity {
 	}
 	
 	protected void unlockWeapon(Entity e, int id) {
-		if (e.weapons.size() < e.abilityCount) {
+		if (e.weapons.size() < e.weaponCount) {
 			Weapon wep = new Weapon(e, id);
 			this.addWeapon(wep);
 			CombatLog.println(e.name + "'s " + wep.getName() + " unlocked.");
@@ -522,6 +530,13 @@ public class Entity {
 	
 	public void init(Stage s) {
 		this.stage = s;
+	}
+	
+	public void setPercentageValues() {
+		pHealth = (byte) (((double) health / (double) maxHealth) * 100.0);
+		pMana = (byte) (((double) mana / (double) maxMana) * 100.0);
+		pAP = (byte) (((double) actionPoints / (double) maxActionPoints) * 100.0);
+		pXP = (byte) (((double) xp / (double) xpNeeded) * 100.0);
 	}
 	
 	// ADDERS (TO THE MAX, NOT CURRENT)

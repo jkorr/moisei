@@ -79,21 +79,17 @@ public class Ability extends Equipment {
 		List<String> lines = new ArrayList<String>();
 				
 		Scanner in;
-		try {
-			in = new Scanner(FileManager.fileAbilities);
+		in = new Scanner(FileManager.inAbilities);
 		while (in.hasNextLine()) {
-			lines.add(in.nextLine());
-			if (!abilitiesCounted) abilityCount++;
-			for (int i = 0; i < lines.size(); i++) {
-				String[] toSplit = lines.get(i).split(":");
-				mapAbilities.put(Integer.parseInt(toSplit[0]), toSplit[1]);
-			}
+		lines.add(in.nextLine());
+		if (!abilitiesCounted) abilityCount++;
+		for (int i = 0; i < lines.size(); i++) {
+			String[] toSplit = lines.get(i).split(":");
+			mapAbilities.put(Integer.parseInt(toSplit[0]), toSplit[1]);
 		}
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+}
 		
+		in.close();
 		abilitiesCounted = true;
 		
 	}

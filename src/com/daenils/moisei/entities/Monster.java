@@ -67,9 +67,12 @@ public class Monster extends Entity {
 		this.levelModifier = Integer.parseInt(tempString[8]);
 		this.damage = new int[] {Integer.parseInt(tempString[9]), Integer.parseInt(tempString[10])};
 		this.abilityCount = Byte.parseByte(tempString[11]);
+		this.weaponCount = 5;
 		initAbilities(tempString[12]);
+		initWeapons(tempString[13]);
+//		System.out.println(tempString[13]);
 		
-		this.weapon = new Weapon(this, 3);
+		this.weapon = this.weapons.get(1);
 		
 		this.isAlive = true;
 		this.level = 1;
@@ -88,6 +91,7 @@ public class Monster extends Entity {
 		this.needsRemove = false;
 		this.deathCount = 0;
 		
+		setPercentageValues();
 		}
 
 	private void updateSpawnSlots() {
@@ -134,27 +138,35 @@ public class Monster extends Entity {
 		List<String> lines = new ArrayList<String>();
 		
 		Scanner in;
-		try {
-			in = new Scanner(FileManager.fileMonsters);
-			while (in.hasNextLine()) {
-				lines.add(in.nextLine());
-				for (int i = 0; i < lines.size(); i++) {
-					String[] toSplit = lines.get(i).split(":");
-					mapMonsters.put(Integer.parseInt(toSplit[0]), toSplit[1]);
-				}
+		in = new Scanner(FileManager.inMonsters);
+		while (in.hasNextLine()) {
+			lines.add(in.nextLine());
+			for (int i = 0; i < lines.size(); i++) {
+				String[] toSplit = lines.get(i).split(":");
+				mapMonsters.put(Integer.parseInt(toSplit[0]), toSplit[1]);
 			}
-		} catch(IOException e) {
-			e.printStackTrace();
 		}
+		in.close();
 	}
 	
 	public void initAbilities(String s) {
-		System.out.println(s);
+//		System.out.println(s);
 		if (!s.equals("none")) {
 			String tempString[] = s.split(";");
 			
 			for (int i = 0; i < tempString.length; i++) {
 				unlockAbility(this, Integer.parseInt(tempString[i]));
+			}
+		}
+	}
+	
+	public void initWeapons(String s) {
+//		System.out.println(s);
+		if (!s.equals("none")) {
+			String tempString[] = s.split(";");
+			
+			for (int i = 0; i < tempString.length; i++) {
+				unlockWeapon(this, Integer.parseInt(tempString[i]));
 			}
 		}
 	}
@@ -168,6 +180,8 @@ public class Monster extends Entity {
 	//	applyDots();
 	//	if (this.actionPoints > 0) this.imUp = true;
 	//	else this.imUp = false;
+		
+		setPercentageValues();
 		
 		// the following 3 lines make the dynamic monster changing possible:
 		updateSpawnSlots();
@@ -184,7 +198,7 @@ public class Monster extends Entity {
 		// e.g. new sprite for dead ppl
 		if (!isAlive) { 
 			actionPoints = 0;
-			sprite = Sprite.monster_demo;
+			sprite = Sprite.monster_generic_dead;
 		}
 		
 		// use heal
@@ -201,12 +215,11 @@ public class Monster extends Entity {
 		
 		// basic attack
 		if (checkCanUseSkills() && currentTarget.isAlive) {
-			monsterWait(r);
+			monsterWait(3);
 		if (!isWaiting) {
-				while (actionPoints > 0) {
+				if (actionPoints > 0) {
 					basicAttack(this, currentTarget, weapon);
 					monstersAttacked++;
-					
 				}
 			}			
 		}
@@ -224,7 +237,7 @@ public class Monster extends Entity {
 	private void aiBehaviorUseStun() {
 
 		if (checkCanUseSkills() && (currentTarget.getMana() < 20 && !currentTarget.isStunned) && currentTarget.isAlive) {
-			monsterWait(r);
+			monsterWait(3);
 			if (!isWaiting) {
 				useAbility(this, abilities.get(1));
 			}
@@ -233,7 +246,7 @@ public class Monster extends Entity {
 
 	private void aiBehaviorUseHeal() {
 		if (checkCanUseSkills() && this.health < 20) {
-			monsterWait(r);
+			monsterWait(3);
 			if (!isWaiting) {
 				useAbility(this, abilities.get(0));
 			}
@@ -242,7 +255,7 @@ public class Monster extends Entity {
 	
 	private void aiBehaviorUseDots() {
 		if (checkCanUseSkills() && currentTarget.health < 150) {
-			monsterWait(r);
+			monsterWait(3);
 			if (!isWaiting) {
 				useAbility(this, abilities.get(1));
 			}
@@ -251,7 +264,7 @@ public class Monster extends Entity {
 	
 	private void aiBehaviorUseShield() {
 		if (checkCanUseSkills()) {
-			monsterWait(r);
+			monsterWait(3);
 			if (!isWaiting) {
 				useAbility(this, abilities.get(3));
 			}
@@ -263,7 +276,7 @@ public class Monster extends Entity {
 	}
 	
 	private boolean checkCanUseSkills() {
-		if (Gamestats.isMonsterTurn && isAlive && actionPoints > 0) return canUseSkills = true;
+		if (Gamestats.isMonsterTurn && isAlive && actionPoints > 0 && Game.getGameplay().getContinueGame()) return canUseSkills = true;
 		else return canUseSkills = false;
 	}
 	

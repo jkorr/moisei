@@ -62,7 +62,6 @@ public class Screen {
 	
 	public void renderCharacter(int xp, int yp, Sprite sprite, int scale, int color) {
 		// TODO: implement sprite scaling via int scale (100 default would be nice)
-		scale = 1;
 		for (int y = 0; y < sprite.height; y++){
 			int ya = y / scale + yp;
 			for (int x = 0; x < sprite.width; x++) {

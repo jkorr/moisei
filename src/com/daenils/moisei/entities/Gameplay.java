@@ -9,6 +9,7 @@ import com.daenils.moisei.CombatLog;
 import com.daenils.moisei.Game;
 import com.daenils.moisei.input.Keyboard;
 import com.daenils.moisei.entities.equipments.Ability;
+import com.daenils.moisei.files.FileManager;
 import com.daenils.moisei.graphics.Font;
 import com.daenils.moisei.graphics.GUI;
 import com.daenils.moisei.graphics.Screen;
@@ -33,33 +34,30 @@ public class Gameplay {
 	private double startGlobalCooldownTimer;
 	private double nowTime;
 	private double deltaGlobalCooldownTime;
-	private double globalCooldown = 0.4; // 400ms
+	private double deltaGlobalCooldownTimeSec;
+	private double globalCooldown = 300.0 / 1000.0; // modify first number only (ms)
 	
-	// TURN TIMER STUFF
-	private double startTurnTimer;
-	private double deltaTurnTime;
-	private double pauseTurnTime;
+	// TIMERS 'N STUFF
+	private double startTurnTimer, deltaTurnTime, deltaTurnTimeSec, pauseTurnTime; // TURN
+	private double startGameTimer, deltaGameTime, deltaGameTimeSec, pauseGameTime; // GAME
+	private double startWaveTimer, deltaWaveTime, deltaWaveTimeSec, pauseWaveTime; // WAVE
+	private double startPauseTimer, deltaPauseTime, deltaPauseTimeSec, turnPauseTime, wavePauseTime, totalPauseTime; // PAUSE
+	private double startWaitTimer, deltaWaitTime, deltaWaitTimeSec; // MONSTER WAIT
 	
-	// GAME TIMER STUFF
-	private double startGameTimer;
-	private double deltaGameTime;
-	private double pauseGameTime;
-	
-	private Date d;
-	
-	// WAVE TIMER STUFF
-	private double startWaveTimer;
-	private double deltaWaveTime;
-	private double pauseWaveTime;
-	
-	
-	// MONSTER WAIT TIMER STUFF
-	private double startWaitTimer;
-	private double deltaWaitTime;
+	// MONSTER WAIT
 	private boolean isWaitingOn;
 	
-	// GAME CONTINUATION AFTER MONSTERS DIED
-	public boolean continueGame;
+	private Date d;
+
+	// GAME PAUSE
+	public boolean continueGame = true;
+	private boolean isPaused;
+	private boolean forcedPause;
+	private boolean totalUpdated;
+	
+	// SWITCH BETWEEN DIFFERENT UI VIEWS / TOGGLE UI STUFF
+	private boolean percentageView;
+	private boolean debugView = true;
 	
 	private Keyboard input;
 	private Font font;
@@ -83,18 +81,23 @@ public class Gameplay {
 		
 		this.input = input;
 		font = new Font();
+		
+		// just so that file is initialized as well, probably a temporary measure
+		Gamestats.submitStats_endWave();
+		FileManager.saveStatisticsFile();
 	}
 	
 	public void update() {
-				
-//		System.out.println(newWave);
+		if (deltaTurnTime < 0) deltaPauseTime = 0;
+
+		nowTime = nowTime();
 		gameFlow();
 		
-		if (!Gamestats.monstersAllDead) continueGame = true;
-		if (Gamestats.monstersAllDead) continueGame = false;
+		if (Gamestats.monstersAllDead || Gamestats.playerHP <= 0) setContinueGame(false);
+		if (Gamestats.monstersAlive > 0 && !forcedPause && Gamestats.playerHP > 0) setContinueGame(true);
 		
 		// TODO: temporary solution to the monster spawn before all removed issue
-		if (!continueGame) removeDead();
+		if (!continueGame && Gamestats.monstersAllDead) removeDead();
 		
 		
 //		System.out.println("WaitingOn? " + isWaitingOn);
@@ -109,6 +112,7 @@ public class Gameplay {
 			}
 		
 		handleTimers();
+		handlePause();
 		
 		if (input.debugLockAbility && !onGlobalCooldown) {
 			Gamestats.player.removeLastAbility();
@@ -142,7 +146,7 @@ public class Gameplay {
 		}
 		else weaponString = "N / A";
 		
-		if (deltaGameTime < 2.0) newWave = true;
+		if (deltaWaveTime < 2.0) newWave = true;
 		else newWave = false;
 		
 		dealOTValues(Gamestats.player);
@@ -159,6 +163,8 @@ public class Gameplay {
 			d = new Date((long) nowTime - (long) startGameTimer - 3600000);
 		//	System.out.println(d.toString().split(" ")[3].split(":")[2]);
 		}
+		
+		
 		
 	}
 
@@ -177,13 +183,15 @@ public class Gameplay {
 	}
 	
 	private void dealOTValues(Entity e) {
+		int tick;
 		// universal method (abilities):
 		for (int i = 0; i < e.abilities.size(); i++) {
 			if (e.abilities.get(i).getLastUsed() > 0 && e.abilities.get(i).getIsOT()) {
 				if (e.abilities.get(i).getLastUsed() + e.abilities.get(i).getTurnCount() + 1 >
 				Gamestats.turnCount && !e.abilities.get(i).isAppliedOT() && 
 				(Gamestats.turnCount > e.abilities.get(i).getLastUsed())) {
-					e.applyOTs(e.abilities.get(i));
+					tick = (int) (e.abilities.get(i).getLastUsed() + Gamestats.turnCount - 2);
+					e.applyOTs(e.abilities.get(i), tick);
 					e.abilities.get(i).setAppliedOT(true);
 				}
 			}
@@ -195,44 +203,70 @@ public class Gameplay {
 				if (e.weapon.getLastUsed() + e.weapon.getTurnCount() + 1 >
 				Gamestats.turnCount && !e.weapon.isAppliedOT() &&
 				(Gamestats.turnCount > e.weapon.getLastUsed())) {
-					e.applyOTs(e.weapon);
+					tick = (int) (e.weapon.getLastUsed() + Gamestats.turnCount - 2);
+					e.applyOTs(e.weapon, tick);
 					e.weapon.setAppliedOT(true);
 				}
 			}
 		}
 	}
-
+	
 	public void handleTimers() {
-		nowTime = System.currentTimeMillis();
-
 		if (continueGame) {
+		isPaused = false;
 		
-		deltaTurnTime = (int) (nowTime - startTurnTimer) / 100;
-		deltaTurnTime = deltaTurnTime / 10;
+		// temporary solution to the pause issues:
+		deltaTurnTime = nowTime - startTurnTimer;
+		if (turnCount > 1) deltaTurnTime -= turnPauseTime;
+		deltaTurnTimeSec = (double) ((int) (deltaTurnTime / 100)) / 10;
+	
+		deltaGameTime = nowTime - startGameTimer - totalPauseTime;
+		deltaGameTimeSec = (double) ((int) (deltaGameTime / 100)) / 10;
 		
-		deltaGameTime = (int) (nowTime - startGameTimer) / 100;
-		deltaGameTime = deltaGameTime / 10;		
-		
-		deltaWaitTime = (int) (nowTime - startWaitTimer) / 100;
-		deltaWaitTime = deltaWaitTime / 10;
+		deltaWaitTime = nowTime - startWaitTimer;
+		deltaWaitTimeSec = (double) ((int) (deltaWaitTime / 100)) / 10;
 //		System.out.println(deltaWaitTime);
 		
-		deltaWaveTime = (int) (nowTime - startWaveTimer) / 100;
-		deltaWaveTime = deltaWaveTime / 10;
+		// temporary solution to the pause issues:
+		deltaWaveTime = nowTime - startWaveTimer;
+		if (turnCount > 1) deltaWaveTime -= wavePauseTime;
+		deltaWaveTimeSec = (double) ((int) (deltaWaveTime / 100)) / 10;
 		}
 		
-		deltaGlobalCooldownTime = (int) (nowTime - startGlobalCooldownTimer) / 100;
-		deltaGlobalCooldownTime = deltaGlobalCooldownTime / 10; // not sure why I can't make it work in the previous line though
+		deltaGlobalCooldownTime = nowTime - startGlobalCooldownTimer;
+		deltaGlobalCooldownTimeSec = (double) ((int) (deltaGlobalCooldownTime / 100)) / 10; // not sure why I can't make it work in the previous line though
 		
 		
 		
-		if (deltaGlobalCooldownTime > 0 && deltaGlobalCooldownTime % globalCooldown == 0) {
+		if (deltaGlobalCooldownTimeSec > 0 && deltaGlobalCooldownTimeSec % globalCooldown == 0) {
 			onGlobalCooldown = false;
-			// this whole stuff needs revision, it becomes imprecise very quickly
-			// (but it's good enough for now) | test line:
-			// 2014-07-27: actually it's not like it's imprecise, but for some weird
-			// reason the value gets double such as: 0.4, 0.8, 1.6, 3.2, 6.4, ...
-//			 System.out.println(deltaGameplayTime);
+//			System.out.println("GCD TICK: " + deltaGlobalCooldownTimeSec);
+		}
+	}
+
+	private long nowTime() {
+		return System.currentTimeMillis();
+	}
+	
+	public void handlePause() {
+		if (!continueGame) {
+			if (!isPaused) {
+				startPauseTimer = System.currentTimeMillis();
+			}
+			isPaused = true;
+			
+			deltaPauseTime = (nowTime - startPauseTimer);
+			deltaPauseTimeSec = (double) ((int) (deltaPauseTime / 100)) / 10;
+			
+			totalUpdated = false;
+		}
+		else {
+			if (!totalUpdated) {
+				totalPauseTime += deltaPauseTime;
+				turnPauseTime += deltaPauseTime;
+				wavePauseTime += deltaPauseTime;
+				totalUpdated = true;
+			}
 		}
 	}
 	
@@ -242,48 +276,52 @@ public class Gameplay {
 		return returnString;  
 	}
 	
-	// rendering the GUI text is probably temporary
+	// rendering the GUI text here is probably temporary
 	public void render(Screen screen) {
 		// TODO: move it to the hell outta here and make it nicer and make it work with all the timers
 		String timeString = "00:00";
 		if (d != null) timeString = d.toString().split(" ")[3].split(":")[1] + ":" + d.toString().split(" ")[3].split(":")[2];
-	
+		
 		// CURRENT VERSION
-		font.render(1147, 0, -8, 0, Game.getTitle() + " " + Game.getVersion()
-				+ newLnLeftPad((Game.getTitle().length() + Game.getVersion().length()) - Game.getProjectStage().length() + 1) + Game.getProjectStage().toUpperCase()
-				+ newLnLeftPad(Game.getProjectStage().length() - Game.isFpsLockedString().length() + 4) + Game.isFpsLockedString(), screen);
+		renderVersionInfo(screen);
 		
 		// TURN INFO BOX
-		font.render(645, 572, -6, 0xffffff00, "- TURN INFO -", screen);  
-		font.render(GUI.screenTurninfoPos, 572, -7, 0xffffff00,
-				"\n\n-> " + printWhosTurn() +
-				"\nACTIONS LEFT: " + showActionsLeft + "" +
-				"\n\nTURN " + turnCount + " - " + getDeltaTurnTime() +
-				"\nWAVE " + waveCount + " - " + getDeltaWaveTime() +
-		//		"\nGAME TIME: " + getDeltaGameTime()
-				"\nGAME TIME: " + timeString
-				, screen);
+		if (percentageView) renderTurnInfoBoxPercentages(screen, timeString);
+		else renderTurnInfoBox(screen, timeString);
 		
 		// PLAYER INFO BOX
-		font.render(GUI.screenPlayerinfoPos+135, 572, -8, 0xffffff00, "- PLAYER INFO -"
-				, screen);
-		font.render(GUI.screenPlayerinfoPos, 572, -7, 0xffffff00, ""
-				+ "\n\nHEALTH: " + Gamestats.playerHP + "/" + Gamestats.playerMaxHP
-				+ " (" + Gamestats.playerLastHitReceived + ")"
-				+ " | SHIELD: " + Gamestats.playerShield
-				+ "\nMANA: " + Gamestats.playerMana + "/" + Gamestats.playerMaxMana
-				+ "\nLEVEL: " + Gamestats.playerLevel + " | XP: " + Gamestats.playerXP
-				+ weaponString
-				, screen);
-
+		if (percentageView) renderPlayerInfoBoxPercentages(screen);
+		else renderPlayerInfoBox(screen);
+		
 		// COMBAT LOG
-		if (CombatLog.getLogLength() > 6) {
-			for (int i = 0; i < 7; i++) {
-				font.render(0, 460 + (i*10), -8, 0xffe5e5e5, CombatLog.getLastLines(6 - i), screen);
-			}
-		}
+		renderCombatLog(screen);
 		
 		// MONSTER INFO #3
+		if (percentageView) renderMonsterInfoPercentages(screen);
+		else renderMonsterInfo(screen);
+		
+		// NOTIFICATIONS
+		renderNotifications(screen);
+		
+		// ABILITY texts
+		for (int i = 0; i < Gamestats.player.abilities.size(); i++)	renderAbilityText(screen, i);
+		
+		// FLOATING PLAYERDAMAGE
+//		if (Gamestats.playerLastActionPoints > Gamestats.playerActionPoints && deltaGlobalCooldownTimeSec < 0.9 && !Gamestats.monstersAllDead)
+//			font.render(Gamestats.player.currentTarget.x + 10, Gamestats.player.currentTarget.y - 20, 10, 0xffff1100, Font.font_kubastaBig, 2, "" + Gamestats.playerHitDamage*-1, screen);
+		
+		// TEMP: GAMESTATS
+		font.render(1110, 420, -4, 0xffffff00, Font.font_default, 1, Gamestats.readGameStats(), screen);
+		
+		// STRICTLY DEBUG
+		if (debugView) renderDebugInfo(screen);
+		
+		//	font.renderXCentered(-1, 199, 12, 0xff444444, Font.font_kubastaBig,1, "Sample String", screen);
+		//	font.renderXCentered(2, 202, 12, 0xff444444, Font.font_kubastaBig,1, "Sample String", screen);
+		//	font.renderXCentered(200, 12, 0xffddbb00, Font.font_kubastaBig,1, "Sample String", screen);
+	}
+
+	private void renderMonsterInfo(Screen screen) {
 		int n = 0;
 //		if (Gamestats.playerTargetCycled < Gamestats.monsterCount && Gamestats.playerTargetCycled > 0) n = Gamestats.playerTargetCycled - 1;
 //		else if (Gamestats.playerNeverCycled) n = Gamestats.monsterCount - 1;
@@ -303,30 +341,92 @@ public class Gameplay {
 						, screen);
 				}
 		}
-
-		/*
-		if (Gamestats.monsterIsAlive[0]) {
-		font.render(580 + 15, 290 + 210, -6, 0xffff0000, "" + Gamestats.monsterId[0]
-				+ "\n HP: " + Gamestats.monsterHP[0]
-//				+ " (" + Gamestats.playerHitDamage*-1 + ")"
-					
-				, screen);
+	}
+	
+	private void renderMonsterInfoPercentages(Screen screen) {
+		int n = 0;
+//		if (Gamestats.playerTargetCycled < Gamestats.monsterCount && Gamestats.playerTargetCycled > 0) n = Gamestats.playerTargetCycled - 1;
+//		else if (Gamestats.playerNeverCycled) n = Gamestats.monsterCount - 1;
+		
+		for (int i = 0; i < Gamestats.monsterCount; i++) {
+			
+			// first if line is the new code, second one is the old code which only works with cycling
+			
+			if (Gamestats.monsterIsAlive[i] && Gamestats.player.currentTarget == stage.getMonsters().get(i)) {
+//			if (Gamestats.monsterIsAlive[i] && (n) == i && (Gamestats.playerNeverCycled) ) {
+				font.render(stage.getMonsters().get(i).x + 5, stage.getMonsters().get(i).y + 15, -7, 0xffdd0010, "" + Gamestats.monsterId[i]
+						+ "\nH:" + stage.getMonsters().get(i).pHealth + "%"
+						+ "|M:" + stage.getMonsters().get(i).pMana + "%"
+						+ "\nS:" + Gamestats.monsterShield[i] + ""
+//						+ " (" + Gamestats.playerHitDamage*-1 + ")"
+							
+						, screen);
+				}
 		}
-		*/
-		
-		// NOTIFICATIONS
-		renderNotifications(screen);
-		
-		// ABILITY texts
-		for (int i = 0; i < Gamestats.player.abilities.size(); i++)	renderAbilityText(screen, i);
-		
-		// FLOATING PLAYERDAMAGE
-		if (Gamestats.playerLastActionPoints > Gamestats.playerActionPoints && deltaGlobalCooldownTime < 0.9)
-			font.render(580 + 40, 290 - 10, -8, 0xffff1100, "\n\n" + Gamestats.playerHitDamage*-1, screen);
-		
-		
-		// STRICTLY DEBUG
-		renderDebugInfo(screen);
+	}
+
+	private void renderCombatLog(Screen screen) {
+		if (CombatLog.getLogLength() > 6) {
+			for (int i = 0; i < 7; i++) {
+				font.render(0, 460 + (i*10), -8, 0xffe5e5e5, CombatLog.getLastLines(6 - i), screen);
+			}
+		}
+	}
+
+	private void renderTurnInfoBox(Screen screen, String timeString) {
+		font.render(645, 572, -6, 0xffffff00, "- TURN INFO -", screen);  
+		font.render(GUI.screenTurninfoPos, 572, -7, 0xffffff00,
+				"\n\n-> " + printWhosTurn() +
+				"\nACTIONS LEFT: " + showActionsLeft + "" +
+				"\n\nTURN " + turnCount + " - " + deltaTurnTimeSec +
+				"\nWAVE " + waveCount + " - " + deltaWaveTimeSec +
+				"\nGAME TIME: " + deltaGameTimeSec
+		//		"\nGAME TIME: " + timeString
+				, screen);
+	}
+	
+	private void renderTurnInfoBoxPercentages(Screen screen, String timeString) {
+		font.render(645, 572, -6, 0xffffff00, "- TURN INFO -", screen);  
+		font.render(GUI.screenTurninfoPos, 572, -7, 0xffffff00,
+				"\n\n-> " + printWhosTurn() +
+				"\nACTIONS LEFT: " + getActionsLeftBar() + "" +
+				"\n\nTURN " + turnCount + " - " + deltaTurnTimeSec +
+				"\nWAVE " + waveCount + " - " + deltaWaveTimeSec +
+				"\nGAME TIME: " + deltaGameTimeSec
+		//		"\nGAME TIME: " + timeString
+				, screen);
+	}
+
+	private void renderVersionInfo(Screen screen) {
+		font.render(1147, 0, -8, 0, Game.getTitle() + " " + Game.getVersion()
+				+ newLnLeftPad((Game.getTitle().length() + Game.getVersion().length()) - Game.getProjectStage().length() + 1) + Game.getProjectStage().toUpperCase()
+				+ newLnLeftPad(Game.getProjectStage().length() - Game.isFpsLockedString().length() + 4) + Game.isFpsLockedString(), screen);
+	}
+
+	private void renderPlayerInfoBox(Screen screen) {
+		font.render(GUI.screenPlayerinfoPos+135, 572, -8, 0xffffff00, "- PLAYER INFO -"
+				, screen);
+		font.render(GUI.screenPlayerinfoPos, 572, -7, 0xffffff00, ""
+				+ "\n\nHEALTH: " + Gamestats.playerHP + "/" + Gamestats.playerMaxHP
+				+ " (" + Gamestats.playerLastHitReceived + ")"
+				+ " | SHIELD: " + Gamestats.playerShield
+				+ "\nMANA: " + Gamestats.playerMana + "/" + Gamestats.playerMaxMana
+				+ "\nLEVEL: " + Gamestats.playerLevel + " | XP: " + Gamestats.playerXP
+				+ weaponString
+				, screen);
+	}
+	
+	private void renderPlayerInfoBoxPercentages(Screen screen) {
+		font.render(GUI.screenPlayerinfoPos+135, 572, -8, 0xffffff00, "- PLAYER INFO -"
+				, screen);
+		font.render(GUI.screenPlayerinfoPos, 572, -7, 0xffffff00, ""
+				+ "\n\nHEALTH: " + Gamestats.player.pHealth + "%"
+				+ " (" + Gamestats.playerLastHitReceived + ")"
+				+ " | SHIELD: " + Gamestats.playerShield
+				+ "\nMANA: " + Gamestats.player.pMana + "%"
+				+ "\nLEVEL: " + Gamestats.playerLevel + " | XP: " + Gamestats.player.pXP + "%"
+				+ weaponString
+				, screen);
 	}
 	
 	protected void renderDebugInfo(Screen screen) {
@@ -353,16 +453,19 @@ public class Gameplay {
 							+ "\nMonster Random Wait: " + Gamestats.monsterRW[0] + "-" + Gamestats.monsterRW[1] + "-" + Gamestats.monsterRW[2]
 									+ "-" + Gamestats.monsterRW[3] + "-" + Gamestats.monsterRW[4]	
 							+ "\nTotal TurnCount: " + Gamestats.getTotalTurnCount()
-							+ "\nTotal GameTime: " + Gamestats.getTotalGameTime()
+							+ "\nTotal GameTime: " + deltaGameTimeSec
 							+ "\nMonster deathcount: " + Gamestats.monsterDeathCount
 							+ "\nTotal Monster deathcount: " + Gamestats.getTotalMonsterDeathCount()
 							+ "\nPl Ability 1 last used: " + Gamestats.player.abilities.get(0).getLastUsed() // these 3 lines are poorly written
 			//				+ "\nPl Ability 2 last used: " + Gamestats.player.abilities.get(1).getLastUsed() // they should be removed/changed
 			//				+ "\nPl Ability 4 last used: " + Gamestats.player.abilities.get(3).getLastUsed() // as soon as possible
 							+ "\nCurrent wave: " + Gamestats.waveCount
-							+ "\nGlobalCooldown: " + deltaGlobalCooldownTime 
+							+ "\nGlobalCooldown: " + deltaGlobalCooldownTimeSec 
 							+ "\nTargetCycled: " + Gamestats.player.targetCycled
 							+ "\nCombat Log length: " + CombatLog.getSize()
+							+ "\nGame is paused: " + !continueGame
+							+ "\nPause force: " + getForcedPause()
+							+ "\nTotal pause time: " + totalPauseTime
 	
 							
 				//			+ "\nMONSTER ATTACKED: " + Gamestats.monstersAttacked
@@ -370,17 +473,30 @@ public class Gameplay {
 	}
 	
 	protected void renderNotifications(Screen screen) {
-		if (Gamestats.turnCount > 1 && Gamestats.deltaTurnTime < 1.2)
-			font.render(590, 160, -4, 0xffff6a05, printWhosTurnTop(), screen);
+		if (Gamestats.turnCount > 1 && Gamestats.deltaTurnTime < 1.2) {
+			font.renderXCentered(2, 132, 12, 0xff9a9a9a, Font.font_kubastaBig, 1, printWhosTurnTop(), screen);
+			font.renderXCentered(130, 12, 0xff4d4d4d, Font.font_kubastaBig, 1, printWhosTurnTop(), screen);
+		}
+		
+		if (!continueGame) {
+			font.renderXCentered(2, 52, 12, 0xff050505, Font.font_kubastaBig, 1, "GAME PAUSED", screen);
+			font.renderXCentered(50, 12, 0xff8d2d8d, Font.font_kubastaBig, 1, "GAME PAUSED", screen);
+		}
+		
 			
-			if (Gamestats.turnCount < 2 && Gamestats.deltaTurnTime < 2)
-				font.render(495, 160, -4, 0xffff6a05, "Press SPACE to hit your enemy", screen);
-			if (Gamestats.turnCount < 2 && Gamestats.deltaTurnTime > 3 && Gamestats.deltaTurnTime < 5)
-				font.render(495, 160, -4, 0xffff6a05, "Press ENTER to end your turn", screen);
-			if (Gamestats.turnCount < 2 && Gamestats.deltaTurnTime > 6 && Gamestats.deltaTurnTime < 8)
-				font.render(470, 160, -4, 0xffff6a05, "Press Q,W,E,R to use your abilities", screen);
-			if (Gamestats.turnCount < 2 && Gamestats.deltaTurnTime > 9 && Gamestats.deltaTurnTime < 11)
-				font.render(470, 160, -4, 0xffff6a05, "Press G to switch between weapons", screen);
+			if (Gamestats.turnCount < 2 && Gamestats.deltaTurnTime < 2 && Gamestats.waveCount < 2)
+				font.renderXCentered(160, 2, 0xff61118e, Font.font_kubastaBig, 2, "Press SPACE to hit your enemy", screen);
+			if (Gamestats.turnCount < 2 && Gamestats.deltaTurnTime > 3 && Gamestats.deltaTurnTime < 5 && Gamestats.waveCount < 2)
+				font.renderXCentered(160, 2, 0xff61118e, Font.font_kubastaBig, 2, "Press ENTER to end your turn", screen);
+			if (Gamestats.turnCount < 2 && Gamestats.deltaTurnTime > 6 && Gamestats.deltaTurnTime < 8 && Gamestats.waveCount < 2)
+				font.renderXCentered(160, 2, 0xff61118e, Font.font_kubastaBig, 2, "Press Q,W,E,R to use your abilities", screen);
+			if (Gamestats.turnCount < 2 && Gamestats.deltaTurnTime > 9 && Gamestats.deltaTurnTime < 11 && Gamestats.waveCount < 2)
+				font.renderXCentered(160, 2, 0xff61118e, Font.font_kubastaBig, 2, "Press G to switch between weapons", screen);
+			
+			if (Gamestats.playerHP <= 0) {
+				font.renderXCentered(-4, 150, 10, 0xff4d0d0d, Font.font_kubastaBig, 1, "YOU HAVE DIED", screen);
+				font.renderXCentered(150, 10, 0xffad0d0d, Font.font_kubastaBig, 1, "YOU HAVE DIED", screen);
+			}
 			
 		//	if (Gamestats.monsterHP[5] < 1)
 		//		font.render(580 - 10, 160, -8, 0xffa30300, "Monster DIED", screen);
@@ -388,9 +504,14 @@ public class Gameplay {
 	
 	protected void renderAbilityText(Screen screen, int n) {
 		font.render(20 + n * 130, GUI.screenBottomElements + 97, -8, 0, "[#" + Gamestats.player.abilities.get(n).getID() + "] " + Gamestats.player.abilities.get(n).getName(), screen);
+		font.render(22 + n * 130, GUI.screenBottomElements + 77, -8, 0xff2020cc, "(" + Gamestats.player.abilities.get(n).getMPcost() + "mp)", screen);
+		font.render(110 + n * 130, GUI.screenBottomElements - 30, -8, 0xff20cc20, "(" + Gamestats.player.abilities.get(n).getCooldown() + "cd)", screen);
 	}
 	
 	protected void newTurn() {
+		turnPauseTime = 0;
+		deltaTurnTime = 0;	
+		
 		CombatLog.printnt("New turn begins.");
 		startTurnTimer = System.currentTimeMillis();
 		if ((!this.isMonsterTurn) && (this.isPlayerTurn)) {
@@ -428,8 +549,7 @@ public class Gameplay {
 		// THIS METHOD IS SPECIFICALLY TAILORED FOR THE MONSTER
 		// USE THE OTHER ONE WITH THE PLAYER
 	//	removeDead();
-		CombatLog.printet("Turn " + Gamestats.turnCount + " has ended in " + deltaTurnTime + " seconds" + " (Game time: " + deltaGameTime + "s)");
-		deltaTurnTime = 0;
+		CombatLog.printet("Turn " + Gamestats.turnCount + " has ended in " + deltaTurnTimeSec + " seconds" + " (Game time: " + deltaGameTimeSec + "s)");
 		newTurn();
 		
 		for (int i = 0; i < Gamestats.monsterCount; i++) {
@@ -441,9 +561,8 @@ public class Gameplay {
 	
 	protected void endTurn(Entity e) {
 	//	removeDead();
-		CombatLog.printet("Turn " + Gamestats.turnCount + " has ended in " + deltaTurnTime + " seconds" + " (Game time: " + deltaGameTime + "s)");
-		deltaTurnTime = 0;
-		
+		CombatLog.printet("Turn " + Gamestats.turnCount + " has ended in " + deltaTurnTimeSec + " seconds" + " (Game time: " + deltaGameTimeSec + "s)");
+		FileManager.saveCombatLogFile();
  
 		if(turnCount > 0) {
 			
@@ -473,15 +592,15 @@ public class Gameplay {
 	}
 
 	public void newMonsterWave(int n) {
+		if (!(Gamestats.turnCount == 0)) buffPlayer();
+			
 		if (stage.checkIfAllDead()) {
 			resetGame();
 		}
-			spawnMonster(n);
 			
-		if (!(Gamestats.turnCount == 0)) buffPlayer();
+		spawnMonster(n);
+	
 		waveCount++;
-		
-
 	}
 
 	private void removeDead() {
@@ -496,7 +615,7 @@ public class Gameplay {
 		int r = rand.nextInt((4 - 1) + 1) + 1;
 		Monster emma = new Monster(r, slot, Gamestats.player);
 		stage.add(emma);
-		CombatLog.println("" + emma.name + "spawned.");
+		CombatLog.println("" + emma.name + " spawned.");
 		Game.getGameplay().enableGlobalCooldown(); 
 
 
@@ -542,21 +661,25 @@ public class Gameplay {
 				enableGlobalCooldown();
 			}
 		}
+	//	System.out.println("RESTART TIME");
 	}
 
 	
 	protected void resetGame() {
-		Gamestats.submitGameStats();
+		Gamestats.submitStats_endWave();
+		FileManager.saveStatisticsFile();
 	//	resetGameplayTime();
 		resetTurnTime();
 		resetWaveTime();
+		resetTurnCount();
 		Gamestats.player.resetActionPoints(Gamestats.player); // this is not really a nice solution
 		Gamestats.player.currentTarget = null;
-		resetTurnCount();
 		// reset cooldowns:
 		Gamestats.player.resetCooldowns(Gamestats.player);
 		for (int i = 0; i < stage.getMonsters().size(); i++)
 			stage.getMonsters().get(i).resetCooldowns(stage.getMonsters().get(i));
+		
+		setContinueGame(true);
 	}
 	
 	protected void buffPlayer() {
@@ -569,6 +692,14 @@ public class Gameplay {
 		if (Gamestats.waveCount % 4 == 0) {
 			Gamestats.player.addMaxActionPoints(1);
 			Gamestats.player.actionPoints++;
+			CombatLog.println("Player received an additional action point! (" + Gamestats.playerMaxActionPoints + " total)");
+		}
+		
+		// TEMP: MAGIC FOUNTAIN
+		if (Gamestats.waveCount % 8 == 0) {
+			Gamestats.player.health = Gamestats.player.maxHealth; // ugly, don't do it pls
+			Gamestats.player.mana = Gamestats.player.maxMana; // ugly, don't do it pls
+			CombatLog.println("Player received a blessing (Health and Mana restored).");
 		}
 	}
 	
@@ -592,7 +723,7 @@ public class Gameplay {
 	
 	public String printWhosTurnTop() {
 		String whosTurn = "N / A";
-		if (getIsMonsterTurn()) whosTurn = " AI TURN";
+		if (getIsMonsterTurn()) whosTurn = "AI TURN";
 		if (getIsPlayerTurn()) whosTurn = "YOUR TURN";
 		return whosTurn;
 	}
@@ -612,12 +743,12 @@ public class Gameplay {
 	}
 	
 	public double getDeltaGameTime() {
-		return this.deltaGameTime;
+		return this.deltaGameTimeSec;
 	}
 	
 	
 	public double getDeltaTurnTime() {
-		return deltaTurnTime;
+		return deltaTurnTimeSec;
 	}
 	
 	public double getTurnStartTime() {
@@ -629,7 +760,7 @@ public class Gameplay {
 	}
 	
 	public double getDeltaWaitTime() {
-		return deltaWaitTime;
+		return deltaWaitTimeSec;
 	}
 	
 	public boolean getIsWaitingOn() {
@@ -645,7 +776,7 @@ public class Gameplay {
 	}
 	
 	public double getDeltaWaveTime() {
-		return deltaWaveTime;
+		return deltaWaveTimeSec;
 	}
 	
 	public int getWaveCount() {
@@ -656,6 +787,35 @@ public class Gameplay {
 		return newWave;
 	}
 	
+	public boolean getContinueGame() {
+		return continueGame;
+	}
+	
+	public boolean getPercentageView() {
+		return percentageView;
+	}
+	
+	public boolean getDebugView() {
+		return debugView;
+	}
+	
+	public boolean getForcedPause() {
+		return forcedPause;
+	}
+	
+	private String getActionsLeftBar() {
+		String s = "";
+		if (showActionsLeft <= 18) {
+			for (int i = 0; i < showActionsLeft; i++) {
+				s = s.concat("#");
+			}			
+		}
+		else {
+			s = Integer.toString(showActionsLeft);
+		}
+		
+		return s;
+	}
 
 	
 	// SETTERS
@@ -685,7 +845,7 @@ public class Gameplay {
 	}
 	
 	public void setDeltaWaitTime( double n) {
-		deltaWaitTime = n;
+		deltaWaitTimeSec = n;
 	}
 	
 	public void setSpawnSlotFilled(int n, boolean b) {
@@ -698,6 +858,18 @@ public class Gameplay {
 	
 	public void setContinueGame(boolean b) {
 		continueGame = b;
+	}
+	
+	public void setPercentageView(boolean b) {
+		percentageView = b;
+	}
+	
+	public void setDebugView(boolean b) {
+		debugView = b;
+	}
+	
+	public void setForcedPause(boolean b) {
+		forcedPause = b;
 	}
 	
 	// DEBUG STUFF

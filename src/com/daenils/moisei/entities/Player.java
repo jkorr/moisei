@@ -31,6 +31,7 @@ public class Player extends Entity {
 		this.input = input;
 		this.canUseSkills = false;	
 		this.abilityCount = 4;
+		this.weaponCount = 10;
 		
 //		this.playerAbility[0] = new Ability(1, this);
 //		this.playerAbility[1] = new Ability(2, this);
@@ -48,6 +49,8 @@ public class Player extends Entity {
 		this.isAlive = true;
 		this.xp = 0;
 		this.level = 1;
+		this.xpNeeded = 120; // temporarily fixed here
+		
 		
 		this.actionPoints = maxActionPoints;
 		this.health = maxHealth;
@@ -56,7 +59,7 @@ public class Player extends Entity {
 		this.stage = Stage.getStage();
 		
 		this.currentTarget = defaultTarget;
-		
+		setPercentageValues();
 	}
 	
 	public void initAbilities() {
@@ -69,11 +72,12 @@ public class Player extends Entity {
 	public void initWeapons() {
 		unlockWeapon(this, 1);
 		unlockWeapon(this, 2);
-	//	unlockWeapon(this, 4);
+		unlockWeapon(this, 4);
 		if (this.weapons.size() > 0) this.weapon = weapons.get(0);
 	}
 	
 	public void update() {
+		setPercentageValues();
 		updateAbilities();
 	//	applyDots();
 		
@@ -85,7 +89,7 @@ public class Player extends Entity {
 		
 		
 		// Check if it's the player turn and no cooldown and alive:
-		if (Gamestats.isPlayerTurn && !Game.getGameplay().onGlobalCooldown && actionPoints > 0 && isAlive == true)
+		if (Gamestats.isPlayerTurn && !Game.getGameplay().onGlobalCooldown && actionPoints > 0 && isAlive == true && Game.getGameplay().getContinueGame())
 			canUseSkills = true;
 		else canUseSkills = false;
 		
@@ -120,8 +124,8 @@ public class Player extends Entity {
 			Game.getGameplay().enableGlobalCooldown();
 		}
 		
-		
-		if (input.playerEndTurn && !Game.getGameplay().onGlobalCooldown && Game.getGameplay().getIsPlayerTurn()) {
+		// END TURN
+		if (input.playerEndTurn && !Game.getGameplay().onGlobalCooldown && Game.getGameplay().getIsPlayerTurn() && !Game.getGameplay().getForcedPause()) {
 			// System.out.println("!!!");
 			if (Gamestats.monstersAlive > 0) Game.getGameplay().endTurn(this);
 			else {
@@ -132,6 +136,7 @@ public class Player extends Entity {
 			Game.getGameplay().enableGlobalCooldown(); 
 		}
 		
+		// SWITCH WEAPONS
 		if (input.playerSwitchWeapon && !Game.getGameplay().onGlobalCooldown && Game.getGameplay().getIsPlayerTurn()) {
 			if (this.weapons.size() > 0) {
 				if (weaponSwitcher == weapons.size() - 1) {
@@ -148,29 +153,57 @@ public class Player extends Entity {
 				
 		}
 		
+		// SWITCH GUI VIEW
+		if (input.playerSwitchGUIView && !Game.getGameplay().onGlobalCooldown) {
+			if (!Game.getGameplay().getPercentageView()) Game.getGameplay().setPercentageView(true);
+			else if (Game.getGameplay().getPercentageView()) Game.getGameplay().setPercentageView(false);
+			Game.getGameplay().enableGlobalCooldown(); 
+		}
+		
+		// PAUSE GAME
+		if (input.playerPauseGame && !Game.getGameplay().onGlobalCooldown) {
+			if (Game.getGameplay().getContinueGame()) {
+				Game.getGameplay().setContinueGame(false);
+				Game.getGameplay().setForcedPause(true);
+			}
+			else if (!Game.getGameplay().getContinueGame()) {
+				Game.getGameplay().setContinueGame(true);
+				Game.getGameplay().setForcedPause(false);
+			}
+			Game.getGameplay().enableGlobalCooldown(); 
+		}
+		
+		// DEBUG: ADD MONSTER
 		if (input.debugAddMonster && !Game.getGameplay().onGlobalCooldown) {
 			if (Gamestats.monstersAlive > 0) Game.getGameplay().spawnMonster();
 			else Game.getGameplay().newMonsterWave();
 		}
 		
+		// DEBUG: FORCE NEW WAVE
 		if (input.debugForceNewWave && !Game.getGameplay().onGlobalCooldown) {
 		//	Game.getGameplay().newMonsterWave();
 		//	((Monster) currentTarget).isAlive = false;
 		//	Game.getGameplay().playerOverride = true;
 		//	stage.setRandomStage();
+
 			Game.getGameplay().enableGlobalCooldown(); 
 		}
 		
+		// DEBUG: TOGGLE FPS LOCK
 		if (input.debugToggleFpsLock && !Game.getGameplay().onGlobalCooldown) {
 			// DEBUG FUNCTION TO TOGGLE FPS LOCK ON/OFF
 				Game.toggleFpsLock();
 				System.err.print("\n" + Game.isFpsLockedString());
-		//		if(Game.isFpsLocked()) System.err.print("\nFPS LOCKED.");
-		//		else System.err.print("\nFPS UNLOCKED.");
-		
 				Game.getGameplay().enableGlobalCooldown(); 
-
-			}
+		}
+		
+		// DEBUG: SHOW DEBUG INFO
+		if (input.debugShowDebugInfo && !Game.getGameplay().onGlobalCooldown) {
+			if (!Game.getGameplay().getDebugView()) Game.getGameplay().setDebugView(true);
+			else if (Game.getGameplay().getDebugView()) Game.getGameplay().setDebugView(false);
+			Game.getGameplay().enableGlobalCooldown();
+		}
+		
 
 		inputTargeting();
 

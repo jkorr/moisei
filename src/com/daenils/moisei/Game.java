@@ -70,7 +70,10 @@ public class Game extends Canvas implements Runnable {
 				+ (width * scale) + "x" + (height * scale) + ".");
 		frame = new JFrame();
 		key = new Keyboard();
+
 		filemanager = new FileManager();
+		FileManager.createStatisticsFile();
+		FileManager.createCombatLogFile();
 
 		stage = new Stage(Stage.st_1a, player);
 		stage = Stage.getStage(); // currently needed for targeting to work,
@@ -99,6 +102,9 @@ public class Game extends Canvas implements Runnable {
 				+ " | monsterturn: " + gameplay.getIsMonsterTurn();
 
 		addKeyListener(key);
+		
+		// Create statistics file (once per launch)
+
 	}
 
 	public synchronized void start() {
