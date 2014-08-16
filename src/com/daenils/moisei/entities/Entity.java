@@ -9,6 +9,7 @@ import com.daenils.moisei.Game;
 import com.daenils.moisei.entities.equipments.Ability;
 import com.daenils.moisei.entities.equipments.Equipment;
 import com.daenils.moisei.entities.equipments.Weapon;
+import com.daenils.moisei.files.FileManager;
 import com.daenils.moisei.graphics.Screen;
 import com.daenils.moisei.graphics.Sprite;
 import com.daenils.moisei.graphics.Stage;
@@ -23,10 +24,13 @@ public class Entity {
 	protected Sprite sprite;
 	protected Stage stage;
 	
+	protected int tick = 0;
 	
+	protected int baseHealth, baseMana;
+	protected int[] baseDamage;
+	protected double[] damageDbl = new double[2]; // for precision (needed for leveling)
 	protected int maxHealth, maxMana;
 	protected int health, mana, shield, xp;
-	protected int xpNeeded; // the amount of xp needed for the next level
 	protected int lastHealth;
 	protected String description;
 	protected byte abilityCount;
@@ -35,7 +39,9 @@ public class Entity {
 	protected boolean needsRemove;
 	protected byte actionPoints, maxActionPoints;
 	protected byte lastActionPoints; // for "flagging" actions via comparison of these values
+	protected int spellPower;
 	protected byte level;
+	final protected byte LEVELCAP = 3; // TODO: implement it!
 	protected  int[] damage; // temporary way to add a damage range, before implementing a weapon system
 	protected int hitDamage;
 	protected String lastAttacker;
@@ -53,6 +59,9 @@ public class Entity {
 	protected List<Ability> abilities = new ArrayList<Ability>();
 	protected List<Weapon> weapons = new ArrayList<Weapon>();
 	
+	// LEVELS AND XP
+	protected int xpNeeded; // the amount of xp needed for the next level
+	protected int xpGained;
 	
 	protected byte pHealth;
 	protected byte pMana;
@@ -127,6 +136,8 @@ public class Entity {
 		}
 		
 		else {
+			// spellpower:
+			d *= e1.spellPower;
 			decreaseHealth(e1, e2, d);
 			stillAlive(e2, e1);
 			if (!mute) CombatLog.println("" + e1.name + " hits " + e2.name + " with " + a.getName() + " (" + d + " damage)");
@@ -139,7 +150,9 @@ public class Entity {
 	
 	protected void doHealing(Entity e1, Entity e2, Equipment a, int h) {
 		// it has targeting because in the future it would be nice to have monster heal other monster
-			increaseHealth(e1, e2, h);
+		// spellpower:
+		h *= e1.spellPower;
+		increaseHealth(e1, e2, h);
 	}
 	
 	protected void doUtility(Entity e1, Entity e2, Equipment a) {
@@ -236,7 +249,7 @@ public class Entity {
 		e1.lastActionPoints = e1.actionPoints;
 		e1.actionPoints -= n;
 
-		if (a != null && a.getMPcost() > 0)	e1.mana -= a.getMPcost();
+		if (a != null && a.getMPcost() > 0)	e1.mana -= a.getMPcost() * e1.spellPower;
 		if (a != null && (a instanceof Weapon) && ((Weapon) a).getWeaponCharges() > 0) {
 			((Weapon) a).decreaseWeaponCharges();
 		}
@@ -247,7 +260,8 @@ public class Entity {
 	}
 	
 	protected void death(Entity checked, Entity attacker) {
-		int buffXp = 10;
+		int buffXp = 0;
+		if (attacker instanceof Player) buffXp = ((Player) attacker).getXpGained();
 		checked.isAlive = false;
 		
 		if (checked instanceof Monster) {
@@ -255,8 +269,17 @@ public class Entity {
 			Monster.addDeathCount();
 			((Player) attacker).newCycledTarget();
 		}
- 
-		giveXP(attacker, buffXp);
+		
+		if (checked instanceof Player) {
+			Gamestats.submitStats_endWave();
+			FileManager.saveStatisticsFile();
+			FileManager.saveCombatLogFile();
+		}
+		
+		if (attacker instanceof Player) {
+			giveXP(attacker, buffXp);
+			((Player) this).checkLevelUp();
+		}
 		CombatLog.println(checked.name + " died. " + attacker.name + " receives " + buffXp + " XP for the kill.");
 	}
 	
@@ -344,19 +367,24 @@ public class Entity {
 		doAbility(a, e);
 	}
 	
-	public void applyOTs(Equipment a, int tick) {
+	public void applyOTs(Equipment a) {
+//		if ((a.getLastUsed() + a.getTurnCount()) >= Gamestats.turnCount - 1) tick = 0;
+		
 		if (health > 0 && a.getDotValue() > 0) {
 			dealDamage(this, currentTarget, a.getDotValue(), true);
+			this.tick++;
 			CombatLog.println("[Tick " + tick + "] " + this.name + " dealt a DoT of " + a.getDotValue());
 		}
 		
 		if (health > 0 && a.getHotValue() > 0) {
 			increaseHealth(this, this, a.getHotValue(), true);
+			this.tick++;
 			CombatLog.println("[Tick " + tick + "] " + this.name + " heals HoT of " + a.getHotValue());
 		}
 		
 		if (health > 0 && a.getMotValue() > 0) {
 			increaseMana(this, this, a.getMotValue());
+			this.tick++;
 			CombatLog.println("[Tick " + tick + "] " + this.name + " restores mana MoT of " + a.getMotValue());
 		}
 	}
@@ -406,6 +434,7 @@ public class Entity {
 	protected void resetCooldowns(Entity e) {
 		for (int i = 0; i < e.abilities.size(); i++) {
 			e.abilities.get(i).setLastUsed(0);
+			e.abilities.get(i).setOnCooldown(false);
 		}
 	}
 	
@@ -465,6 +494,60 @@ public class Entity {
 		removeWeapon(n);
 	}
 	
+	// LEVEL UP STUFF
+	protected void levelUpMaxHealthAndMana() {
+		this.maxHealth = (int) Math.round((this.maxHealth * 1.1));
+		if ( this.maxMana > 0) this.maxMana = (int) Math.round(((this.maxMana * 1.15) + this.level * 2.25));
+	}
+	
+	protected void levelUp(byte level) {
+		for (int i = 0; i < level - 1; i++) {
+			this.levelUp();
+		}
+	}	
+	
+	public void checkLevelUp() {
+		if (this.xp >= this.xpNeeded) {
+			this.levelUp();
+			this.setXpNeeded();
+			this.setXpGained();
+			this.resetXp();
+		}
+	}
+	
+	public void levelUp() {
+		this.level++;
+		this.levelUpStats();
+		if (this instanceof Player) {
+			Game.getGameplay().setNotificationLevelUp();
+			restoreHealth();
+			restoreMana();
+			CombatLog.println("Congratulations, you have reached level " + level + "!");
+		}
+	}
+	
+	private void levelUpStats() {
+		// HEALTH & MANA
+		this.levelUpMaxHealthAndMana();
+		
+		// WEAPON DAMAGE
+	//	System.out.println("DD: " + this.damageDbl[0]);
+		this.damageDbl[0] = ((this.damageDbl[0] * 1.12)); // extra variable to keep the decimal places
+		this.damageDbl[1] = ((this.damageDbl[1] * 1.08));
+
+		this.damage[0] = (int) Math.round(this.damageDbl[0]); 
+		this.damage[1] = (int) Math.round(this.damageDbl[1]);
+		
+		// SPELLDAMAGE
+	
+		this.spellPower = (int) Math.ceil(this.level * 0.3);
+	}
+	
+
+	
+	private void resetXp() {
+		this.xp -= getXpNeeded((byte) (level-1));
+	}
 	
 	// GETTERS
 	public Entity getEntity() {
@@ -485,6 +568,18 @@ public class Entity {
 	
 	public int getXP() {
 		return xp;
+	}
+
+	public int getXpNeeded() {
+		return xpNeeded;
+	}
+	
+	public int getXpNeeded(byte n) {
+		return Game.getGameplay().mapLevelRanges.get(n);
+	}
+	
+	public int getXpGained() {
+		return xpGained;
 	}
 	
 	public boolean getIsAlive() {
@@ -512,6 +607,16 @@ public class Entity {
 	}
 	
 	// SETTERS
+	public void setXpNeeded() {
+		this.xpNeeded = Game.getGameplay().mapLevelRanges.get(this.level);
+//		System.out.println(this.xpNeeded);
+	}
+	
+	public void setXpGained() {
+		xpGained += Math.pow(2, this.level - 1);
+//		System.out.println(xpGained);
+	}
+	
 	protected void setWait(Boolean b) {
 		isWaiting = b;
 	}
@@ -532,11 +637,27 @@ public class Entity {
 		this.stage = s;
 	}
 	
+	protected void restoreHealth() {
+		restoreHealth(100);
+	}
+	
+	protected void restoreHealth(int percentage) {
+		this.health = (int) (this.maxHealth * (percentage / 100.0));
+	}
+	
+	protected void restoreMana() {
+		restoreMana(100);
+	}
+	
+	protected void restoreMana(int percentage) {
+		this.mana = (int) (this.maxMana * (percentage / 100.0));
+	}
+	
 	public void setPercentageValues() {
 		pHealth = (byte) (((double) health / (double) maxHealth) * 100.0);
 		pMana = (byte) (((double) mana / (double) maxMana) * 100.0);
 		pAP = (byte) (((double) actionPoints / (double) maxActionPoints) * 100.0);
-		pXP = (byte) (((double) xp / (double) xpNeeded) * 100.0);
+		if (this instanceof Player) pXP = (byte) (((double) xp / (double) ((Player) this).getXpNeeded()) * 100.0);
 	}
 	
 	// ADDERS (TO THE MAX, NOT CURRENT)

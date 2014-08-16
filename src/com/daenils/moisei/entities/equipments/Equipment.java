@@ -9,6 +9,7 @@ public class Equipment {
 	protected int x, y; // for rendering, but grab it from hotBarSlot
 	
 	protected Entity user;
+	protected int tick;
 	
 	// the costs, the heal/damage values probably should be refactored to 'base' (e.g. baseMPcost, baseHealValue, etc.)
 	// then make new variables with the prefix 'actual' (e.g. actualMPcost)
@@ -111,6 +112,10 @@ public class Equipment {
 		return isShield;
 	}
 	
+	public int getTick() {
+		return tick;
+	}
+	
 	// OT/CD GETTERS
 	public boolean isOTActive() {
 		return OTActive;
@@ -136,6 +141,18 @@ public class Equipment {
 
 	public void setAppliedOT(boolean appliedOT) {
 		this.appliedOT = appliedOT;
+	}
+	
+	public void increaseTick() {
+		tick++;
+	}
+	
+	public void setTick(int n) {
+		tick = n;
+	}
+	
+	public void resetTick() {
+		setTick(0);
 	}
 	
 }

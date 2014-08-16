@@ -43,41 +43,17 @@ public class MonsterAI {
 	}
 	
 	private void endTurnIfAllDone() {
-		if (allDone) {
-			monsterAIWait(1.5);
-			if (!isWaiting) {
-				Game.getGameplay().endTurn();
+		if (allDone && Gamestats.monstersAlive > 0) {
+			stage.getMonsters().get(0).monsterWait(1.5); // this is not the nicest solution, but for now it'll do
+			if (!stage.getMonsters().get(0).isWaiting) {  // basically I pick the first monster and make him wait
+				Game.getGameplay().endTurn();				// instead of making a separate way to make the AI wait
 				allDone = false;
 			}
+		} else if (allDone && Gamestats.monstersAlive <= 0) {
+			Game.getGameplay().setPlayerTurn(true);
+			Game.getGameplay().setMonsterTurn(false);
 		}
 	}
 	
-	// WAIT STUFF
-		protected void monsterAIWait(double n) {
-			beginMonsterAIWait();
-//			System.out.println(startWaitTimer);
-			if (Game.getGameplay().getDeltaWaitTime() >= n) endWait(this);
-			
-		}
-		
-		protected void resetMonsterAIWait() {
-			Game.getGameplay().setStartWaitTimer(System.currentTimeMillis());
-			Game.getGameplay().setDeltaWaitTime(0);
-//			r = newRandomAIWait();
-		}
-		
-		protected void beginMonsterAIWait() {
-			if (!Game.getGameplay().getIsWaitingOn()) {
-				resetMonsterAIWait();
-				Game.getGameplay().setIsWaitingOn(true);
-			}
-					
-		}
-		
-		protected void endWait(MonsterAI m) {
-			m.resetMonsterAIWait();
-			m.isWaiting = false;
-			Game.getGameplay().setIsWaitingOn(false);
-		}
 	
 }

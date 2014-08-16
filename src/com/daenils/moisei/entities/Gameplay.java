@@ -3,6 +3,8 @@ package com.daenils.moisei.entities;
 import java.text.DateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 import com.daenils.moisei.CombatLog;
@@ -66,6 +68,13 @@ public class Gameplay {
 	
 	protected boolean playerOverride;
 	
+	// LEVEL-XPNEEDED MAP
+	protected Map<Byte,Integer> mapLevelRanges = new HashMap<Byte,Integer>();
+	
+	// NOTIFS
+	int notificationStartTime;
+	protected boolean notificationLevelUp;
+	
 	public Gameplay(Keyboard input, Stage stage) {
 		this.stage = stage;
 		this.turnCount = 0;
@@ -82,11 +91,27 @@ public class Gameplay {
 		this.input = input;
 		font = new Font();
 		
+		// initialize mapLevels:
+		initLevelRanges();
+		
 		// just so that file is initialized as well, probably a temporary measure
 		Gamestats.submitStats_endWave();
 		FileManager.saveStatisticsFile();
 	}
 	
+	private void initLevelRanges() {
+		mapLevelRanges.put((byte) 1, 10); // FUCKING WHY?!
+		mapLevelRanges.put((byte) 2, 30);
+		mapLevelRanges.put((byte) 3, 80);
+		mapLevelRanges.put((byte) 4, 150);
+		mapLevelRanges.put((byte) 5, 350);
+		mapLevelRanges.put((byte) 6, 900);
+		mapLevelRanges.put((byte) 7, 2200);
+		mapLevelRanges.put((byte) 8, 5000);
+		mapLevelRanges.put((byte) 9, 12500);
+		mapLevelRanges.put((byte) 10, 100000); // placeholder, reaching it is not intended
+	}
+
 	public void update() {
 		if (deltaTurnTime < 0) deltaPauseTime = 0;
 
@@ -99,8 +124,9 @@ public class Gameplay {
 		// TODO: temporary solution to the monster spawn before all removed issue
 		if (!continueGame && Gamestats.monstersAllDead) removeDead();
 		
-		
-//		System.out.println("WaitingOn? " + isWaitingOn);
+		if (notificationStartTime > 0 && deltaGameTimeSec - notificationStartTime >= 2) {
+			notificationLevelUp = false;
+		}
 		
 		getIsMonsterTurn();
 		getIsPlayerTurn();
@@ -190,10 +216,9 @@ public class Gameplay {
 				if (e.abilities.get(i).getLastUsed() + e.abilities.get(i).getTurnCount() + 1 >
 				Gamestats.turnCount && !e.abilities.get(i).isAppliedOT() && 
 				(Gamestats.turnCount > e.abilities.get(i).getLastUsed())) {
-					tick = (int) (e.abilities.get(i).getLastUsed() + Gamestats.turnCount - 2);
-					e.applyOTs(e.abilities.get(i), tick);
+					e.applyOTs(e.abilities.get(i));
 					e.abilities.get(i).setAppliedOT(true);
-				}
+				} else e.tick = 0;
 			}
 		}
 		
@@ -203,10 +228,9 @@ public class Gameplay {
 				if (e.weapon.getLastUsed() + e.weapon.getTurnCount() + 1 >
 				Gamestats.turnCount && !e.weapon.isAppliedOT() &&
 				(Gamestats.turnCount > e.weapon.getLastUsed())) {
-					tick = (int) (e.weapon.getLastUsed() + Gamestats.turnCount - 2);
-					e.applyOTs(e.weapon, tick);
+					e.applyOTs(e.weapon);
 					e.weapon.setAppliedOT(true);
-				}
+				} else e.tick = 0;
 			}
 		}
 	}
@@ -311,7 +335,7 @@ public class Gameplay {
 //			font.render(Gamestats.player.currentTarget.x + 10, Gamestats.player.currentTarget.y - 20, 10, 0xffff1100, Font.font_kubastaBig, 2, "" + Gamestats.playerHitDamage*-1, screen);
 		
 		// TEMP: GAMESTATS
-		font.render(1110, 420, -4, 0xffffff00, Font.font_default, 1, Gamestats.readGameStats(), screen);
+	//	font.render(1110, 420, -4, 0xffffff00, Font.font_default, 1, Gamestats.readGameStats(), screen);
 		
 		// STRICTLY DEBUG
 		if (debugView) renderDebugInfo(screen);
@@ -412,6 +436,7 @@ public class Gameplay {
 				+ " | SHIELD: " + Gamestats.playerShield
 				+ "\nMANA: " + Gamestats.playerMana + "/" + Gamestats.playerMaxMana
 				+ "\nLEVEL: " + Gamestats.playerLevel + " | XP: " + Gamestats.playerXP
+				+ " / " + Gamestats.player.getXpNeeded()
 				+ weaponString
 				, screen);
 	}
@@ -456,9 +481,10 @@ public class Gameplay {
 							+ "\nTotal GameTime: " + deltaGameTimeSec
 							+ "\nMonster deathcount: " + Gamestats.monsterDeathCount
 							+ "\nTotal Monster deathcount: " + Gamestats.getTotalMonsterDeathCount()
-							+ "\nPl Ability 1 last used: " + Gamestats.player.abilities.get(0).getLastUsed() // these 3 lines are poorly written
+			//				+ "\nPl Ability 1 last used: " + Gamestats.player.abilities.get(0).getLastUsed() // these 3 lines are poorly written
 			//				+ "\nPl Ability 2 last used: " + Gamestats.player.abilities.get(1).getLastUsed() // they should be removed/changed
 			//				+ "\nPl Ability 4 last used: " + Gamestats.player.abilities.get(3).getLastUsed() // as soon as possible
+			//				+ "\nPl Ability 4 onCooldown: " + Gamestats.player.abilities.get(3).isOnCooldown()
 							+ "\nCurrent wave: " + Gamestats.waveCount
 							+ "\nGlobalCooldown: " + deltaGlobalCooldownTimeSec 
 							+ "\nTargetCycled: " + Gamestats.player.targetCycled
@@ -466,6 +492,8 @@ public class Gameplay {
 							+ "\nGame is paused: " + !continueGame
 							+ "\nPause force: " + getForcedPause()
 							+ "\nTotal pause time: " + totalPauseTime
+							+ "\nPlayer's spellpower: " + Gamestats.player.spellPower
+							
 	
 							
 				//			+ "\nMONSTER ATTACKED: " + Gamestats.monstersAttacked
@@ -483,6 +511,10 @@ public class Gameplay {
 			font.renderXCentered(50, 12, 0xff8d2d8d, Font.font_kubastaBig, 1, "GAME PAUSED", screen);
 		}
 		
+		if (notificationLevelUp) {
+			font.renderXCentered(2, 182, 12, 0xff050505, Font.font_kubastaBig, 1, "LEVEL UP!", screen);
+			font.renderXCentered(180, 12, 0xffdfbf00, Font.font_kubastaBig, 1, "LEVEL UP!", screen);
+		}
 			
 			if (Gamestats.turnCount < 2 && Gamestats.deltaTurnTime < 2 && Gamestats.waveCount < 2)
 				font.renderXCentered(160, 2, 0xff61118e, Font.font_kubastaBig, 2, "Press SPACE to hit your enemy", screen);
@@ -506,6 +538,8 @@ public class Gameplay {
 		font.render(20 + n * 130, GUI.screenBottomElements + 97, -8, 0, "[#" + Gamestats.player.abilities.get(n).getID() + "] " + Gamestats.player.abilities.get(n).getName(), screen);
 		font.render(22 + n * 130, GUI.screenBottomElements + 77, -8, 0xff2020cc, "(" + Gamestats.player.abilities.get(n).getMPcost() + "mp)", screen);
 		font.render(110 + n * 130, GUI.screenBottomElements - 30, -8, 0xff20cc20, "(" + Gamestats.player.abilities.get(n).getCooldown() + "cd)", screen);
+		font.render(55 + n * 130, GUI.screenBottomElements + 21, 0, 0xff101010, Font.font_kubastaBig, 2, "" + Gamestats.player.abilities.get(n).isOnCooldownText(), screen);
+		font.render(53 + n * 130, GUI.screenBottomElements + 20, 0, 0xffdd1010, Font.font_kubastaBig, 2, "" + Gamestats.player.abilities.get(n).isOnCooldownText(), screen);
 	}
 	
 	protected void newTurn() {
@@ -552,7 +586,7 @@ public class Gameplay {
 		CombatLog.printet("Turn " + Gamestats.turnCount + " has ended in " + deltaTurnTimeSec + " seconds" + " (Game time: " + deltaGameTimeSec + "s)");
 		newTurn();
 		
-		for (int i = 0; i < Gamestats.monsterCount; i++) {
+		for (int i = 0; i < Gamestats.monstersAlive; i++) {
 			stage.getMonsters().get(i).resetActionPoints(stage.getMonsters().get(i));
 		}
 		Monster.resetMonstersAttacked();
@@ -611,8 +645,10 @@ public class Gameplay {
 	}
 	
 	private void addMonster(int slot) {
+		int n = 2; // failsafe (temporary?)
+		if (Monster.monstersLoaded > 1) n = Monster.monstersLoaded;
 		Random rand = new Random();
-		int r = rand.nextInt((4 - 1) + 1) + 1;
+		int r = rand.nextInt(((n - 1) - 1) + 1) + 1;
 		Monster emma = new Monster(r, slot, Gamestats.player);
 		stage.add(emma);
 		CombatLog.println("" + emma.name + " spawned.");
@@ -683,17 +719,20 @@ public class Gameplay {
 	}
 	
 	protected void buffPlayer() {
-		int buffHp = 10;
-		int buffMp = 10;
-		Gamestats.player.addHealth(buffHp);
-		Gamestats.player.addMana(buffMp);
-		CombatLog.println("Player buffed for +" + buffHp + " health and +" + buffMp +" mana" );
-		
-		if (Gamestats.waveCount % 4 == 0) {
-			Gamestats.player.addMaxActionPoints(1);
-			Gamestats.player.actionPoints++;
-			CombatLog.println("Player received an additional action point! (" + Gamestats.playerMaxActionPoints + " total)");
-		}
+	/*
+	 * 	int buffHp = 10;
+	 *	int buffMp = 10;
+	 *	Gamestats.player.addHealth(buffHp);
+	 *	Gamestats.player.addMana(buffMp);
+	 *	CombatLog.println("Player buffed for +" + buffHp + " health and +" + buffMp +" mana" );
+	 *	
+	 *	if (Gamestats.waveCount % 4 == 0) {
+	 *		Gamestats.player.addMaxActionPoints(1);
+	 *		Gamestats.player.actionPoints++;
+	 *		CombatLog.println("Player received an additional action point! (" + Gamestats.playerMaxActionPoints + " total)");
+	 *	}
+	 *	
+	 */
 		
 		// TEMP: MAGIC FOUNTAIN
 		if (Gamestats.waveCount % 8 == 0) {
@@ -884,13 +923,26 @@ public class Gameplay {
 		else if (this.isPlayerTurn) this.isPlayerTurn = false;
 	}
 	
+	public void setMonsterTurn(boolean b) {
+		this.isMonsterTurn = b;
+	}
+	
+	public void setPlayerTurn(boolean b) {
+		this.isPlayerTurn = b;
+	}
+	
+	public void setNotificationLevelUp() {
+		notificationStartTime = (int) deltaGameTimeSec;
+		notificationLevelUp = true;
+	}
+	
 	// GAMEFLOW CONTROL
 	public void gameFlow() {
-		if (Gamestats.monsterCount < 1 && isBetween(Gamestats.playerXP, 0, 30) && (continueGame || Gamestats.turnCount == 0)) {newMonsterWave(1);}
-		else if (Gamestats.monsterCount < 1 && isBetween(Gamestats.playerXP, 30, 110) && continueGame) newMonsterWave(2);
-		else if (Gamestats.monsterCount < 1 && isBetween(Gamestats.playerXP, 110, 230) && continueGame) newMonsterWave(3);
-		else if (Gamestats.monsterCount < 1 && isBetween(Gamestats.playerXP, 230, 350) && continueGame) newMonsterWave(4);
-		else if (Gamestats.monsterCount < 1 && Gamestats.playerXP >= 350 && continueGame) newMonsterWave(5);
+		if (Gamestats.monsterCount < 1 && isBetween(Gamestats.playerLevel, 0, 3) && (continueGame || Gamestats.turnCount == 0)) {newMonsterWave(1);}
+		else if (Gamestats.monsterCount < 1 && isBetween(Gamestats.playerLevel, 3, 5) && continueGame) newMonsterWave(2);
+		else if (Gamestats.monsterCount < 1 && isBetween(Gamestats.playerLevel, 5, 7) && continueGame) newMonsterWave(3);
+		else if (Gamestats.monsterCount < 1 && isBetween(Gamestats.playerLevel, 7, 9) && continueGame) newMonsterWave(4);
+		else if (Gamestats.monsterCount < 1 && Gamestats.playerXP >= 9 && continueGame) newMonsterWave(5);
 	}
 	
 	public boolean isBetween(int comparedNum, int min, int max) {

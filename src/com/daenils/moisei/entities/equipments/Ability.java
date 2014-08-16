@@ -19,6 +19,7 @@ public class Ability extends Equipment {
 	
 	private static Map<Integer, String> mapAbilities = new HashMap<Integer, String>();
 	private int abilityType;
+
 	private static boolean abilitiesCounted;
 	
 	// ABILITY COOLDOWN HANDLING
@@ -102,6 +103,11 @@ public class Ability extends Equipment {
 	
 	public boolean isOnCooldown() {
 		return onCooldown;
+	}
+	
+	public String isOnCooldownText() {
+		if (onCooldown) return "CD!";
+		else return "";
 	}
 	
 	// SETTERS

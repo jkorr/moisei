@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Scanner;
 
+import com.daenils.moisei.CombatLog;
 import com.daenils.moisei.Game;
 import com.daenils.moisei.entities.equipments.Ability;
 import com.daenils.moisei.entities.equipments.Weapon;
@@ -39,6 +40,9 @@ public class Monster extends Entity {
 	
 	private static int monstersAttacked;
 	private static int deathCount;
+	
+	public static int monstersLoaded;
+	public static boolean monstersCounted;
 		
 	public Monster(int id, int spawnSlot, Entity defaultTarget) {
 		load();
@@ -47,7 +51,7 @@ public class Monster extends Entity {
 		this.spawnSlot = spawnSlot;
 		Game.getGameplay().spawnSlotFilled[spawnSlot - 1] = true;
 		this.localId = spawnSlot;
-		
+				
 		setXY(spawnSlot);
 		this.x = XY[0];
 		this.y = XY[1];
@@ -60,23 +64,31 @@ public class Monster extends Entity {
 		this.name = tempString[1];
 		this.description = tempString[2];
 		this.sprite = Sprite.parseSprite(tempString[3]);
-		this.maxHealth = Integer.parseInt(tempString[4]);
-		this.maxMana = Integer.parseInt(tempString[5]);
+		this.baseHealth = Integer.parseInt(tempString[4]);
+		this.baseMana = Integer.parseInt(tempString[5]);
 		this.maxActionPoints = Byte.parseByte(tempString[6]);
+		this.spellPower = 1; // TODO: decide whether it goes into the file or not
 		this.shield = Integer.parseInt(tempString[7]);
 		this.levelModifier = Integer.parseInt(tempString[8]);
-		this.damage = new int[] {Integer.parseInt(tempString[9]), Integer.parseInt(tempString[10])};
+		this.baseDamage = new int[] {Integer.parseInt(tempString[9]), Integer.parseInt(tempString[10])};
 		this.abilityCount = Byte.parseByte(tempString[11]);
 		this.weaponCount = 5;
 		initAbilities(tempString[12]);
 		initWeapons(tempString[13]);
 //		System.out.println(tempString[13]);
 		
-		this.weapon = this.weapons.get(1);
+		if (weapons.size() > 0)
+		this.weapon = this.weapons.get(0);
 		
 		this.isAlive = true;
-		this.level = 1;
 		
+		this.maxHealth = baseHealth;
+		this.maxMana = baseMana;
+		this.damage = baseDamage;
+		this.damageDbl[0] = baseDamage[0];
+		this.damageDbl[1] = baseDamage[1];
+		this.level = 1;
+		this.levelUp(Gamestats.playerLevel);
 		this.health = maxHealth;
 		this.mana = maxMana;
 		this.actionPoints = maxActionPoints;
@@ -141,12 +153,15 @@ public class Monster extends Entity {
 		in = new Scanner(FileManager.inMonsters);
 		while (in.hasNextLine()) {
 			lines.add(in.nextLine());
+			if (!monstersCounted) monstersLoaded++;
 			for (int i = 0; i < lines.size(); i++) {
 				String[] toSplit = lines.get(i).split(":");
 				mapMonsters.put(Integer.parseInt(toSplit[0]), toSplit[1]);
 			}
 		}
 		in.close();
+		monstersCounted = true;
+		System.out.println(monstersLoaded);
 	}
 	
 	public void initAbilities(String s) {
@@ -188,9 +203,9 @@ public class Monster extends Entity {
 		setXY(spawnSlot);
 		updateXY();
 	
+	
 //		System.out.println(id);
 //		System.out.println("Waiting? " + isWaiting);
-		isWaiting = true;
 //		System.out.println(isWaiting);
 		
 		//if dead 0 ap since checkIfDone() looks for ap
@@ -201,17 +216,12 @@ public class Monster extends Entity {
 			sprite = Sprite.monster_generic_dead;
 		}
 		
-		// use heal
+	// AI BEHAVIORS
 	//	aiBehaviorUseHeal();
-		
-		// use stun
 	//	aiBehaviorUseStun();
-		
-		// use dots
 	//	aiBehaviorUseDots();
-		
-		// use shield
 	//	aiBehaviorUseShield();	
+		aiBehaviorUseDamageSpells();
 		
 		// basic attack
 		if (checkCanUseSkills() && currentTarget.isAlive) {
@@ -224,14 +234,23 @@ public class Monster extends Entity {
 			}			
 		}
 		
-		// monster entity removal code 
-//		if ((!isAlive && Game.getGameplay().getCurrentTurn() == 1) || forceRemoved) needsRemove = true;
-//		else needsRemove = false;
-	
-//		System.out.println("MONSTER UPDATE");
-		
-		
+		isWaiting = true;
+	}
 
+	private void aiBehaviorUseDamageSpells() {
+		if (checkCanUseSkills() && currentTarget.isAlive) {
+			for (int i = 0; i < this.abilities.size(); i++) {
+				if (this.abilities.get(i).getID() == 2) aiBehaviorUseFireball(i);
+			}
+		}
+	}
+
+	private void aiBehaviorUseFireball(int i) {
+//		System.out.println("Attempting to cast fireball...");
+			monsterWait(3);
+			if (!isWaiting) {
+				useAbility(this, abilities.get(i));
+			}
 	}
 
 	private void aiBehaviorUseStun() {
@@ -314,7 +333,6 @@ public class Monster extends Entity {
 		beginMonsterWait();
 //		System.out.println(startWaitTimer);
 		if (Game.getGameplay().getDeltaWaitTime() >= n) endWait(this);
-		
 	}
 	
 	protected void resetMonsterWait() {
@@ -327,8 +345,7 @@ public class Monster extends Entity {
 		if (!Game.getGameplay().getIsWaitingOn()) {
 			resetMonsterWait();
 			Game.getGameplay().setIsWaitingOn(true);
-		}
-				
+		}		
 	}
 	
 	protected void endWait(Monster m) {

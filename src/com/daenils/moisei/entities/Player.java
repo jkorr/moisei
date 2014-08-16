@@ -41,16 +41,33 @@ public class Player extends Entity {
 		initAbilities();
 		initWeapons();
 		
-		this.damage = new int[] {3, 7};
-		this.maxHealth = 100;
-		this.maxMana = 25;
+		this.baseHealth = 100;
+		this.baseMana = 25;
 		this.maxActionPoints = 1;
+		this.spellPower = 1;
+		this.baseDamage = new int[] {4, 7};
 		this.shield = 0;
 		this.isAlive = true;
 		this.xp = 0;
 		this.level = 1;
-		this.xpNeeded = 120; // temporarily fixed here
 		
+		
+		this.maxHealth = baseHealth;
+		this.maxMana = baseMana;
+		
+		
+		this.damage = baseDamage;
+		this.damageDbl[0] = baseDamage[0];
+		this.damageDbl[1] = baseDamage[1];
+		
+		this.levelUp((byte) 1);
+		if (this.level < 2) {
+			this.xpGained = 10; // initialized here for now
+			this.xpNeeded = 10; // initialized here for now
+		} else {
+			setXpGained();
+			setXpNeeded();
+		}
 		
 		this.actionPoints = maxActionPoints;
 		this.health = maxHealth;
@@ -66,7 +83,7 @@ public class Player extends Entity {
 		unlockAbility(this, 1);
 		unlockAbility(this, 2);
 		unlockAbility(this, 3);
-		unlockAbility(this, 0);
+		unlockAbility(this, 4);
 	}
 	
 	public void initWeapons() {
@@ -77,6 +94,7 @@ public class Player extends Entity {
 	}
 	
 	public void update() {
+
 		setPercentageValues();
 		updateAbilities();
 	//	applyDots();
@@ -252,15 +270,20 @@ public class Player extends Entity {
 		}
 		
 	}
+	
+	
 
 	
 	
 	public void render(Screen screen) {
+		// RENDER ABILITIES AT THE ACTION BAR
 		int[] spellPosHelper = new int[]{GUI.screenSpellPos1, GUI.screenSpellPos2, GUI.screenSpellPos3, GUI.screenSpellPos4};
 		for (int i = 0; i < abilities.size(); i++) {
 			screen.renderSprite(spellPosHelper[i], GUI.screenBottomElements - 30, abilities.get(i).getIcon(), 0);
 		}
 	}
+	
+
 	
 	public Player getPlayer() {
 		return this;
@@ -269,7 +292,7 @@ public class Player extends Entity {
 	public boolean getCanUseSkills() {
 		return canUseSkills;
 	}
-	
+
 	
 	
 }

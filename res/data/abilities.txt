@@ -1,6 +1,6 @@
 0:1,T KILL,no desc,spell0,0,0,0,0,99,0,false,0,0,0,0,1,false,false,false
 1:0,T Heal,no desc,spell1,1,10,0,10,0,0,true,3,0,2,3,1,false,false,false
-2:1,T Fireball,no desc,spell2,1,10,0,0,10,0,true,0,2,0,2,1,false,false,false
+2:1,T Fireball,no desc,spell2,1,10,1,0,10,0,true,0,2,0,2,1,false,false,false
 3:2,T Stun,no desc,spell3,1,15,1,0,0,100,false,0,0,0,0,1,true,false,false
 4:1,T Firestorm,no desc,spell0,1,5,2,0,15,0,true,0,1,0,3,3,false,false,false
 5:1,T 5KILL,no desc,spell0,1,10,0,0,10,0,true,0,2,0,2,5,false,false,false
