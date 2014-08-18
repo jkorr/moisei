@@ -13,9 +13,10 @@ public class Screen {
 		pixels = new int[width * height];
 	}
 	
-	public void render() {
-		renderStage(Stage.getStage());
+	public void render(Stage stage) {
 
+		if (Game.isGUIrendered()) {
+			renderStage(stage.getStage());
 		renderGUI(GUI.screenSpellPos1, GUI.screenBottomElements-30, GUI.gui_spelldefQ);
 		renderGUI(GUI.screenSpellPos2, GUI.screenBottomElements-30, GUI.gui_spelldefW);
 		renderGUI(GUI.screenSpellPos3, GUI.screenBottomElements-30, GUI.gui_spelldefE);
@@ -23,6 +24,7 @@ public class Screen {
 		renderGUI(GUI.screenTurninfoPos, GUI.screenBottomElements-30, GUI.gui_turninfo);
 		renderGUI(GUI.screenPlayerinfoPos, GUI.screenBottomElements-30, GUI.gui_playerinfo);
 		renderGUI(0, GUI.screenBottomBack, GUI.gui_back);
+		}
 	}
 	
 	public void clear() {

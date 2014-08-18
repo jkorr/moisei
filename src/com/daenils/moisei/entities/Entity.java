@@ -45,6 +45,7 @@ public class Entity {
 	protected  int[] damage; // temporary way to add a damage range, before implementing a weapon system
 	protected int hitDamage;
 	protected String lastAttacker;
+	protected int lastHitReceived = (lastHealth - health) * -1; // temporarily fix the value here
 	
 	protected Weapon weapon;
 	
@@ -327,7 +328,7 @@ public class Entity {
 			}
 			
 			compensateForCosts(this, this, a);
-			a.setLastUsed(Gamestats.turnCount);
+			a.setLastUsed(Game.getGameplay().getTurnCount());
 		}
 
 	}
@@ -357,7 +358,7 @@ public class Entity {
 	}
 	
 	private void doAbility(Equipment a, Entity e) {
-		a.setLastUsed(Gamestats.turnCount); // TODO: add this reset to resetGame() ! (+ maybe dots/hots as well?)
+		a.setLastUsed(Game.getGameplay().getTurnCount()); // TODO: add this reset to resetGame() ! (+ maybe dots/hots as well?)
 		if (a.getHealValue() > 0) doHealing(this, this, a, a.getHealValue());
 		if (a.getDamageValue() > 0) dealDamage(this, e, a, a.getDamageValue());
 		if (a.getUtilityValue() > 0) doUtility(this, e, a);
@@ -590,12 +591,20 @@ public class Entity {
 		return needsRemove;
 	}
 	
+	public int getLastHitReceived() {
+		return lastHitReceived;
+	}
+	
 	public Stage getStage() {
 		return stage;
 	}
 	
 	public Entity getTarget() {
 		return this;
+	}
+	
+	public Entity getCurrentTarget() {
+		return currentTarget;
 	}
 	
 	public int getTargetCycled() {

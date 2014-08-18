@@ -3,13 +3,15 @@ package com.daenils.moisei;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.daenils.moisei.entities.Gamestats;
-
 public class CombatLog {
 	private static List<String> combatlog = new ArrayList<String>();
 	
 	public static void println(String string) {
-		String logOpener = "|T" + Gamestats.turnCount + " : ";
+		String logOpener = "|T" + 0 + " : ";
+		
+		if (Game.getGameplay() != null) {
+			logOpener = "|T" + Game.getGameplay().getTurnCount() + " : ";
+		}
 		
 		string = logOpener.concat(string);
 		System.out.print("\n" + string);
@@ -22,7 +24,7 @@ public class CombatLog {
 	}
 	
 	public static void printnt(String string) {
-		String logOpener = "+T" + (Gamestats.turnCount + 1) + " : ";
+		String logOpener = "+T" + (Game.getGameplay().getTurnCount() + 1) + " : ";
 		
 		string = logOpener.concat(string);
 		System.out.print("\n" + string);
@@ -30,7 +32,7 @@ public class CombatLog {
 	}
 	
 	public static void printet(String string) {
-		String logOpener = "-T" + (Gamestats.turnCount) + " : ";
+		String logOpener = "-T" + (Game.getGameplay().getTurnCount()) + " : ";
 
 		string = logOpener.concat(string);
 		System.out.print("\n" + string);

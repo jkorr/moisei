@@ -1,0 +1,250 @@
+|T0 : A new game has started.
+|T0 : Player's T Heal unlocked.
+|T0 : Player's T Fireball unlocked.
+|T0 : Player's T Stun unlocked.
+|T0 : Player's T Firestorm unlocked.
+|T0 : Player's Alpha Sword unlocked.
+|T0 : Player's T Greathammer unlocked.
+|T0 : Player's Shadow Dagger unlocked.
+|T0 : Basic Beast spawned.
+|T1 : New turn begins.
+|T1 : Targeted Basic Beast
+|T1 : Hit chance roll: 18
+|T1 : Player missed.
+-T1 : Turn 1 has ended in 12.6 seconds (Game time: 12.6s)
++T2 : New turn begins.
+|T2 : Basic Beast --> Player (5 damage)
+-T2 : Turn 2 has ended in 4.5 seconds (Game time: 17.2s)
++T3 : New turn begins.
+|T3 : Hit chance roll: 48
+|T3 : Player hits Basic Beast with Alpha Sword (7 damage)
+-T3 : Turn 3 has ended in 0.9 seconds (Game time: 18.2s)
++T4 : New turn begins.
+|T4 : Basic Beast --> Player (2 damage)
+-T4 : Turn 4 has ended in 4.5 seconds (Game time: 22.7s)
++T5 : New turn begins.
+|T5 : Hit chance roll: 22
+|T5 : Player hits Basic Beast with Alpha Sword (6 damage)
+-T5 : Turn 5 has ended in 1.4 seconds (Game time: 24.2s)
++T6 : New turn begins.
+|T6 : Basic Beast --> Player (2 damage)
+-T6 : Turn 6 has ended in 4.5 seconds (Game time: 28.8s)
++T7 : New turn begins.
+|T7 : Game ended by player.
+
+|T0 : A new game has started.
+|T0 : Player's T Heal unlocked.
+|T0 : Player's T Fireball unlocked.
+|T0 : Player's T Stun unlocked.
+|T0 : Player's T Firestorm unlocked.
+|T0 : Player's Alpha Sword unlocked.
+|T0 : Player's T Greathammer unlocked.
+|T0 : Player's Shadow Dagger unlocked.
+|T0 : Weak Wolf's (M) Basic Attack unlocked.
+|T0 : Weak Wolf spawned.
+|T1 : New turn begins.
+|T1 : Targeted Weak Wolf
+|T1 : Hit chance roll: 86
+|T1 : Player hits Weak Wolf with Alpha Sword (4 damage)
+-T1 : Turn 1 has ended in 1.3 seconds (Game time: 1.3s)
++T2 : New turn begins.
+|T2 : Hit chance roll: 14
+|T2 : Weak Wolf missed.
+-T2 : Turn 2 has ended in 4.5 seconds (Game time: 5.9s)
++T3 : New turn begins.
+|T3 : Hit chance roll: 30
+|T3 : Player hits Weak Wolf with Alpha Sword (6 damage)
+-T3 : Turn 3 has ended in 1.1 seconds (Game time: 7.0s)
++T4 : New turn begins.
+|T4 : Hit chance roll: 27
+|T4 : Weak Wolf missed.
+-T4 : Turn 4 has ended in 4.5 seconds (Game time: 11.5s)
++T5 : New turn begins.
+-T5 : Turn 5 has ended in 0.0 seconds (Game time: 11.6s)
++T6 : New turn begins.
+|T6 : Hit chance roll: 21
+|T6 : Weak Wolf missed.
+-T6 : Turn 6 has ended in 1.5 seconds (Game time: 13.1s)
++T7 : New turn begins.
+|T7 : Hit chance roll: 1
+|T7 : Player missed.
+-T7 : Turn 7 has ended in 2.0 seconds (Game time: 15.2s)
++T8 : New turn begins.
+|T8 : Hit chance roll: 37
+|T8 : Weak Wolf missed.
+-T8 : Turn 8 has ended in 4.5 seconds (Game time: 19.7s)
++T9 : New turn begins.
+|T9 : Hit chance roll: 14
+|T9 : Player missed.
+-T9 : Turn 9 has ended in 1.3 seconds (Game time: 21.1s)
++T10 : New turn begins.
+|T10 : Hit chance roll: 39
+|T10 : Weak Wolf missed.
+-T10 : Turn 10 has ended in 4.5 seconds (Game time: 25.7s)
++T11 : New turn begins.
+|T11 : Hit chance roll: 14
+|T11 : Player missed.
+-T11 : Turn 11 has ended in 0.7 seconds (Game time: 26.4s)
++T12 : New turn begins.
+|T12 : Hit chance roll: 16
+|T12 : Weak Wolf missed.
+-T12 : Turn 12 has ended in 4.5 seconds (Game time: 31.0s)
++T13 : New turn begins.
+|T13 : Hit chance roll: 49
+|T13 : Player hits Weak Wolf with Alpha Sword (5 damage)
+-T13 : Turn 13 has ended in 3.4 seconds (Game time: 34.4s)
++T14 : New turn begins.
+|T14 : Hit chance roll: 9
+|T14 : Weak Wolf missed.
+-T14 : Turn 14 has ended in 4.5 seconds (Game time: 38.9s)
++T15 : New turn begins.
+|T15 : Game ended by player.
+
+|T0 : A new game has started.
+|T0 : Player's T Heal unlocked.
+|T0 : Player's T Fireball unlocked.
+|T0 : Player's T Stun unlocked.
+|T0 : Player's T Firestorm unlocked.
+|T0 : Player's Alpha Sword unlocked.
+|T0 : Player's T Greathammer unlocked.
+|T0 : Player's Shadow Dagger unlocked.
+|T0 : Wicked Wizard's T Fireball unlocked.
+|T0 : Wicked Wizard's T ManaDrain unlocked.
+|T0 : Wicked Wizard's T Shield unlocked.
+|T0 : Wicked Wizard spawned.
+|T1 : New turn begins.
+|T1 : Targeted Wicked Wizard
+|T1 : Hit chance roll: 19
+|T1 : Player missed.
+-T1 : Turn 1 has ended in 1.2 seconds (Game time: 1.2s)
++T2 : New turn begins.
+|T2 : Ability (T Fireball) used: 
+|T2 : Wicked Wizard hits Player with T Fireball (10 damage)
+-T2 : Turn 2 has ended in 4.5 seconds (Game time: 5.7s)
++T3 : New turn begins.
+|T3 : Wicked Wizard --> Player (2 damage)
+|T3 : [Tick 1] Wicked Wizard dealt a DoT of 2
+|T3 : Hit chance roll: 72
+|T3 : Player hits Wicked Wizard with Alpha Sword (8 damage)
+-T3 : Turn 3 has ended in 2.1 seconds (Game time: 7.9s)
++T4 : New turn begins.
+|T4 : Wicked Wizard --> Player (2 damage)
+|T4 : [Tick 1] Wicked Wizard dealt a DoT of 2
+|T4 : Wicked Wizard --> Player (1 damage)
+-T4 : Turn 4 has ended in 4.5 seconds (Game time: 12.4s)
++T5 : New turn begins.
+|T5 : Hit chance roll: 52
+|T5 : Player hits Wicked Wizard with Alpha Sword (4 damage)
+-T5 : Turn 5 has ended in 5.1 seconds (Game time: 17.5s)
++T6 : New turn begins.
+|T6 : Ability (T Fireball) used: 
+|T6 : Wicked Wizard hits Player with T Fireball (10 damage)
+-T6 : Turn 6 has ended in 4.5 seconds (Game time: 22.1s)
++T7 : New turn begins.
+|T7 : Wicked Wizard --> Player (2 damage)
+|T7 : [Tick 1] Wicked Wizard dealt a DoT of 2
+|T7 : Ability (T Fireball) used: 
+|T7 : Player hits Wicked Wizard with T Fireball (10 damage)
+-T7 : Turn 7 has ended in 2.6 seconds (Game time: 24.7s)
++T8 : New turn begins.
+|T8 : Player --> Wicked Wizard (2 damage)
+|T8 : [Tick 1] Player dealt a DoT of 2
+|T8 : Wicked Wizard --> Player (2 damage)
+|T8 : [Tick 1] Wicked Wizard dealt a DoT of 2
+|T8 : Wicked Wizard --> Player (2 damage)
+-T8 : Turn 8 has ended in 4.5 seconds (Game time: 29.3s)
++T9 : New turn begins.
+|T9 : Player --> Wicked Wizard (2 damage)
+|T9 : [Tick 1] Player dealt a DoT of 2
+|T9 : Hit chance roll: 91
+|T9 : Congratulations, you have reached level 2!
+|T9 : Wicked Wizard died. Player receives 10 XP for the kill.
+|T9 : Player hits Wicked Wizard with Alpha Sword (9 damage)
+|T9 : Monster removed
+|T0 : Wicked Wizard's T Fireball unlocked.
+|T0 : Wicked Wizard's T ManaDrain unlocked.
+|T0 : Wicked Wizard's T Shield unlocked.
+|T0 : Wicked Wizard spawned.
+|T1 : New turn begins.
+|T1 : Targeted Wicked Wizard
+|T1 : Game ended by player.
+
+|T0 : A new game has started.
+|T0 : Player's T Heal unlocked.
+|T0 : Player's T Fireball unlocked.
+|T0 : Player's T Stun unlocked.
+|T0 : Player's T Firestorm unlocked.
+|T0 : Player's Alpha Sword unlocked.
+|T0 : Player's T Greathammer unlocked.
+|T0 : Player's Shadow Dagger unlocked.
+|T0 : Wicked Wizard's T Fireball unlocked.
+|T0 : Wicked Wizard's T ManaDrain unlocked.
+|T0 : Wicked Wizard's T Shield unlocked.
+|T0 : Wicked Wizard spawned.
+|T1 : New turn begins.
+|T1 : Targeted Wicked Wizard
+|T1 : Hit chance roll: 8
+|T1 : Player missed.
+-T1 : Turn 1 has ended in 1.1 seconds (Game time: 1.1s)
++T2 : New turn begins.
+|T2 : Ability (T Fireball) used: 
+|T2 : Wicked Wizard hits Player with T Fireball (10 damage)
+|T2 : Game ended by player.
+
+|T0 : A new game has started.
+|T0 : Player's T Heal unlocked.
+|T0 : Player's T Fireball unlocked.
+|T0 : Player's T Stun unlocked.
+|T0 : Player's T Firestorm unlocked.
+|T0 : Player's Alpha Sword unlocked.
+|T0 : Player's T Greathammer unlocked.
+|T0 : Player's Shadow Dagger unlocked.
+|T0 : Wicked Wizard's T Fireball unlocked.
+|T0 : Wicked Wizard's T ManaDrain unlocked.
+|T0 : Wicked Wizard's T Shield unlocked.
+|T0 : Wicked Wizard spawned.
+|T1 : New turn begins.
+|T1 : Targeted Wicked Wizard
+|T1 : Game ended by player.
+
+|T0 : A new game has started.
+|T0 : Player's T Heal unlocked.
+|T0 : Player's T Fireball unlocked.
+|T0 : Player's T Stun unlocked.
+|T0 : Player's T Firestorm unlocked.
+|T0 : Player's Alpha Sword unlocked.
+|T0 : Player's T Greathammer unlocked.
+|T0 : Player's Shadow Dagger unlocked.
+|T0 : Basic Beast spawned.
+|T1 : New turn begins.
+|T1 : Targeted Basic Beast
+|T1 : Hit chance roll: 17
+|T1 : Player missed.
+-T1 : Turn 1 has ended in 1.4 seconds (Game time: 1.4s)
++T2 : New turn begins.
+|T2 : Basic Beast --> Player (3 damage)
+-T2 : Turn 2 has ended in 4.5 seconds (Game time: 5.9s)
++T3 : New turn begins.
+|T3 : Hit chance roll: 80
+|T3 : Player hits Basic Beast with Alpha Sword (7 damage)
+-T3 : Turn 3 has ended in 1.4 seconds (Game time: 7.4s)
++T4 : New turn begins.
+|T4 : Basic Beast --> Player (3 damage)
+-T4 : Turn 4 has ended in 4.5 seconds (Game time: 12.0s)
++T5 : New turn begins.
+|T5 : Hit chance roll: 21
+|T5 : Player hits Basic Beast with Alpha Sword (6 damage)
+-T5 : Turn 5 has ended in 1.0 seconds (Game time: 13.0s)
++T6 : New turn begins.
+|T6 : Basic Beast --> Player (3 damage)
+-T6 : Turn 6 has ended in 4.5 seconds (Game time: 17.5s)
++T7 : New turn begins.
+-T7 : Turn 7 has ended in 0.0 seconds (Game time: 17.6s)
++T8 : New turn begins.
+|T8 : Basic Beast --> Player (2 damage)
+-T8 : Turn 8 has ended in 4.5 seconds (Game time: 22.2s)
++T9 : New turn begins.
+|T9 : Hit chance roll: 38
+|T9 : Player hits Basic Beast with Alpha Sword (8 damage)
+-T9 : Turn 9 has ended in 3.8 seconds (Game time: 26.0s)
+

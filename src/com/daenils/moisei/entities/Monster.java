@@ -44,7 +44,8 @@ public class Monster extends Entity {
 	public static int monstersLoaded;
 	public static boolean monstersCounted;
 		
-	public Monster(int id, int spawnSlot, Entity defaultTarget) {
+	public Monster(int id, int spawnSlot, Entity defaultTarget, Stage stage) {
+		this.stage = stage;
 		load();
 		updateSpawnSlots();
 		
@@ -88,7 +89,7 @@ public class Monster extends Entity {
 		this.damageDbl[0] = baseDamage[0];
 		this.damageDbl[1] = baseDamage[1];
 		this.level = 1;
-		this.levelUp(Gamestats.playerLevel);
+		this.levelUp(defaultTarget.level);
 		this.health = maxHealth;
 		this.mana = maxMana;
 		this.actionPoints = maxActionPoints;
@@ -98,7 +99,6 @@ public class Monster extends Entity {
 		this.randomWait = new int[] {1, 3};
 		this.r = newRandomWait();
 		
-		this.stage = Stage.getStage();
 		
 		this.needsRemove = false;
 		this.deathCount = 0;
@@ -107,29 +107,29 @@ public class Monster extends Entity {
 		}
 
 	private void updateSpawnSlots() {
-		if (Gamestats.monsterCount == 1) {
+		if (stage.getMonsters().size() == 1) {
 			spawnSlot1 = new int[] {580, 290};
 			spawnSlot2 = new int[] {335, 320};
 		}
-		else if (Gamestats.monsterCount == 2) { 
+		else if (stage.getMonsters().size() == 2) { 
 			spawnSlot1 = new int[] {335, 320};
 			spawnSlot2 = new int[] {580, 290};
 			spawnSlot3 = new int[] {810, 250};
 		}
-		else if (Gamestats.monsterCount == 3) {
+		else if (stage.getMonsters().size() == 3) {
 			spawnSlot1 = new int[] {335, 320};
 			spawnSlot2 = new int[] {580, 290};
 			spawnSlot3 = new int[] {810, 250};
 			spawnSlot4 = new int[] {100, 250};
 		}
-		else if (Gamestats.monsterCount == 4) {
+		else if (stage.getMonsters().size() == 4) {
 			spawnSlot1 = new int[] {100, 250};
 			spawnSlot2 = new int[] {335, 320};
 			spawnSlot3 = new int[] {580, 290};
 			spawnSlot4 = new int[] {810, 250};
 			spawnSlot5 = new int[] {1050, 210};
 		}
-		else if (Gamestats.monsterCount == 5) {
+		else if (stage.getMonsters().size() == 5) {
 			spawnSlot1 = new int[] {100, 250};
 			spawnSlot2 = new int[] {335, 320};
 			spawnSlot3 = new int[] {580, 290};
@@ -161,7 +161,7 @@ public class Monster extends Entity {
 		}
 		in.close();
 		monstersCounted = true;
-		System.out.println(monstersLoaded);
+//		System.out.println(monstersLoaded);
 	}
 	
 	public void initAbilities(String s) {
@@ -295,7 +295,7 @@ public class Monster extends Entity {
 	}
 	
 	private boolean checkCanUseSkills() {
-		if (Gamestats.isMonsterTurn && isAlive && actionPoints > 0 && Game.getGameplay().getContinueGame()) return canUseSkills = true;
+		if (Game.getGameplay().getIsMonsterTurn() && isAlive && actionPoints > 0 && Game.getGameplay().getContinueGame()) return canUseSkills = true;
 		else return canUseSkills = false;
 	}
 	

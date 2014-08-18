@@ -1,17 +1,21 @@
 package com.daenils.moisei.graphics;
 
+import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
 import com.daenils.moisei.Game;
+import com.daenils.moisei.entities.Gamestats;
 
 public class GUI {
 	
 	private String path;
 	protected int x, y, width, height;
 	protected int[] pixels;
+	
+	private Text font = new Text();
 	
 	// GUI ELEMENTS
 	
@@ -52,7 +56,31 @@ public class GUI {
 		pixels = new int[w * h];
 	}
 	
-	public void render() {
+	public GUI() {
+		
+	}
+	
+	public void render(Graphics g) {
+		// TEXT RENDERING WILL MOVE HERE FROM GAMEPLAY.JAVA
+	//	font.renderNew("Player H\tealth " + Gamestats.playerHP, 40, 40, 0, "Kubasta", 16, g);
+		
+	//	renderVersionInfo(g);
+		
+	}
+	
+	private void renderVersionInfo(Graphics g) {
+		font.renderNew(Game.getTitle() + " " + Game.getVersion(), 1157, 10, 0, "Kubasta", 16, g);
+		font.renderNew(newLnLeftPad((Game.getTitle().length() + Game.getVersion().length()) - Game.getProjectStage().length() + 1) + Game.getProjectStage().toUpperCase(), 1157, 22, 0, "Kubasta", 16, g);
+		font.renderNew(Game.isFpsLockedString(), 1157, 34, 0, "Kubasta", 16, g);
+	//	font.render(1147, 0, -8, 0, Game.getTitle() + " " + Game.getVersion()
+	//			+ newLnLeftPad((Game.getTitle().length() + Game.getVersion().length()) - Game.getProjectStage().length() + 1) + Game.getProjectStage().toUpperCase()
+	//			+ newLnLeftPad((Game.getTitle().length() + Game.getVersion().length()) - Game.isFpsLockedString().length() + 1) + Game.isFpsLockedString(), screen);
+	}
+	
+	public String newLnLeftPad(int n) {
+		String returnString = "\n";
+		for (int i = 0; i < n; i++) returnString = returnString.concat("\t");
+		return returnString;  
 	}
 	
 	public void load() {

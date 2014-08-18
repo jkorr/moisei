@@ -1,8 +1,12 @@
 package com.daenils.moisei.graphics;
 
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Graphics;
+
 import com.daenils.moisei.Game;
 
-public class Font {
+public class Text {
 
 	
 	private static Spritesheet font0 = new Spritesheet("/textures/gui/fontsheet2.png", 182, 112, 14);
@@ -21,8 +25,14 @@ public class Font {
 										":?!'\"/\\%|()-+" +
 										"[]{}=&@$_#~§*" +
 										"<>°€£ίχ";
-	public Font() {
+	public Text() {
 		
+	}
+	
+	public void renderNew(String s, int x, int y, int col, String fontname, int size, Graphics g) {
+		g.setFont(new Font(fontname, Font.PLAIN, size));
+		g.setColor(new Color(col));
+		g.drawString(s, x, y);
 	}
 	
 	public void renderXCentered(int y, int spacing, int color, Sprite[] font, int scale, String text, Screen screen) {

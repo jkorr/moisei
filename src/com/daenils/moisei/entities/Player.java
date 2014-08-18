@@ -20,10 +20,12 @@ public class Player extends Entity {
 	protected boolean neverCycled;
 	protected int weaponSwitcher = 0;
 
-	public Player(Keyboard input, Entity defaultTarget) {
+	public Player(Keyboard input, Entity defaultTarget, Stage stage) {
 		this.name = "Player";
 		this.type = "player";
 		this.id = -1;
+		
+		this.stage = stage;
 		
 		this.x = 0;
 		this.y = 0;
@@ -73,9 +75,7 @@ public class Player extends Entity {
 		this.health = maxHealth;
 		this.mana = maxMana;
 		
-		this.stage = Stage.getStage();
-		
-		this.currentTarget = defaultTarget;
+		this.currentTarget = null;
 		setPercentageValues();
 	}
 	
@@ -103,11 +103,14 @@ public class Player extends Entity {
 //		System.out.println("A3 CD: " + abilities.get(3).isOnCooldown());
 		
 		// set a default target
-		if (currentTarget == null && Gamestats.monstersAlive > 0) newCycledTarget();
+		if (currentTarget == null && Game.getGameplay().monstersAlive > 0) {
+	//		System.out.println("new target...");
+			newCycledTarget();
+		}
 		
 		
 		// Check if it's the player turn and no cooldown and alive:
-		if (Gamestats.isPlayerTurn && !Game.getGameplay().onGlobalCooldown && actionPoints > 0 && isAlive == true && Game.getGameplay().getContinueGame())
+		if (Game.getGameplay().getIsPlayerTurn() && !Game.getGameplay().onGlobalCooldown && actionPoints > 0 && isAlive == true && Game.getGameplay().getContinueGame())
 			canUseSkills = true;
 		else canUseSkills = false;
 		
@@ -145,7 +148,7 @@ public class Player extends Entity {
 		// END TURN
 		if (input.playerEndTurn && !Game.getGameplay().onGlobalCooldown && Game.getGameplay().getIsPlayerTurn() && !Game.getGameplay().getForcedPause()) {
 			// System.out.println("!!!");
-			if (Gamestats.monstersAlive > 0) Game.getGameplay().endTurn(this);
+			if (Game.getGameplay().monstersAlive > 0) Game.getGameplay().endTurn(this);
 			else {
 				Game.getGameplay().setContinueGame(true);
 			//	Game.getGameplay().gameFlow();
@@ -193,7 +196,7 @@ public class Player extends Entity {
 		
 		// DEBUG: ADD MONSTER
 		if (input.debugAddMonster && !Game.getGameplay().onGlobalCooldown) {
-			if (Gamestats.monstersAlive > 0) Game.getGameplay().spawnMonster();
+			if (Game.getGameplay().monstersAlive > 0) Game.getGameplay().spawnMonster();
 			else Game.getGameplay().newMonsterWave();
 		}
 		
@@ -203,8 +206,7 @@ public class Player extends Entity {
 		//	((Monster) currentTarget).isAlive = false;
 		//	Game.getGameplay().playerOverride = true;
 		//	stage.setRandomStage();
-
-			Game.getGameplay().enableGlobalCooldown(); 
+	//		Game.getGameplay().enableGlobalCooldown(); 
 		}
 		
 		// DEBUG: TOGGLE FPS LOCK
@@ -236,7 +238,7 @@ public class Player extends Entity {
 
 	private void inputTargeting() {
 			// OLD
-			for (int i = 0; i < Gamestats.monsterCount; i++) {
+			for (int i = 0; i < stage.getMonsters().size(); i++) {
 				if (input.playerTarget[i] && !Game.getGameplay().onGlobalCooldown) {
 					setTarget(stage.getMonsters().get(i));
 					targetCycled = i + 1;
@@ -246,7 +248,7 @@ public class Player extends Entity {
 		
 		
 			// NEW
-			if (targetCycled >= Gamestats.monsterCount) targetCycled = 0;
+			if (targetCycled >= stage.getMonsters().size()) targetCycled = 0;
 //			System.out.println(targetCycled);
 			if (input.playerCycleTargets && !Game.getGameplay().onGlobalCooldown) {
 				newCycledTarget();
@@ -263,8 +265,8 @@ public class Player extends Entity {
 		neverCycled = true;
 		for (int i = 1; i < times; i++) {
 //			if (Gamestats.monsterCount < 1) cycleTarget(null);
-			if (Gamestats.monsterCount == 1) cycleTarget(stage.getMonsters().get(0));
-			if (Gamestats.monsterCount > 1) {
+			if (stage.getMonsters().size() == 1) cycleTarget(stage.getMonsters().get(0));
+			if (stage.getMonsters().size() > 1) {
 				cycleTarget(stage.getMonsters().get(targetCycled));
 			}
 		}

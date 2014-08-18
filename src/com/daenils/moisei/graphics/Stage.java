@@ -10,14 +10,12 @@ import javax.imageio.ImageIO;
 import com.daenils.moisei.CombatLog;
 import com.daenils.moisei.Game;
 import com.daenils.moisei.entities.Entity;
-import com.daenils.moisei.entities.Gamestats;
 import com.daenils.moisei.entities.Monster;
 import com.daenils.moisei.entities.Player;
 
 public class Stage {
-	private static Stage playStage;
+	private Stage playStage;
 	private Player player;
-	
 	
 	private String path;
 	private int width, height;
@@ -32,12 +30,12 @@ public class Stage {
 	// STAGES
 //	private static Stage st_demo = new Stage("/textures/stages/st_demo.png");
 //	private static Stage st_altdemo = new Stage("/textures/stages/st_altdemo.png");
-	public static Stage st_1 = new Stage("/textures/stages/st_1.png");
-	public static Stage st_1a = new Stage("/textures/stages/st_1a.png");
+	public static Stage st1 = new Stage("/textures/stages/st_1.png");
+	public static Stage st1a = new Stage("/textures/stages/st_1a.png");
+	public static Stage st1c = new Stage("/textures/stages/st_1c.png");
 	
-	public Stage(Stage stage, Player player) {
+	public Stage(Stage stage) {
 		this.playStage = stage;
-		this.player = player;
 	}
 	
 	public Stage(String path) {
@@ -48,15 +46,24 @@ public class Stage {
 	}
 
 	public void update() {
+		player.update();
+		
+		if (this.player == null && monsters.size() > 0) {
+			player = (Player) (monsters.get(0).getCurrentTarget());
+			System.out.print("\nPlayer has been added to stage.");
+		}
 		for (int i = 0; i < entities.size(); i++) {
 			entities.get(i).update();
 		}
 		
-		
+	//	System.out.println(getMonsters().size());
 		remove();
 	}
 	
 	public void render(Screen screen) {
+		// render player
+		player.render(screen);
+		
 		// maybe put stage render here? from Screen.java
 		
 		// render monsters
@@ -98,14 +105,18 @@ public class Stage {
 		return monsters;
 	}
 	
+	public Player getPlayer() {
+		return player;
+	}
+	
 	public boolean checkIfAllDead() {
 		boolean returnValue = false;
-		if (Gamestats.turnCount > 0) { 		// "Gamestats.turnCount > 0" is a temporary fix (?)
+		if (Game.getGameplay().getTurnCount() > 0) { 		// "Gamestats.turnCount > 0" is a temporary fix (?)
 			int n = 0;
 			for (int i = 0; i < monsters.size(); i++) {
 				if (monsters.get(i).getHealth() <= 0) n++; 
 			}
-			if (n == Gamestats.monsterCount) returnValue = true;
+			if (n == monsters.size()) returnValue = true;
 			else returnValue = false;
 		}
 //			System.out.println(returnValue);
@@ -127,7 +138,7 @@ public class Stage {
 	
 	// METHOD to pass a stage to the Screen class
 	// Currently it already has a VERY BASIC "give me a random stage" feature, but its just for fun
-	public static Stage getStage() {
+	public Stage getStage() {
 		 return playStage;
 			//	return st_1a;
 	}
@@ -135,10 +146,14 @@ public class Stage {
 	public void setRandomStage() {
 		int selector = (int) (Math.random() * 10);
 		System.out.println(selector);
-		if (selector > 5) playStage = st_1;
-		else playStage = st_1a;
+		if (selector > 5) playStage = st1c;
+		else playStage = st1a;
 //		if (selector > 1) return st_1;
 //		resetAll();
+	}
+	
+	public void setPlayer(Player p) {
+		player = p;
 	}
 	
 	public void forceRemove(Entity e) {
@@ -146,9 +161,13 @@ public class Stage {
 		CombatLog.println("Monster removed");
 	}
 	
-	
-	
 	public void resetAll() {
-		
+		playStage = null;
 	}
+
+	public void killAll() {
+		for (int i = 0; i < monsters.size(); i++)
+			monsters.remove(i);
+	}
+	
 }

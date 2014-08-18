@@ -20,7 +20,8 @@ import com.daenils.moisei.entities.MonsterAI;
 import com.daenils.moisei.entities.Player;
 import com.daenils.moisei.entities.equipments.Ability;
 import com.daenils.moisei.files.FileManager;
-import com.daenils.moisei.graphics.Font;
+import com.daenils.moisei.graphics.Text;
+import com.daenils.moisei.graphics.GUI;
 import com.daenils.moisei.graphics.Screen;
 import com.daenils.moisei.graphics.Stage; // probably it should be in its own package later (e.g. moisei.stage.stage)
 import com.daenils.moisei.input.Keyboard;
@@ -29,12 +30,13 @@ public class Game extends Canvas implements Runnable {
 
 	private static final long serialVersionUID = 1L;
 	private static int scale = 1;
-	private static int width = 1280 * scale;
-	private static int height = (width / 16 * 9) * scale;
+	private static int width = 1280;
+	private static int height = (width / 16 * 9);
 	private static String title = "Project Moisei";
-	private static String version = "0.5";
-	private static String projectStage = "internal alpha";
+	private static String version = "0.6";
+	private static String projectStage = "f&f alpha";
 	private static boolean fpsLock = false;
+	private static boolean renderGUI;
 
 	private Thread thread;
 	private JFrame frame;
@@ -46,6 +48,7 @@ public class Game extends Canvas implements Runnable {
 	// other than having this as static. I mean it only has ONE instance
 	// under any given circumstances, so I guess no harm's done, right?
 	private static Gameplay gameplay;
+	private GUI gui;
 	private Gamestats gamestats;
 	private FileManager filemanager;
 	private static Stage stage;
@@ -69,42 +72,35 @@ public class Game extends Canvas implements Runnable {
 		System.out.println("Rendering screen at the resolution of "
 				+ (width * scale) + "x" + (height * scale) + ".");
 		frame = new JFrame();
+		
 		key = new Keyboard();
-
+		
 		filemanager = new FileManager();
-		FileManager.createStatisticsFile();
-		FileManager.createCombatLogFile();
-
-		stage = new Stage(Stage.st_1a, player);
-		stage = Stage.getStage(); // currently needed for targeting to work,
-									// might wanna look into it later
-
-		System.out.println("Gameplay control is running.");
-		
-		gameplay = new Gameplay(key, stage);
-/*
- * 		Later you might want to load the abilities only once, so:
- * 		Ability.load();	
- */
-
-	//	dummyMonster = new Monster(); // WTF CODE?
-		player = new Player(key, null);
-		monsterAI = new MonsterAI(stage);
-		// monster1.setDefaultTarget(player); // repeated due to lack of better
-		// solution for now (chicken-egg issue otherwise)
-
-		gamestats = new Gamestats(player, stage, dummyMonster);
-		System.out.println("Statistics collection is running.");
-
-		gameplay.setFirst();
-
-		String temp_turninfo = "playerturn: " + gameplay.getIsPlayerTurn()
-				+ " | monsterturn: " + gameplay.getIsMonsterTurn();
-
-		addKeyListener(key);
-		
 		// Create statistics file (once per launch)
+		FileManager.createStatisticsFile();
+		// Create combat log file (once per launch)
+		FileManager.createCombatLogFile();
+		
+		freshGame();
+		
+		addKeyListener(key);
+	}
 
+	private void freshGame() {
+		CombatLog.println("A new game has started.");
+		stage = new Stage(Stage.st1a);
+		gameplay = new Gameplay(key, stage);
+		System.out.println("Gameplay control is running.");
+		gamestats = new Gamestats(stage);
+		System.out.println("Statistics collection is running.");
+		monsterAI = new MonsterAI(stage);
+		
+//		Later you might want to load the abilities only once, so:
+ //		Ability.load();
+
+		renderGUI = true;
+		gui = new GUI();
+		gameplay.setFirst();
 	}
 
 	public synchronized void start() {
@@ -160,14 +156,23 @@ public class Game extends Canvas implements Runnable {
 	}
 
 	public void update() {
+		// render GUI if the game is on
+		if (player != null) renderGUI = true;
+		
 		// don't forget to drop the other objects' update() methods here
 		key.update();
-		stage.update();
-		player.update();
-		monsterAI.update();
+		if (stage != null) stage.update();
+//		if (player != null) player.update();
+		if (monsterAI != null) monsterAI.update();
 		// dummyMonster.update();
-		gamestats.update();
-		gameplay.update();
+		if (gamestats != null) gamestats.update();
+		if (gameplay != null) gameplay.update();
+		
+		// KEY INPUT
+		if (key.debugForceNewWave && stage != null) resetStage();
+		if (key.debugAddMonster && stage == null) createStage();
+
+		
 		// temporarily here
 //		temp_turninfo = "playerturn: " + gameplay.getIsPlayerTurn()
 //				+ " | monsterturn: " + gameplay.getIsMonsterTurn();
@@ -180,25 +185,26 @@ public class Game extends Canvas implements Runnable {
 			createBufferStrategy(3);
 			return;
 		}
+		Graphics g = bs.getDrawGraphics();
 
 		screen.clear();
-		screen.render();
+		screen.render(stage);
 
-		stage.render(screen);
-
-		player.render(screen);
+		if (stage != null) stage.render(screen);
+		if (player != null) player.render(screen);
+		if (gameplay != null) gameplay.render(screen);
 		// dummyMonster.render(screen);
 
-		gameplay.render(screen);
+		
+		
 
 		// don't forget to drop the other objects' render() methods here
 
 		for (int i = 0; i < pixels.length; i++)
 			pixels[i] = screen.getPixels()[i];
 
-		Graphics g = bs.getDrawGraphics();
 		g.drawImage(image, 0, 0, getWidth(), getHeight(), null);
-
+		if (gui != null) gui.render(g);
 		g.dispose();
 		bs.show();
 	}
@@ -240,8 +246,12 @@ public class Game extends Canvas implements Runnable {
 		return fpsLock;
 	}
 	
+	public static boolean isGUIrendered() {
+		return renderGUI;
+	}
+	
 	public static String isFpsLockedString() {
-		if(Game.isFpsLocked()) return "FPS LOCKED";
+		if(Game.isFpsLocked()) return "60FPS";
 		else return "FPS UNLOCKED";
 	}
 	
@@ -249,9 +259,29 @@ public class Game extends Canvas implements Runnable {
 		if (fpsLock) fpsLock = false;
 		else if (!fpsLock) fpsLock = true;
 	}
+	
+	public void resetStage() {
+		clearStage();
+	}
+	
+	public void clearStage() {
+		CombatLog.println("Game ended by player.\n");
+		renderGUI = false;
+		
+		gamestats = null;
+		monsterAI = null;
+		gui = null;
+		gameplay = null;
+		stage.resetAll();
+		stage.killAll();
+		stage = null;
+	}
+	
+	public void createStage() {
+		freshGame();
+	}
 
 	public static void main(String[] args) {	
-		
 		Game game = new Game();
 		game.frame.setResizable(false);
 		game.frame.setTitle(title);
