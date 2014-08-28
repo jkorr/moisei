@@ -17,12 +17,12 @@ public class Screen {
 
 		if (Game.isGUIrendered()) {
 			renderStage(stage.getStage());
-		renderGUI(GUI.screenSpellPos1, GUI.screenBottomElements-30, GUI.gui_spelldefQ);
-		renderGUI(GUI.screenSpellPos2, GUI.screenBottomElements-30, GUI.gui_spelldefW);
-		renderGUI(GUI.screenSpellPos3, GUI.screenBottomElements-30, GUI.gui_spelldefE);
-		renderGUI(GUI.screenSpellPos4, GUI.screenBottomElements-30, GUI.gui_spelldefR);
-		renderGUI(GUI.screenTurninfoPos, GUI.screenBottomElements-30, GUI.gui_turninfo);
-		renderGUI(GUI.screenPlayerinfoPos, GUI.screenBottomElements-30, GUI.gui_playerinfo);
+		renderGUI(GUI.screenSpellPos1, GUI.screenBottomElements+11, GUI.gui_spelldefQ);
+		renderGUI(GUI.screenSpellPos2, GUI.screenBottomElements+11, GUI.gui_spelldefW);
+		renderGUI(GUI.screenSpellPos3, GUI.screenBottomElements+11, GUI.gui_spelldefE);
+		renderGUI(GUI.screenSpellPos4, GUI.screenBottomElements+11, GUI.gui_spelldefR);
+//		renderGUI(GUI.screenTurninfoPos, GUI.screenBottomElements-15, GUI.gui_turninfo);
+//		renderGUI(GUI.screenPlayerinfoPos, GUI.screenBottomElements-15, GUI.gui_playerinfo);
 		renderGUI(0, GUI.screenBottomBack, GUI.gui_back);
 		}
 	}
@@ -30,6 +30,11 @@ public class Screen {
 	public void clear() {
 		for (int i = 0; i < pixels.length; i++)
 			pixels[i] = 0;
+	}
+	
+	public void clear2() {
+		for (int i = 0; i < pixels.length; i++)
+			pixels[i] = 0xffff00ff;
 	}
 	
 	public void renderStage(Stage stage) {
@@ -62,15 +67,18 @@ public class Screen {
 		}
 	}
 	
-	public void renderCharacter(int xp, int yp, Sprite sprite, int scale, int color) {
-		// TODO: implement sprite scaling via int scale (100 default would be nice)
+	public void renderPixel(int xp, int yp, int color) {
+		pixels[xp + yp* width] = color;
+	}
+	
+	public void renderCharacter(int xp, int yp, Sprite sprite, double scale, int color) {
 		for (int y = 0; y < sprite.height; y++){
-			int ya = y / scale + yp;
+			double ya = y / scale + yp;
 			for (int x = 0; x < sprite.width; x++) {
-				int xa = x / scale + xp;
+				double xa = x / scale + xp;
 				int col = sprite.pixels[x + y * sprite.width];
 				
-				if (col != 0xffff00ff) pixels[xa + ya * width] = color;
+				if (col != 0xffff00ff) pixels[(int) xa + (int) ya * width] = color;
 			}
 		}
 	}

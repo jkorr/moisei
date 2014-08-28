@@ -9,18 +9,22 @@ import com.daenils.moisei.graphics.GUI;
 import com.daenils.moisei.graphics.Screen;
 import com.daenils.moisei.graphics.Stage;
 import com.daenils.moisei.input.Keyboard;
+import com.daenils.moisei.input.Mouse;
 import com.daenils.moisei.entities.equipments.Ability;
 import com.daenils.moisei.entities.equipments.Weapon;
 
 public class Player extends Entity {
 	private Keyboard input;
+	private Mouse inputM;
 	private boolean canUseSkills;
 //	private Ability[] playerAbility = new Ability[4];
 	
 	protected boolean neverCycled;
 	protected int weaponSwitcher = 0;
+	
+	protected int goldAmount;
 
-	public Player(Keyboard input, Entity defaultTarget, Stage stage) {
+	public Player(Keyboard input, Mouse inputM, Entity defaultTarget, Stage stage) {
 		this.name = "Player";
 		this.type = "player";
 		this.id = -1;
@@ -31,6 +35,7 @@ public class Player extends Entity {
 		this.y = 0;
 		
 		this.input = input;
+		this.inputM = inputM;
 		this.canUseSkills = false;	
 		this.abilityCount = 4;
 		this.weaponCount = 10;
@@ -226,10 +231,9 @@ public class Player extends Entity {
 		
 
 		inputTargeting();
+		mouseInput();
 
 	}
-	
-	
 	
 	protected void updateAbilities() {
 //		for (int i = 0; i < abilities.size(); i++) abilities.get(i).update();
@@ -273,15 +277,96 @@ public class Player extends Entity {
 		
 	}
 	
+	private void mouseInput() {
+		// TODO: ALL OF THESE CODE SEGMENTS SHOULD BE EXTRACTED INTO SEPARATE METHODS SO THEY 
+		// COULD BE ACCESSED BY BOTH THE KEYBOARD INPUT CODE AND THE MOUSE INPUT CODE
+		
+		// BASIC ATTACK
+				for (int i = 0; i < stage.getMonsters().size(); i++) {
+					if (Mouse.getB() == 1 && canUseSkills && this.currentTarget == stage.getMonsters().get(i) && !Game.getGameplay().onGlobalCooldown
+							&& Mouse.getX() > stage.getMonsters().get(i).x * Game.getScale()
+							&& Mouse.getX() < (stage.getMonsters().get(i).x + stage.getMonsters().get(i).width) * Game.getScale()
+							&& Mouse.getY() > stage.getMonsters().get(i).y * Game.getScale()
+							&& Mouse.getY() < (stage.getMonsters().get(i).y + stage.getMonsters().get(i).height) * Game.getScale()) {
+						basicAttack(this, currentTarget, weapon);
+						Game.getGameplay().enableGlobalCooldown();
+					}
+				}
+		
+		// TARGETING
+		for (int i = 0; i < stage.getMonsters().size(); i++) {
+			if (Mouse.getB() == 1 && stage.getMonsters().size() > i && !Game.getGameplay().onGlobalCooldown
+					&& Mouse.getX() > stage.getMonsters().get(i).x * Game.getScale()
+					&& Mouse.getX() < (stage.getMonsters().get(i).x + stage.getMonsters().get(i).width) * Game.getScale()
+					&& Mouse.getY() > stage.getMonsters().get(i).y * Game.getScale()
+					&& Mouse.getY() < (stage.getMonsters().get(i).y + stage.getMonsters().get(i).height) * Game.getScale()) {
+				setTarget(stage.getMonsters().get(i));
+				targetCycled = i + 1;
+				Game.getGameplay().enableGlobalCooldown();
+			}
+		}
+		
+		// HOVER: MONSTER INFO (DETAILS)
+		for (int i = 0; i < stage.getMonsters().size(); i++) {
+			if (Mouse.getB() == -1 && stage.getMonsters().size() > i
+					&& Mouse.getX() > stage.getMonsters().get(i).x * Game.getScale()
+					&& Mouse.getX() < (stage.getMonsters().get(i).x + stage.getMonsters().get(i).width) * Game.getScale()
+					&& Mouse.getY() > stage.getMonsters().get(i).y * Game.getScale()
+					&& Mouse.getY() < (stage.getMonsters().get(i).y + stage.getMonsters().get(i).height) * Game.getScale()) {
+				stage.getMonsters().get(i).showDetails = true;
+			}
+			else stage.getMonsters().get(i).showDetails = false;
+		}
+		
+		// QWER ABILITIES
+		for (int i = 0; i < abilities.size(); i++) {
+			int[] spellPos = {GUI.screenSpellPos1, GUI.screenSpellPos2, GUI.screenSpellPos3, GUI.screenSpellPos4};
+			if (Mouse.getB() == 1 && canUseSkills && (abilities.size() > i)
+					&& !Game.getGameplay().onGlobalCooldown
+					&& Mouse.getX() > spellPos[i] * Game.getScale()
+					&& Mouse.getX() < (spellPos[i] + 30) * Game.getScale()
+					&& Mouse.getY() > 620
+					&& Mouse.getY() < 680) {
+				useAbility(this, abilities.get(i));
+				Game.getGameplay().enableGlobalCooldown();
+			}
+		}
+		
+		
+		// HOVER: QWER ABILITY TOOLTIPS
+		for (int i = 0; i < abilities.size(); i++) {
+			int[] spellPos = {GUI.screenSpellPos1, GUI.screenSpellPos2, GUI.screenSpellPos3, GUI.screenSpellPos4};
+			if (Mouse.getB() == -1 && (abilities.size() > i)
+					&& Mouse.getX() > spellPos[i] * Game.getScale()
+					&& Mouse.getX() < (spellPos[i] + 30) * Game.getScale()
+					&& Mouse.getY() > 620
+					&& Mouse.getY() < 680) {
+				abilities.get(i).showTooltip = true;
+			}
+			else abilities.get(i).showTooltip = false;
+		}
+		
+		// END TURN
+		if (Mouse.getB() == 1 && !Game.getGameplay().onGlobalCooldown && Game.getGameplay().getIsPlayerTurn() && !Game.getGameplay().getForcedPause()
+				&& Mouse.getX() > 395
+				&& Mouse.getX() < 512
+				&& Mouse.getY() > 609
+				&& Mouse.getY() < 623) {
+			if (Game.getGameplay().monstersAlive > 0) Game.getGameplay().endTurn(this);
+			else {
+				Game.getGameplay().setContinueGame(true);
+			}
+			Game.getGameplay().enableGlobalCooldown(); 
+		}
+	}
 	
-
 	
 	
 	public void render(Screen screen) {
 		// RENDER ABILITIES AT THE ACTION BAR
 		int[] spellPosHelper = new int[]{GUI.screenSpellPos1, GUI.screenSpellPos2, GUI.screenSpellPos3, GUI.screenSpellPos4};
 		for (int i = 0; i < abilities.size(); i++) {
-			screen.renderSprite(spellPosHelper[i], GUI.screenBottomElements - 30, abilities.get(i).getIcon(), 0);
+			screen.renderSprite(spellPosHelper[i], GUI.screenBottomElements + 11, abilities.get(i).getIcon(), 0);
 		}
 	}
 	
@@ -295,6 +380,19 @@ public class Player extends Entity {
 		return canUseSkills;
 	}
 
+	public int getGoldAmount() {
+		return goldAmount;
+	}
 	
+	public void setGoldAmount(int n) {
+		goldAmount = n;
+	}
 	
+	public void addGold(int n) {
+		goldAmount += n;
+	}
+	
+	public void removeGold(int n) {
+		goldAmount -= n;
+	}
 }

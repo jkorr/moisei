@@ -1,0 +1,74 @@
+|T0 : A new game has started.
+|T0 : Player's T Heal unlocked.
+|T0 : Player's T Fireball unlocked.
+|T0 : Player's T Stun unlocked.
+|T0 : Player's T Firestorm unlocked.
+|T0 : Player's Alpha Sword unlocked.
+|T0 : Player's T Greathammer unlocked.
+|T0 : Player's Shadow Dagger unlocked.
+|T0 : Basic Beast spawned.
+|T1 : New turn begins.
+|T1 : Targeted Basic Beast
+|T1 : Player switched weapons.
+|T1 : Player switched weapons.
+|T1 : Player switched weapons.
+|T1 : Player switched weapons.
+|T1 : Player switched weapons.
+|T1 : Player switched weapons.
+|T1 : Player switched weapons.
+|T1 : Player switched weapons.
+|T1 : Player switched weapons.
+|T1 : Wicked Wizard's T Fireball unlocked.
+|T1 : Wicked Wizard's T ManaDrain unlocked.
+|T1 : Wicked Wizard's T Shield unlocked.
+|T1 : Wicked Wizard spawned.
+|T1 : Weak Wolf's (M) Basic Attack unlocked.
+|T1 : Weak Wolf spawned.
+|T1 : Wicked Wizard's T Fireball unlocked.
+|T1 : Wicked Wizard's T ManaDrain unlocked.
+|T1 : Wicked Wizard's T Shield unlocked.
+|T1 : Wicked Wizard spawned.
+|T1 : Basic Beast spawned.
+|T1 : Targeted Basic Beast
+|T1 : Targeted Wicked Wizard
+|T1 : Targeted Weak Wolf
+|T1 : Targeted Wicked Wizard
+|T1 : Targeted Basic Beast
+|T1 : Targeted Basic Beast
+|T1 : Targeted Wicked Wizard
+|T1 : Targeted Weak Wolf
+|T1 : Player switched weapons.
+|T1 : Player switched weapons.
+|T1 : Player switched weapons.
+|T1 : Player switched weapons.
+|T1 : Player switched weapons.
+|T1 : Player switched weapons.
+|T1 : Player switched weapons.
+|T1 : Player switched weapons.
+|T1 : Player switched weapons.
+|T1 : Player switched weapons.
+|T1 : Player switched weapons.
+|T1 : Hit chance roll: 39
+|T1 : Player hits Weak Wolf with Alpha Sword (8 damage)
+-T1 : Turn 1 has ended in 153.0 seconds (Game time: 153.0s)
++T2 : New turn begins.
+|T2 : Game ended by player.
+
+|T0 : A new game has started.
+|T0 : Player's T Heal unlocked.
+|T0 : Player's T Fireball unlocked.
+|T0 : Player's T Stun unlocked.
+|T0 : Player's T Firestorm unlocked.
+|T0 : Player's Alpha Sword unlocked.
+|T0 : Player's T Greathammer unlocked.
+|T0 : Player's Shadow Dagger unlocked.
+|T0 : Wicked Wizard's T Fireball unlocked.
+|T0 : Wicked Wizard's T ManaDrain unlocked.
+|T0 : Wicked Wizard's T Shield unlocked.
+|T0 : Wicked Wizard spawned.
+|T1 : New turn begins.
+|T1 : Targeted Wicked Wizard
+|T1 : Hit chance roll: 23
+|T1 : Player hits Wicked Wizard with Alpha Sword (7 damage)
+-T1 : Turn 1 has ended in 45.7 seconds (Game time: 45.7s)
+

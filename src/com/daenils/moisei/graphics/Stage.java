@@ -30,9 +30,11 @@ public class Stage {
 	// STAGES
 //	private static Stage st_demo = new Stage("/textures/stages/st_demo.png");
 //	private static Stage st_altdemo = new Stage("/textures/stages/st_altdemo.png");
-	public static Stage st1 = new Stage("/textures/stages/st_1.png");
-	public static Stage st1a = new Stage("/textures/stages/st_1a.png");
-	public static Stage st1c = new Stage("/textures/stages/st_1c.png");
+	public static Stage st1 = new Stage("/textures/stages/st1.png");
+	public static Stage st1a = new Stage("/textures/stages/st1a.png");
+	public static Stage st1b = new Stage("/textures/stages/st1b.png");
+	public static Stage st1c = new Stage("/textures/stages/st1c.png");
+	public static Stage stx = new Stage("/textures/stages/stx.png");
 	
 	public Stage(Stage stage) {
 		this.playStage = stage;

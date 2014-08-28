@@ -1,0 +1,227 @@
+|T0 : A new game has started.
+|T0 : Player's T Heal unlocked.
+|T0 : Player's T Fireball unlocked.
+|T0 : Player's T Stun unlocked.
+|T0 : Player's T Firestorm unlocked.
+|T0 : Player's Alpha Sword unlocked.
+|T0 : Player's T Greathammer unlocked.
+|T0 : Player's Shadow Dagger unlocked.
+|T0 : Basic Beast spawned.
+|T1 : New turn begins.
+|T1 : Targeted Basic Beast
+|T1 : Hit chance roll: 95
+|T1 : Player hits Basic Beast with Alpha Sword (6 damage)
+-T1 : Turn 1 has ended in 5.2 seconds (Game time: 5.2s)
++T2 : New turn begins.
+|T2 : Basic Beast --> Player (3 damage)
+-T2 : Turn 2 has ended in 4.5 seconds (Game time: 9.8s)
++T3 : New turn begins.
+|T3 : Hit chance roll: 82
+|T3 : Player hits Basic Beast with Alpha Sword (7 damage)
+-T3 : Turn 3 has ended in 1.4 seconds (Game time: 11.3s)
++T4 : New turn begins.
+|T4 : Basic Beast --> Player (4 damage)
+-T4 : Turn 4 has ended in 4.5 seconds (Game time: 15.9s)
++T5 : New turn begins.
+|T5 : Hit chance roll: 61
+|T5 : Player hits Basic Beast with Alpha Sword (9 damage)
+-T5 : Turn 5 has ended in 3.6 seconds (Game time: 19.5s)
++T6 : New turn begins.
+|T6 : Basic Beast --> Player (4 damage)
+-T6 : Turn 6 has ended in 4.5 seconds (Game time: 24.1s)
++T7 : New turn begins.
+|T7 : Hit chance roll: 25
+|T7 : Player hits Basic Beast with Alpha Sword (6 damage)
+-T7 : Turn 7 has ended in 2.2 seconds (Game time: 26.4s)
++T8 : New turn begins.
+|T8 : Basic Beast --> Player (2 damage)
+|T8 : Targeted Basic Beast
+-T8 : Turn 8 has ended in 4.5 seconds (Game time: 30.9s)
++T9 : New turn begins.
+|T9 : Hit chance roll: 64
+|T9 : Congratulations, you have reached level 2!
+|T9 : Basic Beast died. Player receives 10 XP and 5 gold for the kill.
+|T9 : Player hits Basic Beast with Alpha Sword (8 damage)
+|T9 : Monster removed
+|T0 : Weak Wolf's (M) Basic Attack unlocked.
+|T0 : Weak Wolf spawned.
+|T1 : New turn begins.
+|T1 : Targeted Weak Wolf
+|T1 : Hit chance roll: 24
+|T1 : Player hits Weak Wolf with Alpha Sword (7 damage)
+-T1 : Turn 1 has ended in 3.8 seconds (Game time: 36.1s)
++T2 : New turn begins.
+|T2 : Hit chance roll: 95
+|T2 : Weak Wolf hits Player with (M) Basic Attack (4 damage)
+-T2 : Turn 2 has ended in 4.5 seconds (Game time: 40.6s)
++T3 : New turn begins.
+|T3 : Ability (T Fireball) used: 
+|T3 : Player hits Weak Wolf with T Fireball (10 damage)
+-T3 : Turn 3 has ended in 6.7 seconds (Game time: 47.4s)
++T4 : New turn begins.
+|T4 : Player --> Weak Wolf (2 damage)
+|T4 : [Tick 1] Player dealt a DoT of 2
+|T4 : Hit chance roll: 56
+|T4 : Weak Wolf hits Player with (M) Basic Attack (4 damage)
+-T4 : Turn 4 has ended in 4.5 seconds (Game time: 52.0s)
++T5 : New turn begins.
+|T5 : Player --> Weak Wolf (2 damage)
+|T5 : [Tick 1] Player dealt a DoT of 2
+|T5 : Hit chance roll: 32
+|T5 : Player hits Weak Wolf with Alpha Sword (7 damage)
+-T5 : Turn 5 has ended in 17.5 seconds (Game time: 69.6s)
++T6 : New turn begins.
+|T6 : Hit chance roll: 82
+|T6 : Weak Wolf hits Player with (M) Basic Attack (6 damage)
+|T6 : Targeted Weak Wolf
+-T6 : Turn 6 has ended in 4.5 seconds (Game time: 74.1s)
++T7 : New turn begins.
+|T7 : Hit chance roll: 17
+|T7 : Player missed.
+|T7 : Targeted Weak Wolf
+-T7 : Turn 7 has ended in 2.7 seconds (Game time: 76.9s)
++T8 : New turn begins.
+|T8 : Hit chance roll: 14
+|T8 : Weak Wolf missed.
+-T8 : Turn 8 has ended in 4.5 seconds (Game time: 81.5s)
++T9 : New turn begins.
+|T9 : Hit chance roll: 59
+|T9 : Weak Wolf died. Player receives 12 XP and 10 gold for the kill.
+|T9 : Player hits Weak Wolf with Alpha Sword (9 damage)
+|T9 : Monster removed
+|T0 : Weak Wolf's (M) Basic Attack unlocked.
+|T0 : Weak Wolf spawned.
+|T1 : New turn begins.
+|T1 : Targeted Weak Wolf
+|T1 : Hit chance roll: 82
+|T1 : Player hits Weak Wolf with Alpha Sword (4 damage)
+-T1 : Turn 1 has ended in 3.8 seconds (Game time: 86.6s)
++T2 : New turn begins.
+|T2 : Hit chance roll: 51
+|T2 : Weak Wolf hits Player with (M) Basic Attack (4 damage)
+-T2 : Turn 2 has ended in 4.5 seconds (Game time: 91.1s)
++T3 : New turn begins.
+|T3 : Hit chance roll: 29
+|T3 : Player hits Weak Wolf with Alpha Sword (4 damage)
+-T3 : Turn 3 has ended in 2.8 seconds (Game time: 94.0s)
++T4 : New turn begins.
+|T4 : Hit chance roll: 81
+|T4 : Weak Wolf hits Player with (M) Basic Attack (4 damage)
+-T4 : Turn 4 has ended in 4.5 seconds (Game time: 98.6s)
++T5 : New turn begins.
+|T5 : Ability (T Fireball) used: 
+|T5 : Player hits Weak Wolf with T Fireball (10 damage)
+-T5 : Turn 5 has ended in 1.9 seconds (Game time: 100.6s)
++T6 : New turn begins.
+|T6 : Player --> Weak Wolf (2 damage)
+|T6 : [Tick 1] Player dealt a DoT of 2
+|T6 : Hit chance roll: 57
+|T6 : Weak Wolf hits Player with (M) Basic Attack (4 damage)
+-T6 : Turn 6 has ended in 4.5 seconds (Game time: 105.1s)
++T7 : New turn begins.
+|T7 : Player --> Weak Wolf (2 damage)
+|T7 : [Tick 1] Player dealt a DoT of 2
+|T7 : Hit chance roll: 29
+|T7 : Player hits Weak Wolf with Alpha Sword (8 damage)
+-T7 : Turn 7 has ended in 1.9 seconds (Game time: 107.1s)
++T8 : New turn begins.
+|T8 : Hit chance roll: 29
+|T8 : Weak Wolf missed.
+-T8 : Turn 8 has ended in 4.5 seconds (Game time: 111.7s)
++T9 : New turn begins.
+|T9 : Hit chance roll: 55
+|T9 : Weak Wolf died. Player receives 12 XP and 10 gold for the kill.
+|T9 : Player hits Weak Wolf with Alpha Sword (7 damage)
+|T9 : Monster removed
+|T0 : Basic Beast spawned.
+|T1 : New turn begins.
+|T1 : Targeted Basic Beast
+|T1 : Ability (T Fireball) used: 
+|T1 : Player hits Basic Beast with T Fireball (10 damage)
+-T1 : Turn 1 has ended in 3.5 seconds (Game time: 115.9s)
++T2 : New turn begins.
+|T2 : Player --> Basic Beast (2 damage)
+|T2 : [Tick 1] Player dealt a DoT of 2
+|T2 : Basic Beast --> Player (3 damage)
+-T2 : Turn 2 has ended in 4.5 seconds (Game time: 120.5s)
++T3 : New turn begins.
+|T3 : Player --> Basic Beast (2 damage)
+|T3 : [Tick 1] Player dealt a DoT of 2
+|T3 : Hit chance roll: 29
+|T3 : Player hits Basic Beast with Alpha Sword (9 damage)
+-T3 : Turn 3 has ended in 1.3 seconds (Game time: 121.9s)
++T4 : New turn begins.
+|T4 : Basic Beast --> Player (3 damage)
+-T4 : Turn 4 has ended in 4.5 seconds (Game time: 126.4s)
++T5 : New turn begins.
+|T5 : Hit chance roll: 55
+|T5 : Player hits Basic Beast with Alpha Sword (9 damage)
+-T5 : Turn 5 has ended in 2.2 seconds (Game time: 128.7s)
++T6 : New turn begins.
+|T6 : Basic Beast --> Player (4 damage)
+-T6 : Turn 6 has ended in 4.5 seconds (Game time: 133.3s)
++T7 : New turn begins.
+|T7 : Hit chance roll: 64
+|T7 : Congratulations, you have reached level 3!
+|T7 : Basic Beast died. Player receives 12 XP and 10 gold for the kill.
+|T7 : Player hits Basic Beast with Alpha Sword (4 damage)
+|T7 : Monster removed
+|T0 : Weak Wolf's (M) Basic Attack unlocked.
+|T0 : Weak Wolf spawned.
+|T0 : Basic Beast spawned.
+|T1 : New turn begins.
+|T1 : Targeted Weak Wolf
+|T1 : Targeted Basic Beast
+|T1 : Targeted Weak Wolf
+|T1 : Ability (T Firestorm) used: 
+|T1 : Player hits Weak Wolf with T Firestorm (15 damage)
+|T1 : Player hits Basic Beast with T Firestorm (15 damage)
+|T1 : Targeted Weak Wolf
+-T1 : Turn 1 has ended in 6.8 seconds (Game time: 141.3s)
++T2 : New turn begins.
+|T2 : Player --> Weak Wolf (1 damage)
+|T2 : [Tick 1] Player dealt a DoT of 1
+|T2 : Hit chance roll: 59
+|T2 : Weak Wolf hits Player with (M) Basic Attack (4 damage)
+|T2 : Basic Beast --> Player (3 damage)
+-T2 : Turn 2 has ended in 7.5 seconds (Game time: 148.9s)
++T3 : New turn begins.
+|T3 : Player --> Weak Wolf (1 damage)
+|T3 : [Tick 1] Player dealt a DoT of 1
+|T3 : Hit chance roll: 51
+|T3 : Player hits Weak Wolf with Alpha Sword (9 damage)
+-T3 : Turn 3 has ended in 2.5 seconds (Game time: 151.4s)
++T4 : New turn begins.
+|T4 : Player --> Weak Wolf (1 damage)
+|T4 : [Tick 1] Player dealt a DoT of 1
+|T4 : Hit chance roll: 2
+|T4 : Weak Wolf missed.
+|T4 : Basic Beast --> Player (3 damage)
+-T4 : Turn 4 has ended in 7.5 seconds (Game time: 159.0s)
++T5 : New turn begins.
+|T5 : Hit chance roll: 58
+|T5 : Player hits Weak Wolf with Alpha Sword (4 damage)
+-T5 : Turn 5 has ended in 1.6 seconds (Game time: 160.7s)
++T6 : New turn begins.
+|T6 : Hit chance roll: 64
+|T6 : Weak Wolf hits Player with (M) Basic Attack (4 damage)
+|T6 : Basic Beast --> Player (3 damage)
+-T6 : Turn 6 has ended in 7.5 seconds (Game time: 168.3s)
++T7 : New turn begins.
+|T7 : Hit chance roll: 3
+|T7 : Player missed.
+-T7 : Turn 7 has ended in 4.0 seconds (Game time: 172.4s)
++T8 : New turn begins.
+|T8 : Hit chance roll: 35
+|T8 : Weak Wolf missed.
+|T8 : Basic Beast --> Player (3 damage)
+|T8 : Targeted Weak Wolf
+-T8 : Turn 8 has ended in 7.5 seconds (Game time: 179.9s)
++T9 : New turn begins.
+|T9 : Hit chance roll: 51
+|T9 : Targeted Basic Beast
+|T9 : Weak Wolf died. Player receives 16 XP and 15 gold for the kill.
+|T9 : Player hits Weak Wolf with Alpha Sword (9 damage)
+|T9 : Targeted Basic Beast
+-T9 : Turn 9 has ended in 3.4 seconds (Game time: 183.4s)
+

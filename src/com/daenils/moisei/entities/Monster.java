@@ -22,6 +22,8 @@ public class Monster extends Entity {
 	private int[] XY = new int[2];
 	private int[] randomWait = new int[2];
 	private int r;
+
+	public boolean showDetails; 
 	
 	public int[] spawnSlot1;
 	public int[] spawnSlot2;
@@ -99,6 +101,8 @@ public class Monster extends Entity {
 		this.randomWait = new int[] {1, 3};
 		this.r = newRandomWait();
 		
+		this.width = sprite.getWidth();
+		this.height = sprite.getHeight();
 		
 		this.needsRemove = false;
 		this.deathCount = 0;
@@ -108,40 +112,40 @@ public class Monster extends Entity {
 
 	private void updateSpawnSlots() {
 		if (stage.getMonsters().size() == 1) {
-			spawnSlot1 = new int[] {580, 290};
-			spawnSlot2 = new int[] {335, 320};
+			spawnSlot1 = new int[] {580 / 2, 290 / 2};
+			spawnSlot2 = new int[] {335 / 2, 320 / 2};
 		}
 		else if (stage.getMonsters().size() == 2) { 
-			spawnSlot1 = new int[] {335, 320};
-			spawnSlot2 = new int[] {580, 290};
-			spawnSlot3 = new int[] {810, 250};
+			spawnSlot1 = new int[] {335 / 2, 320 / 2};
+			spawnSlot2 = new int[] {580 / 2, 290 / 2};
+			spawnSlot3 = new int[] {810 / 2, 250 / 2};
 		}
 		else if (stage.getMonsters().size() == 3) {
-			spawnSlot1 = new int[] {335, 320};
-			spawnSlot2 = new int[] {580, 290};
-			spawnSlot3 = new int[] {810, 250};
-			spawnSlot4 = new int[] {100, 250};
+			spawnSlot1 = new int[] {335 / 2, 320 / 2};
+			spawnSlot2 = new int[] {580 / 2, 290 / 2};
+			spawnSlot3 = new int[] {810 / 2, 250 / 2};
+			spawnSlot4 = new int[] {100 / 2, 250 / 2};
 		}
 		else if (stage.getMonsters().size() == 4) {
-			spawnSlot1 = new int[] {100, 250};
-			spawnSlot2 = new int[] {335, 320};
-			spawnSlot3 = new int[] {580, 290};
-			spawnSlot4 = new int[] {810, 250};
-			spawnSlot5 = new int[] {1050, 210};
+			spawnSlot1 = new int[] {100 / 2, 250 / 2};
+			spawnSlot2 = new int[] {335 / 2, 320 / 2};
+			spawnSlot3 = new int[] {580 / 2, 290 / 2};
+			spawnSlot4 = new int[] {810 / 2, 250 / 2};
+			spawnSlot5 = new int[] {1050 / 2, 210 / 2};
 		}
 		else if (stage.getMonsters().size() == 5) {
-			spawnSlot1 = new int[] {100, 250};
-			spawnSlot2 = new int[] {335, 320};
-			spawnSlot3 = new int[] {580, 290};
-			spawnSlot4 = new int[] {810, 250};
-			spawnSlot5 = new int[] {1050, 210};
+			spawnSlot1 = new int[] {100 / 2, 250 / 2};
+			spawnSlot2 = new int[] {335 / 2, 320 / 2};
+			spawnSlot3 = new int[] {580 / 2, 290 / 2};
+			spawnSlot4 = new int[] {810 / 2, 250 / 2};
+			spawnSlot5 = new int[] {1050 / 2, 210 / 2};
 		}
 		else {
-		spawnSlot1 = new int[] {100, 250};
-		spawnSlot2 = new int[] {335, 320};
-		spawnSlot3 = new int[] {580, 290};
-		spawnSlot4 = new int[] {810, 250};
-		spawnSlot5 = new int[] {1050, 210};
+		spawnSlot1 = new int[] {100 / 2, 250 / 2};
+		spawnSlot2 = new int[] {335 / 2, 320 / 2};
+		spawnSlot3 = new int[] {580 / 2, 290 / 2};
+		spawnSlot4 = new int[] {810 / 2, 250 / 2};
+		spawnSlot5 = new int[] {1050 / 2, 210 / 2};
 		}
 		
 	}
@@ -301,7 +305,7 @@ public class Monster extends Entity {
 	
 	
 	private int[] setXY(int spawnSlot) {
-		if (spawnSlot < 1 || spawnSlot > 5) { XY[0] = 100; XY[1] = 250; }
+		if (spawnSlot < 1 || spawnSlot > 5) { XY[0] = 100 / 2; XY[1] = 250 / 2; }
 		else if (spawnSlot == 1)  { XY[0] = spawnSlot1[0]; XY[1] = spawnSlot1[1]; }
 		else if (spawnSlot == 2)  { XY[0] = spawnSlot2[0]; XY[1] = spawnSlot2[1]; }
 		else if (spawnSlot == 3)  { XY[0] = spawnSlot3[0]; XY[1] = spawnSlot3[1]; }

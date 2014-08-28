@@ -1,0 +1,248 @@
+|T0 : A new game has started.
+|T0 : Player's T Heal unlocked.
+|T0 : Player's T Fireball unlocked.
+|T0 : Player's T Stun unlocked.
+|T0 : Player's T Firestorm unlocked.
+|T0 : Player's Alpha Sword unlocked.
+|T0 : Player's T Greathammer unlocked.
+|T0 : Player's Shadow Dagger unlocked.
+|T0 : Basic Beast spawned.
+|T1 : New turn begins.
+|T1 : Targeted Basic Beast
+|T1 : Hit chance roll: 1
+|T1 : Player missed.
+-T1 : Turn 1 has ended in 2.5 seconds (Game time: 2.5s)
++T2 : New turn begins.
+|T2 : Basic Beast --> Player (5 damage)
+-T2 : Turn 2 has ended in 4.5 seconds (Game time: 7.1s)
++T3 : New turn begins.
+|T3 : Ability (T Fireball) used: 
+|T3 : Player hits Basic Beast with T Fireball (10 damage)
+-T3 : Turn 3 has ended in 0.7 seconds (Game time: 7.8s)
++T4 : New turn begins.
+|T4 : Player --> Basic Beast (2 damage)
+|T4 : [Tick 1] Player dealt a DoT of 2
+|T4 : Basic Beast --> Player (3 damage)
+-T4 : Turn 4 has ended in 4.5 seconds (Game time: 12.4s)
++T5 : New turn begins.
+|T5 : Player --> Basic Beast (2 damage)
+|T5 : [Tick 1] Player dealt a DoT of 2
+|T5 : Hit chance roll: 68
+|T5 : Player hits Basic Beast with Alpha Sword (7 damage)
+-T5 : Turn 5 has ended in 1.0 seconds (Game time: 13.5s)
++T6 : New turn begins.
+|T6 : Basic Beast --> Player (4 damage)
+-T6 : Turn 6 has ended in 4.5 seconds (Game time: 18.0s)
++T7 : New turn begins.
+|T7 : Hit chance roll: 69
+|T7 : Player hits Basic Beast with Alpha Sword (4 damage)
+-T7 : Turn 7 has ended in 2.2 seconds (Game time: 20.3s)
++T8 : New turn begins.
+|T8 : Basic Beast --> Player (5 damage)
+-T8 : Turn 8 has ended in 4.5 seconds (Game time: 24.8s)
++T9 : New turn begins.
+|T9 : Hit chance roll: 95
+|T9 : Congratulations, you have reached level 2!
+|T9 : Basic Beast died. Player receives 10 XP and 5 gold for the kill.
+|T9 : Player hits Basic Beast with Alpha Sword (8 damage)
+|T9 : Monster removed
+|T0 : Wicked Wizard's T Fireball unlocked.
+|T0 : Wicked Wizard's T ManaDrain unlocked.
+|T0 : Wicked Wizard's T Shield unlocked.
+|T0 : Wicked Wizard spawned.
+|T1 : New turn begins.
+|T1 : Targeted Wicked Wizard
+|T1 : Hit chance roll: 16
+|T1 : Player missed.
+-T1 : Turn 1 has ended in 8.3 seconds (Game time: 33.5s)
++T2 : New turn begins.
+|T2 : Ability (T Fireball) used: 
+|T2 : Wicked Wizard hits Player with T Fireball (10 damage)
+-T2 : Turn 2 has ended in 4.5 seconds (Game time: 38.1s)
++T3 : New turn begins.
+|T3 : Wicked Wizard --> Player (2 damage)
+|T3 : [Tick 1] Wicked Wizard dealt a DoT of 2
+|T3 : Ability (T Fireball) used: 
+|T3 : Player hits Wicked Wizard with T Fireball (10 damage)
+-T3 : Turn 3 has ended in 0.9 seconds (Game time: 39.1s)
++T4 : New turn begins.
+|T4 : Player --> Wicked Wizard (2 damage)
+|T4 : [Tick 1] Player dealt a DoT of 2
+|T4 : Wicked Wizard --> Player (2 damage)
+|T4 : [Tick 1] Wicked Wizard dealt a DoT of 2
+|T4 : Wicked Wizard --> Player (2 damage)
+-T4 : Turn 4 has ended in 4.5 seconds (Game time: 43.7s)
++T5 : New turn begins.
+|T5 : Player --> Wicked Wizard (2 damage)
+|T5 : [Tick 1] Player dealt a DoT of 2
+|T5 : Hit chance roll: 25
+|T5 : Player hits Wicked Wizard with Alpha Sword (4 damage)
+-T5 : Turn 5 has ended in 1.8 seconds (Game time: 45.5s)
++T6 : New turn begins.
+|T6 : Ability (T Fireball) used: 
+|T6 : Wicked Wizard hits Player with T Fireball (10 damage)
+-T6 : Turn 6 has ended in 4.5 seconds (Game time: 50.1s)
++T7 : New turn begins.
+|T7 : Wicked Wizard --> Player (2 damage)
+|T7 : [Tick 1] Wicked Wizard dealt a DoT of 2
+|T7 : Hit chance roll: 26
+|T7 : Player hits Wicked Wizard with Alpha Sword (6 damage)
+-T7 : Turn 7 has ended in 2.5 seconds (Game time: 52.6s)
++T8 : New turn begins.
+|T8 : Wicked Wizard --> Player (2 damage)
+|T8 : [Tick 1] Wicked Wizard dealt a DoT of 2
+|T8 : Wicked Wizard --> Player (3 damage)
+-T8 : Turn 8 has ended in 4.5 seconds (Game time: 57.2s)
++T9 : New turn begins.
+|T9 : Hit chance roll: 89
+|T9 : Wicked Wizard died. Player receives 12 XP and 10 gold for the kill.
+|T9 : Player hits Wicked Wizard with Alpha Sword (8 damage)
+|T9 : Monster removed
+|T0 : Basic Beast spawned.
+|T1 : New turn begins.
+|T1 : Targeted Basic Beast
+|T1 : Ability (T Fireball) used: 
+|T1 : Player hits Basic Beast with T Fireball (10 damage)
+-T1 : Turn 1 has ended in 2.1 seconds (Game time: 60.2s)
++T2 : New turn begins.
+|T2 : Player --> Basic Beast (2 damage)
+|T2 : [Tick 1] Player dealt a DoT of 2
+|T2 : Basic Beast --> Player (2 damage)
+-T2 : Turn 2 has ended in 4.5 seconds (Game time: 64.8s)
++T3 : New turn begins.
+|T3 : Player --> Basic Beast (2 damage)
+|T3 : [Tick 1] Player dealt a DoT of 2
+|T3 : Hit chance roll: 69
+|T3 : Player hits Basic Beast with Alpha Sword (7 damage)
+-T3 : Turn 3 has ended in 1.1 seconds (Game time: 66.0s)
++T4 : New turn begins.
+|T4 : Basic Beast --> Player (2 damage)
+-T4 : Turn 4 has ended in 4.5 seconds (Game time: 70.5s)
++T5 : New turn begins.
+|T5 : Hit chance roll: 95
+|T5 : Player hits Basic Beast with Alpha Sword (9 damage)
+-T5 : Turn 5 has ended in 1.0 seconds (Game time: 71.6s)
++T6 : New turn begins.
+|T6 : Basic Beast --> Player (2 damage)
+-T6 : Turn 6 has ended in 4.5 seconds (Game time: 76.2s)
++T7 : New turn begins.
+|T7 : Hit chance roll: 77
+|T7 : Basic Beast died. Player receives 12 XP and 10 gold for the kill.
+|T7 : Player hits Basic Beast with Alpha Sword (7 damage)
+|T7 : Monster removed
+|T0 : Wicked Wizard's T Fireball unlocked.
+|T0 : Wicked Wizard's T ManaDrain unlocked.
+|T0 : Wicked Wizard's T Shield unlocked.
+|T0 : Wicked Wizard spawned.
+|T1 : New turn begins.
+|T1 : Targeted Wicked Wizard
+|T1 : Hit chance roll: 26
+|T1 : Player hits Wicked Wizard with Alpha Sword (7 damage)
+-T1 : Turn 1 has ended in 2.2 seconds (Game time: 79.6s)
++T2 : New turn begins.
+|T2 : Ability (T Fireball) used: 
+|T2 : Wicked Wizard hits Player with T Fireball (10 damage)
+-T2 : Turn 2 has ended in 4.5 seconds (Game time: 84.1s)
++T3 : New turn begins.
+|T3 : Wicked Wizard --> Player (2 damage)
+|T3 : [Tick 1] Wicked Wizard dealt a DoT of 2
+|T3 : Hit chance roll: 60
+|T3 : Player hits Wicked Wizard with Alpha Sword (8 damage)
+-T3 : Turn 3 has ended in 1.3 seconds (Game time: 85.5s)
++T4 : New turn begins.
+|T4 : Wicked Wizard --> Player (2 damage)
+|T4 : [Tick 1] Wicked Wizard dealt a DoT of 2
+|T4 : Wicked Wizard --> Player (1 damage)
+-T4 : Turn 4 has ended in 4.5 seconds (Game time: 90.0s)
++T5 : New turn begins.
+|T5 : Hit chance roll: 57
+|T5 : Player hits Wicked Wizard with Alpha Sword (9 damage)
+-T5 : Turn 5 has ended in 1.1 seconds (Game time: 91.2s)
++T6 : New turn begins.
+|T6 : Ability (T Fireball) used: 
+|T6 : Wicked Wizard hits Player with T Fireball (10 damage)
+-T6 : Turn 6 has ended in 4.5 seconds (Game time: 95.7s)
++T7 : New turn begins.
+|T7 : Wicked Wizard --> Player (2 damage)
+|T7 : [Tick 1] Wicked Wizard dealt a DoT of 2
+|T7 : Ability (T Fireball) used: 
+|T7 : Congratulations, you have reached level 3!
+|T7 : Wicked Wizard died. Player receives 12 XP and 10 gold for the kill.
+|T7 : Player hits Wicked Wizard with T Fireball (10 damage)
+|T7 : Monster removed
+|T0 : Wicked Wizard's T Fireball unlocked.
+|T0 : Wicked Wizard's T ManaDrain unlocked.
+|T0 : Wicked Wizard's T Shield unlocked.
+|T0 : Wicked Wizard spawned.
+|T0 : Weak Wolf's (M) Basic Attack unlocked.
+|T0 : Weak Wolf spawned.
+|T1 : New turn begins.
+|T1 : Targeted Wicked Wizard
+|T1 : Ability (T Fireball) used: 
+|T1 : Player hits Wicked Wizard with T Fireball (10 damage)
+-T1 : Turn 1 has ended in 2.8 seconds (Game time: 98.8s)
++T2 : New turn begins.
+|T2 : Player --> Wicked Wizard (2 damage)
+|T2 : [Tick 1] Player dealt a DoT of 2
+|T2 : Ability (T Fireball) used: 
+|T2 : Wicked Wizard hits Player with T Fireball (10 damage)
+|T2 : Hit chance roll: 17
+|T2 : Weak Wolf missed.
+-T2 : Turn 2 has ended in 7.5 seconds (Game time: 106.4s)
++T3 : New turn begins.
+|T3 : Player --> Wicked Wizard (2 damage)
+|T3 : [Tick 1] Player dealt a DoT of 2
+|T3 : Wicked Wizard --> Player (2 damage)
+|T3 : [Tick 1] Wicked Wizard dealt a DoT of 2
+|T3 : Hit chance roll: 57
+|T3 : Player hits Wicked Wizard with Alpha Sword (6 damage)
+-T3 : Turn 3 has ended in 1.2 seconds (Game time: 107.6s)
++T4 : New turn begins.
+|T4 : Wicked Wizard --> Player (2 damage)
+|T4 : [Tick 1] Wicked Wizard dealt a DoT of 2
+|T4 : Wicked Wizard --> Player (3 damage)
+|T4 : Hit chance roll: 54
+|T4 : Weak Wolf hits Player with (M) Basic Attack (3 damage)
+-T4 : Turn 4 has ended in 7.5 seconds (Game time: 115.2s)
++T5 : New turn begins.
+|T5 : Hit chance roll: 72
+|T5 : Player hits Wicked Wizard with Alpha Sword (5 damage)
+-T5 : Turn 5 has ended in 1.7 seconds (Game time: 116.9s)
++T6 : New turn begins.
+|T6 : Ability (T Fireball) used: 
+|T6 : Wicked Wizard hits Player with T Fireball (10 damage)
+|T6 : Hit chance roll: 44
+|T6 : Weak Wolf hits Player with (M) Basic Attack (6 damage)
+-T6 : Turn 6 has ended in 7.5 seconds (Game time: 124.5s)
++T7 : New turn begins.
+|T7 : Wicked Wizard --> Player (2 damage)
+|T7 : [Tick 1] Wicked Wizard dealt a DoT of 2
+|T7 : Hit chance roll: 8
+|T7 : Player missed.
+-T7 : Turn 7 has ended in 10.6 seconds (Game time: 135.2s)
++T8 : New turn begins.
+|T8 : Wicked Wizard --> Player (2 damage)
+|T8 : [Tick 1] Wicked Wizard dealt a DoT of 2
+|T8 : Wicked Wizard --> Player (1 damage)
+|T8 : Hit chance roll: 69
+|T8 : Weak Wolf hits Player with (M) Basic Attack (5 damage)
+-T8 : Turn 8 has ended in 7.5 seconds (Game time: 142.8s)
++T9 : New turn begins.
+|T9 : Hit chance roll: 29
+|T9 : Player hits Wicked Wizard with Alpha Sword (8 damage)
+-T9 : Turn 9 has ended in 1.6 seconds (Game time: 144.4s)
++T10 : New turn begins.
+|T10 : Ability (T Fireball) used: 
+|T10 : Wicked Wizard hits Player with T Fireball (10 damage)
+|T10 : Hit chance roll: 35
+|T10 : Weak Wolf missed.
+-T10 : Turn 10 has ended in 7.5 seconds (Game time: 152.0s)
++T11 : New turn begins.
+|T11 : Wicked Wizard --> Player (2 damage)
+|T11 : [Tick 1] Wicked Wizard dealt a DoT of 2
+|T11 : Hit chance roll: 47
+|T11 : Targeted Weak Wolf
+|T11 : Wicked Wizard died. Player receives 16 XP and 15 gold for the kill.
+|T11 : Player hits Wicked Wizard with Alpha Sword (6 damage)
+-T11 : Turn 11 has ended in 5.4 seconds (Game time: 157.5s)
+

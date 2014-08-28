@@ -22,11 +22,11 @@ public class Sprite {
 	 * --------------
 	 */
 
-	public static Sprite monster_demo = new Sprite("/textures/entities/monster_demo.png", 128, 208);
-	public static Sprite monster_demo2 = new Sprite("/textures/entities/monster_demo2.png", 128, 208);
-	public static Sprite monster_demo3 = new Sprite("/textures/entities/monster_demo3.png", 128, 208);
-	public static Sprite monster_demo4 = new Sprite("/textures/entities/monster_demo4.gif", 128, 208);
-	public static Sprite monster_generic_dead = new Sprite("/textures/entities/monster_generic_dead.gif", 128, 208);
+//	public static Sprite monster_demo = new Sprite("/textures/entities/monster_demo.png", 64, 104);
+//	public static Sprite monster_demo2 = new Sprite("/textures/entities/monster_demo2.png", 64, 104);
+	public static Sprite monster_demo3 = new Sprite("/textures/entities/monster_demo3.png", 64, 104);
+	public static Sprite monster_demo4 = new Sprite("/textures/entities/monster_demo4.gif", 64, 104);
+	public static Sprite monster_generic_dead = new Sprite("/textures/entities/monster_generic_dead.gif", 64, 104);
 	
 	/* 
 	 * --------------
@@ -34,10 +34,10 @@ public class Sprite {
 	 * --------------
 	 */
 	
-	public static Sprite spell0 = new Sprite("/textures/gui/spells/spell0.png", 120, 120);
-	public static Sprite spell1 = new Sprite("/textures/gui/spells/spell1.png", 120, 120);
-	public static Sprite spell2 = new Sprite("/textures/gui/spells/spell2.png", 120, 120);
-	public static Sprite spell3 = new Sprite("/textures/gui/spells/spell3.png", 120, 120);
+	public static Sprite spell0 = new Sprite("/textures/gui/spells/spell0.png", 30, 30);
+	public static Sprite spell1 = new Sprite("/textures/gui/spells/spell1.png", 30, 30);
+	public static Sprite spell2 = new Sprite("/textures/gui/spells/spell2.png", 30, 30);
+	public static Sprite spell3 = new Sprite("/textures/gui/spells/spell3.png", 30, 30);
 	
 	public Sprite(String path, int w, int h) {
 		this.width = w;

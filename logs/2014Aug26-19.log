@@ -1,0 +1,56 @@
+|T0 : A new game has started.
+|T0 : Player's T Heal unlocked.
+|T0 : Player's T Fireball unlocked.
+|T0 : Player's T Stun unlocked.
+|T0 : Player's T Firestorm unlocked.
+|T0 : Player's Alpha Sword unlocked.
+|T0 : Player's T Greathammer unlocked.
+|T0 : Player's Shadow Dagger unlocked.
+|T0 : Basic Beast spawned.
+|T1 : New turn begins.
+|T1 : Targeted Basic Beast
+|T1 : Wicked Wizard's T Fireball unlocked.
+|T1 : Wicked Wizard's T ManaDrain unlocked.
+|T1 : Wicked Wizard's T Shield unlocked.
+|T1 : Wicked Wizard spawned.
+|T1 : Targeted Wicked Wizard
+|T1 : Targeted Basic Beast
+|T1 : Hit chance roll: 37
+|T1 : Player hits Basic Beast with Alpha Sword (4 damage)
+|T1 : Targeted Wicked Wizard
+-T1 : Turn 1 has ended in 28.6 seconds (Game time: 28.6s)
++T2 : New turn begins.
+|T2 : Basic Beast --> Player (4 damage)
+|T2 : Ability (T Fireball) used: 
+|T2 : Wicked Wizard hits Player with T Fireball (10 damage)
+|T2 : Targeted Basic Beast
+-T2 : Turn 2 has ended in 7.5 seconds (Game time: 36.2s)
++T3 : New turn begins.
+|T3 : Wicked Wizard --> Player (2 damage)
+|T3 : [Tick 1] Wicked Wizard dealt a DoT of 2
+|T3 : Targeted Wicked Wizard
+|T3 : Targeted Basic Beast
+|T3 : Targeted Wicked Wizard
+|T3 : Targeted Basic Beast
+|T3 : Hit chance roll: 47
+|T3 : Player hits Basic Beast with Alpha Sword (9 damage)
+-T3 : Turn 3 has ended in 7.2 seconds (Game time: 43.4s)
++T4 : New turn begins.
+|T4 : Wicked Wizard --> Player (2 damage)
+|T4 : [Tick 1] Wicked Wizard dealt a DoT of 2
+|T4 : Targeted Wicked Wizard
+|T4 : Targeted Basic Beast
+|T4 : Targeted Wicked Wizard
+|T4 : Targeted Basic Beast
+|T4 : Basic Beast --> Player (4 damage)
+|T4 : Targeted Wicked Wizard
+|T4 : Wicked Wizard --> Player (2 damage)
+-T4 : Turn 4 has ended in 7.5 seconds (Game time: 51.0s)
++T5 : New turn begins.
+|T5 : Targeted Basic Beast
+|T5 : Targeted Wicked Wizard
+|T5 : Targeted Basic Beast
+|T5 : Hit chance roll: 94
+|T5 : Player hits Basic Beast with Alpha Sword (7 damage)
+-T5 : Turn 5 has ended in 4.9 seconds (Game time: 56.0s)
+

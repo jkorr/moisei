@@ -19,23 +19,23 @@ public class GUI {
 	
 	// GUI ELEMENTS
 	
-	public static GUI gui_back = new GUI("/textures/gui/gui_back.png", 1280, 180);
-	public static GUI gui_turninfo = new GUI("/textures/gui/gui_turninfo.png", 240, 120);
-	public static GUI gui_playerinfo = new GUI("/textures/gui/gui_playerinfo.png", 370, 120);
-	public static GUI gui_spelldefQ = new GUI("/textures/gui/gui_spell-defQ.png", 120, 120);
-	public static GUI gui_spelldefW = new GUI("/textures/gui/gui_spell-defW.png", 120, 120);
-	public static GUI gui_spelldefE = new GUI("/textures/gui/gui_spell-defE.png", 120, 120);
-	public static GUI gui_spelldefR = new GUI("/textures/gui/gui_spell-defR.png", 120, 120);	
+	public static GUI gui_back = new GUI("/textures/gui/gui_back.png", 640, 60);
+	public static GUI gui_turninfo = new GUI("/textures/gui/gui_turninfo.png", 120, 60);
+	public static GUI gui_playerinfo = new GUI("/textures/gui/gui_playerinfo.png", 185, 60);
+	public static GUI gui_spelldefQ = new GUI("/textures/gui/gui_spell-defQ.png", 30, 30);
+	public static GUI gui_spelldefW = new GUI("/textures/gui/gui_spell-defW.png", 30, 30);
+	public static GUI gui_spelldefE = new GUI("/textures/gui/gui_spell-defE.png", 30, 30);
+	public static GUI gui_spelldefR = new GUI("/textures/gui/gui_spell-defR.png", 30, 30);	
 	
 	// GUI POSITION HELPERS
 	public static int screenBottomBack = Game.getRenderHeight()-GUI.gui_back.height;
 	public static int screenBottomElements = Game.getRenderHeight()-GUI.gui_turninfo.height;
-	public static int screenSpellPos1 = 30;
-	public static int screenSpellPos2 = 30 + (1 * 10) + (1 * 120);
-	public static int screenSpellPos3 = 30 + (2 * 10) + (2 * 120);
-	public static int screenSpellPos4 = 30 + (3 * 10) + (3 * 120);
-	public static int screenTurninfoPos = 30 + (3 * 10) + (4 * 120) + (1 * 50);
-	public static int screenPlayerinfoPos = 30 + (3 * 10) + (4 * 120) + (2 * 50) + 240;
+	public static int screenSpellPos1 = 10;
+	public static int screenSpellPos2 = screenSpellPos1 + (1 * 5) + (1 * 30);
+	public static int screenSpellPos3 = screenSpellPos1 + (2 * 5) + (2 * 30);
+	public static int screenSpellPos4 = screenSpellPos1 + (3 * 5) + (3 * 30);
+	public static int screenTurninfoPos = screenSpellPos1 + (3 * 5) + (4 * 60) + (1 * 25);
+	public static int screenPlayerinfoPos = screenSpellPos1 + (3 * 5) + (4 * 60) + (2 * 25) + 120;
 	
 		
 	
@@ -62,9 +62,12 @@ public class GUI {
 	
 	public void render(Graphics g) {
 		// TEXT RENDERING WILL MOVE HERE FROM GAMEPLAY.JAVA
-	//	font.renderNew("Player H\tealth " + Gamestats.playerHP, 40, 40, 0, "Kubasta", 16, g);
+//		font.renderNew("Player H\tealth " + Game.getGameplay().getStage().getPlayer().getHealth(), Game.getRenderWidth(), Game.getRenderHeight(), 0, "Kubasta", 16, g);
 		
 	//	renderVersionInfo(g);
+	//	g.drawLine(25, 25, 50, 25);
+		
+		
 		
 	}
 	

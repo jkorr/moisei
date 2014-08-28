@@ -19,15 +19,15 @@ public class Spritesheet {
 	// SPRITESHEETS
 	// fontsheet:
 	
-	public Spritesheet(String path, int w, int h, int spriteSize) {
+	public Spritesheet(String path, int w, int h, int sw, int sh) {
 		this.path = path;
 		width = w;
 		height = h;
 		size = width * height;
 		pixels = new int[width * height];
 		
-		spriteHeight = spriteSize;
-		spriteWidth = spriteSize;
+		spriteHeight = sh;
+		spriteWidth = sw;
 		load();
 	}
 	

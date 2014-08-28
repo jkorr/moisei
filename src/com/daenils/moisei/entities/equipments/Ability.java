@@ -25,6 +25,8 @@ public class Ability extends Equipment {
 	// ABILITY COOLDOWN HANDLING
 	private boolean onCooldown;
 	
+	public boolean showTooltip;
+	
 	/*
 	 * 0 - heal 
 	 * 1 - damage

@@ -1,5 +1,6 @@
 package com.daenils.moisei.entities;
 
+import java.awt.Font;
 import java.awt.Graphics;
 import java.text.DateFormat;
 import java.util.Calendar;
@@ -11,6 +12,7 @@ import java.util.Random;
 import com.daenils.moisei.CombatLog;
 import com.daenils.moisei.Game;
 import com.daenils.moisei.input.Keyboard;
+import com.daenils.moisei.input.Mouse;
 import com.daenils.moisei.entities.equipments.Ability;
 import com.daenils.moisei.files.FileManager;
 import com.daenils.moisei.graphics.Text;
@@ -20,6 +22,7 @@ import com.daenils.moisei.graphics.Stage;
 
 public class Gameplay {
 	private Stage stage;
+	private Game game;
 	
 	private long turnCount;
 	private boolean isPlayerTurn;
@@ -38,7 +41,7 @@ public class Gameplay {
 	private double nowTime;
 	private double deltaGlobalCooldownTime;
 	private double deltaGlobalCooldownTimeSec;
-	private double globalCooldown = 300.0 / 1000.0; // modify first number only (ms)
+	private double globalCooldown = 400.0 / 1000.0; // modify first number only (ms)
 	
 	// TIMERS 'N STUFF
 	private double startTurnTimer, deltaTurnTime, deltaTurnTimeSec, pauseTurnTime; // TURN
@@ -60,9 +63,10 @@ public class Gameplay {
 	
 	// SWITCH BETWEEN DIFFERENT UI VIEWS / TOGGLE UI STUFF
 	private boolean percentageView;
-	private boolean debugView = true;
+	private boolean debugView = false;
 	
 	private Keyboard input;
+	private Mouse inputM;
 	private Text font;
 	
 	protected boolean[] spawnSlotFilled = new boolean[5];
@@ -80,7 +84,8 @@ public class Gameplay {
 	protected boolean monstersAllDead;
 	protected int monstersAlive;
 	
-	public Gameplay(Keyboard input, Stage stage) {
+	public Gameplay(Keyboard input, Mouse inputM, Stage stage, Game game) {
+		this.game = game;
 		this.stage = stage;
 		this.turnCount = 0;
 		this.isMonsterTurn = false;
@@ -94,6 +99,7 @@ public class Gameplay {
 		this.waveCount = 0;
 		
 		this.input = input;
+		this.inputM = inputM;
 		font = new Text();
 		
 		// initialize mapLevels:
@@ -103,7 +109,8 @@ public class Gameplay {
 	//	Gamestats.submitStats_endWave();
 	//	FileManager.saveStatisticsFile();
 		
-		stage.setPlayer(new Player(input, null, stage));
+		// Why is it here, isn't it a duplicate?
+		stage.setPlayer(new Player(input, inputM, null, stage));
 	}
 	
 	private void initLevelRanges() {
@@ -174,11 +181,11 @@ public class Gameplay {
 			showActionsLeft = actionSum;
 		}
 		
-		if (stage.getPlayer().getWeapon() != null) weaponString = "\n\nWEAPON: " + stage.getPlayer().getWeapon().getName() + " (" + stage.getPlayer().getWeapon().getWeaponTypeString() +")"
-				+ "\nphDMG: " + stage.getPlayer().getWeapon().getDmgRange() + " | HIT CHANCE: " + stage.getPlayer().getWeapon().getHitChance() + "%" + " | mDMG: " + stage.getPlayer().getWeapon().getDamageValue() + " | heal: " + stage.getPlayer().getWeapon().getHealValue()
-				+ "\nCHARGES: " + stage.getPlayer().getWeapon().getWeaponCharges() + " | HoT: " + stage.getPlayer().getWeapon().getHotValue() + " | DoT: " + stage.getPlayer().getWeapon().getDotValue() + " | MoT: " + stage.getPlayer().getWeapon().getMotValue();
+		if (stage.getPlayer().getWeapon() != null) weaponString = "\n\n" + stage.getPlayer().getWeapon().getName() + " (" + stage.getPlayer().getWeapon().getWeaponTypeString() +")"
+				+ "\ndmg: " + stage.getPlayer().getWeapon().getDmgRange() + "|hit chance: " + stage.getPlayer().getWeapon().getHitChance() + "%" + "|mDMG: " + stage.getPlayer().getWeapon().getDamageValue() + "|heal: " + stage.getPlayer().getWeapon().getHealValue()
+				+ "\n\nCHARGES: " + stage.getPlayer().getWeapon().getWeaponCharges() + "|HoT: " + stage.getPlayer().getWeapon().getHotValue() + "|DoT: " + stage.getPlayer().getWeapon().getDotValue() + "|MoT: " + stage.getPlayer().getWeapon().getMotValue();
 		else if (stage.getPlayer().damage[0] > 0) {
-			weaponString = "\n\nWEAPON: " + "Bare hands" + " (null)"
+			weaponString = "\n\n" + "Bare hands" + " (null)"
 					+ "\nphDMG: " + stage.getPlayer().damage[0] + "-" + stage.getPlayer().damage[1];
 		}
 		else weaponString = "N / A";
@@ -314,7 +321,7 @@ public class Gameplay {
 	// rendering the GUI text here is probably temporary
 	public void render(Screen screen) {
 		// TEST STRING
-
+//		font.renderNew("Hi!", 50, 50, 0, Font.SANS_SERIF, 12, g);
 		
 		// TODO: move it to the hell outta here and make it nicer and make it work with all the timers
 		String timeString = "00:00";
@@ -341,8 +348,26 @@ public class Gameplay {
 		// NOTIFICATIONS
 		renderNotifications(screen);
 		
+		// WEAPON INFO
+		// TODO: make it work similarly to the ability resource info text rendering
+		if (debugView)
+		renderWeaponInfoWindow(screen);
+		
 		// ABILITY texts
-		for (int i = 0; i < stage.getPlayer().abilities.size(); i++)	renderAbilityText(screen, i);
+		for (int i = 0; i < stage.getPlayer().abilities.size(); i++)	 {
+			renderAbilityHelperText(screen, i);
+			if (stage.getPlayer().abilities.get(i).showTooltip) renderAbilityText(screen, i);
+		}
+		
+		// HITCHANCE
+		for (int i = 0; i < stage.getMonsters().size(); i++) {
+		if (isPlayerTurn && stage.getPlayer().lastActionPoints > stage.getPlayer().actionPoints && deltaGlobalCooldownTimeSec < 1.5
+				|| 
+				isMonsterTurn && stage.getMonsters().get(i).lastActionPoints > stage.getMonsters().get(i).actionPoints && stage.getMonsters().get(i).lastHitChance > 0
+				) {			
+			renderHitChanceBox(screen);
+		}
+		}
 		
 		// FLOATING PLAYERDAMAGE
 //		if (Gamestats.playerLastActionPoints > Gamestats.playerActionPoints && deltaGlobalCooldownTimeSec < 0.9 && !Gamestats.monstersAllDead)
@@ -354,9 +379,23 @@ public class Gameplay {
 		// STRICTLY DEBUG
 		if (debugView) renderDebugInfo(screen);
 		
+		
 		//	font.renderXCentered(-1, 199, 12, 0xff444444, Font.font_kubastaBig,1, "Sample String", screen);
 		//	font.renderXCentered(2, 202, 12, 0xff444444, Font.font_kubastaBig,1, "Sample String", screen);
 		//	font.renderXCentered(200, 12, 0xffddbb00, Font.font_kubastaBig,1, "Sample String", screen);
+	}
+
+	private void renderHitChanceBox(Screen screen) {
+		int renderedHitChance = 0;
+		if (isPlayerTurn) renderedHitChance = stage.getPlayer().getLastHitChance();
+		else if (isMonsterTurn) {
+			for (int i = 0; i < stage.getMonsters().size(); i++) {
+				if (stage.getMonsters().get(i).lastActionPoints > stage.getMonsters().get(i).actionPoints) {
+					renderedHitChance = stage.getMonsters().get(i).getLastHitChance();
+				}
+			}
+		}
+		font.render(580, 275, -2, 0, Text.font_kubastaBig, 2, "" + renderedHitChance, screen);
 	}
 
 	private void renderMonsterInfo(Screen screen) {
@@ -368,16 +407,52 @@ public class Gameplay {
 			
 			// first if line is the new code, second one is the old code which only works with cycling
 			
+			 
 			if (stage.getMonsters().get(i).isAlive && stage.getPlayer().currentTarget == stage.getMonsters().get(i)) {
 //			if (Gamestats.monsterIsAlive[i] && (n) == i && (Gamestats.playerNeverCycled) ) {
+				renderMonsterBarBg(screen, i, stage.getMonsters().get(i).x + 12, stage.getMonsters().get(i).y + 7);
+				renderMonsterHealthBar(screen, i, stage.getMonsters().get(i).x + 12, stage.getMonsters().get(i).y + 7);
+				
+				renderMonsterBarBg(screen, i, stage.getMonsters().get(i).x + 12, stage.getMonsters().get(i).y + 10);
+				renderMonsterManaBar(screen, i, stage.getMonsters().get(i).x + 12, stage.getMonsters().get(i).y + 10);
 				font.render(stage.getMonsters().get(i).x + 5, stage.getMonsters().get(i).y + 15, -7, 0xffdd0010, "" + stage.getMonsters().get(i).name
-						+ "\nH:" + stage.getMonsters().get(i).getHealth() + "/" + stage.getMonsters().get(i).maxHealth
-						+ "|M:" + stage.getMonsters().get(i).getMana() + "/" + stage.getMonsters().get(i).maxMana
-						+ "\nS:" + stage.getMonsters().get(i).getShield() + ""
-//						+ " (" + Gamestats.playerHitDamage*-1 + ")"
-							
 						, screen);
+					if (stage.getMonsters().get(i).showDetails) {
+						font.render(stage.getMonsters().get(i).x + 5, stage.getMonsters().get(i).y - 0, -7, 0xffbb0000, 
+							"" + stage.getMonsters().get(i).getHealth() + "/" + stage.getMonsters().get(i).maxHealth
+							, screen);
+						if (stage.getMonsters().get(i).getMana() > 0) font.render(stage.getMonsters().get(i).x + 42, stage.getMonsters().get(i).y - 0, -7, 0xff0000bb, 
+								"" + stage.getMonsters().get(i).getMana() + "/" + stage.getMonsters().get(i).maxMana
+								, screen);
+						if (stage.getMonsters().get(i).getShield() > 0) font.render(stage.getMonsters().get(i).x + 42, stage.getMonsters().get(i).y - 8, -7, 0xff00bbbb, 
+								"" + stage.getMonsters().get(i).getShield()
+								, screen);
+					}
 				}
+		}
+	}
+	
+	private void renderMonsterBarBg(Screen screen, int monster, int x, int y) {
+		for (int k = 0; k < 3; k++) {
+			for (int i = 0; i < 50; i++) {
+				screen.renderPixel(x + i, y + k, 0xffbbbbbb);
+			}			
+		}
+	}
+	
+	private void renderMonsterManaBar(Screen screen, int monster, int x, int y) {
+		for (int k = 0; k < 3; k++) {
+			for (int i = 0; i < 50 * (stage.getMonsters().get(monster).pMana / 100.0); i++) {
+				screen.renderPixel(x + i, y + k, 0xff0000bb);
+			}			
+		}
+	}
+	
+	private void renderMonsterHealthBar(Screen screen, int monster, int x, int y) {
+		for (int k = 0; k < 3; k++) {
+			for (int i = 0; i < 50 * (stage.getMonsters().get(monster).pHealth / 100.0); i++) {
+				screen.renderPixel(x + i, y + k, 0xffbb0000);
+			}			
 		}
 	}
 	
@@ -404,28 +479,35 @@ public class Gameplay {
 	}
 
 	private void renderCombatLog(Screen screen) {
-		if (CombatLog.getLogLength() > 6) {
-			for (int i = 0; i < 7; i++) {
-				font.render(0, 460 + (i*10), -8, 0xffe5e5e5, CombatLog.getLastLines(6 - i), screen);
+		if (CombatLog.getLogLength() > 4) {
+			for (int i = 0; i < 5; i++) {
+				font.render(0, 250 + (i*10), -8, 0xffe5e5e5, Text.font_default, 1.0, CombatLog.getLastLines(4 - i), screen);
 			}
 		}
 	}
 
 	private void renderTurnInfoBox(Screen screen, String timeString) {
-		font.render(645, 572, -6, 0xffffff00, "- TURN INFO -", screen);  
-		font.render(GUI.screenTurninfoPos, 572, -7, 0xffffff00,
-				"\n\n-> " + printWhosTurn() +
-				"\nACTIONS LEFT: " + showActionsLeft + "" +
-				"\n\nTURN " + turnCount + " - " + deltaTurnTimeSec +
-				"\nWAVE " + waveCount + " - " + deltaWaveTimeSec +
-				"\nGAME TIME: " + deltaGameTimeSec
-		//		"\nGAME TIME: " + timeString
+//			font.render(645/2, 572/2, -6, 0xffffff00, Text.font_default, 1, "- TURN INFO -", screen);  
+		font.render(GUI.screenTurninfoPos - 35, 303, -8, 0xffdddddd, Text.font_default, 1,
+				"  T\n " + turnCount + "\n\n\n\n" + (int) deltaTurnTimeSec
 				, screen);
+		
+		font.render(GUI.screenTurninfoPos + 65, 303, -8, 0xffdddddd, Text.font_default, 1,
+				"W\n " + waveCount + "\n\n\n\n" + (int) deltaWaveTimeSec
+				, screen);
+		
+		// ACTIONS BAR
+		font.render(GUI.screenTurninfoPos - 6, 340, -8, 0xffffcc00, Text.font_default, 1,
+		"" + getActionsLeftBar() + ""
+				, screen);
+		
+		// TEMPORARY END TURN "BUTTON"
+		font.render(192, 305, -8, 0xff252575, Text.font_default, 1, "[END TURN]", screen);
 	}
 	
 	private void renderTurnInfoBoxPercentages(Screen screen, String timeString) {
-		font.render(645, 572, -6, 0xffffff00, "- TURN INFO -", screen);  
-		font.render(GUI.screenTurninfoPos, 572, -7, 0xffffff00,
+		font.render(645/2, 572/2, -6, 0xffffff00, "- TURN INFO -", screen);  
+		font.render(GUI.screenTurninfoPos, 572/2, -7, 0xffffff00,
 				"\n\n-> " + printWhosTurn() +
 				"\nACTIONS LEFT: " + getActionsLeftBar() + "" +
 				"\n\nTURN " + turnCount + " - " + deltaTurnTimeSec +
@@ -436,29 +518,83 @@ public class Gameplay {
 	}
 
 	private void renderVersionInfo(Screen screen) {
-		font.render(1147, 0, -8, 0, Game.getTitle() + " " + Game.getVersion()
+		font.render(525, 2, -8, 0xff000000, Text.font_default, 1, Game.getTitle() + " " + Game.getVersion()
 				+ newLnLeftPad((Game.getTitle().length() + Game.getVersion().length()) - Game.getProjectStage().length() + 1) + Game.getProjectStage().toUpperCase()
 				+ newLnLeftPad((Game.getTitle().length() + Game.getVersion().length()) - Game.isFpsLockedString().length() + 1) + Game.isFpsLockedString(), screen);
 	}
 
 	private void renderPlayerInfoBox(Screen screen) {
-		font.render(GUI.screenPlayerinfoPos+135, 572, -8, 0xffffff00, "- PLAYER INFO -"
+		// BARS
+		renderPlayerHealthBar(screen);
+		renderPlayerManaBar(screen);
+		renderPlayerXPBar(screen);
+		
+		// HP TEXT
+		font.render(GUI.screenPlayerinfoPos-153, 303, -8, 0xffffffff, Text.font_default, 1, ""
+				+ "" + stage.getPlayer().getHealth() + "/" + stage.getPlayer().maxHealth
+				+ " (" + stage.getPlayer().getShield() + ")"
 				, screen);
-		font.render(GUI.screenPlayerinfoPos, 572, -7, 0xffffff00, ""
-				+ "\n\nHEALTH: " + stage.getPlayer().getHealth() + "/" + stage.getPlayer().maxHealth
-				+ " (" + stage.getPlayer().lastHitReceived + ")"
-				+ " | SHIELD: " + stage.getPlayer().getShield()
-				+ "\nMANA: " + stage.getPlayer().getMana() + "/" + stage.getPlayer().maxMana
-				+ "\nLEVEL: " + stage.getPlayer().level + " | XP: " + stage.getPlayer().getXP()
-				+ " / " + stage.getPlayer().getXpNeeded()
-				+ weaponString
+		
+		// MANA TEXT
+		font.render(GUI.screenPlayerinfoPos-153, 314, -8, 0xffffffff, Text.font_default, 1, ""
+				+ "" + stage.getPlayer().getMana() + "/" + stage.getPlayer().maxMana
+				, screen);
+		
+		// XP TEXT
+		font.render(GUI.screenPlayerinfoPos-153, 325, -8, 0xffffffff, Text.font_default, 1, ""
+				+ "" + "" + stage.getPlayer().getXP() + "/" + stage.getPlayer().getXpNeeded() 
+				, screen);
+		
+		// LEVEL
+		font.render(GUI.screenPlayerinfoPos-266, 308, 10, 0, Text.font_kubastaBig, 1, ""
+				+ "" + stage.getPlayer().level				 
+				, screen);
+		font.render(GUI.screenPlayerinfoPos-263, 308, 10, 0xffffffff, Text.font_kubastaBig, 1, ""
+				+ "" + stage.getPlayer().level				 
+				, screen);
+		
+		// GOLD
+		font.render(GUI.screenPlayerinfoPos-145, 350, -7, 0xffffffff, Text.font_default, 1, 
+				"$" +
+				stage.getPlayer().getGoldAmount()
 				, screen);
 	}
 	
+	private void renderPlayerHealthBar(Screen screen) {
+		for (int k = 0; k < 8; k++) {
+			for (int i = 0; i < 76 * (stage.getPlayer().pHealth / 100.0); i++) {
+				screen.renderPixel(282 + i, 302 + k, 0xffbb0000);
+			}			
+		}
+	}
+	
+	
+	private void renderPlayerManaBar(Screen screen) {
+		for (int k = 0; k < 8; k++) {
+			for (int i = 0; i < 76 * (stage.getPlayer().pMana / 100.0); i++) {
+				screen.renderPixel(282 + i, 313 + k, 0xff0000bb);
+			}			
+		}
+	}
+	
+	private void renderPlayerXPBar(Screen screen) {
+		for (int k = 0; k < 8; k++) {
+			for (int i = 0; i < 76 * (stage.getPlayer().pXP / 100.0); i++) {
+				screen.renderPixel(282 + i, 324 + k, 0xffbbbb00);
+			}			
+		}
+	}
+	
+	
+	
+	private void renderWeaponInfoWindow(Screen screen) {
+		font.render(380, 264, -8, 0xff00ff00, Text.font_default, 1, "" + weaponString, screen);
+	}
+	
 	private void renderPlayerInfoBoxPercentages(Screen screen) {
-		font.render(GUI.screenPlayerinfoPos+135, 572, -8, 0xffffff00, "- PLAYER INFO -"
+		font.render(GUI.screenPlayerinfoPos+135/2, 572/2, -8, 0xffffff00, "- PLAYER INFO -"
 				, screen);
-		font.render(GUI.screenPlayerinfoPos, 572, -7, 0xffffff00, ""
+		font.render(GUI.screenPlayerinfoPos, 572/2, -7, 0xffffff00, ""
 				+ "\n\nHEALTH: " + stage.getPlayer().pHealth + "%"
 				+ " (" + stage.getPlayer().getLastHitReceived() + ")"
 				+ " | SHIELD: " + stage.getPlayer().getShield()
@@ -469,7 +605,7 @@ public class Gameplay {
 	}
 	
 	protected void renderDebugInfo(Screen screen) {
-		font.render(25, 25, -8, 0xff00deff, "DEBUG STUFF\n"
+		font.render(-4, 2, -8, 0xffeeaa00, Text.font_default, 1, "DEBUG STUFF\n"
 				//			+ "\nRandom Wait: " + Gamestats.monsterRW
 							+ "\nMonsters spawned: " + stage.getMonsters().size()
 							+ "\nMonsters alive: " + monstersAlive
@@ -482,14 +618,15 @@ public class Gameplay {
 			//				+ "\nPl Ability 2 last used: " + Gamestats.player.abilities.get(1).getLastUsed() // they should be removed/changed
 			//				+ "\nPl Ability 4 last used: " + Gamestats.player.abilities.get(3).getLastUsed() // as soon as possible
 			//				+ "\nPl Ability 4 onCooldown: " + Gamestats.player.abilities.get(3).isOnCooldown()
-							+ "\nCurrent wave: " + waveCount
+				//			+ "\nCurrent wave: " + waveCount
 							+ "\nGlobalCooldown: " + deltaGlobalCooldownTimeSec 
-							+ "\nTargetCycled: " + stage.getPlayer().targetCycled
+				//			+ "\nTargetCycled: " + stage.getPlayer().targetCycled
 							+ "\nCombat Log length: " + CombatLog.getSize()
 							+ "\nGame is paused: " + !continueGame
-							+ "\nPause force: " + getForcedPause()
+							+ "\nPause forced: " + getForcedPause()
 							+ "\nTotal pause time: " + totalPauseTime
 							+ "\nPlayer's spellpower: " + stage.getPlayer().spellPower
+							+ "\n\nmX: " + Mouse.getX() + " mY: " + Mouse.getY() + " mB: " + Mouse.getB() 
 							
 	
 							
@@ -540,28 +677,28 @@ public class Gameplay {
 	
 	protected void renderNotifications(Screen screen) {
 		if (turnCount > 1 && deltaTurnTimeSec < 1.2) {
-			font.renderXCentered(2, 132, 12, 0xff9a9a9a, Text.font_kubastaBig, 1, printWhosTurnTop(), screen);
-			font.renderXCentered(130, 12, 0xff4d4d4d, Text.font_kubastaBig, 1, printWhosTurnTop(), screen);
+			font.renderXCentered(2, 62, 12, 0xff9a9a9a, Text.font_kubastaBig, 1.5, printWhosTurnTop(), screen);
+			font.renderXCentered(60, 12, 0xff4d4d4d, Text.font_kubastaBig, 1.5, printWhosTurnTop(), screen);
 		}
 		
 		if (!continueGame) {
-			font.renderXCentered(2, 52, 12, 0xff050505, Text.font_kubastaBig, 1, "GAME PAUSED", screen);
-			font.renderXCentered(50, 12, 0xff8d2d8d, Text.font_kubastaBig, 1, "GAME PAUSED", screen);
+			font.renderXCentered(-3, 20, 12, 0xff050505, Text.font_kubastaBig, 1.1, "GAME PAUSED", screen);
+			font.renderXCentered(20, 12, 0xff8d2d8d, Text.font_kubastaBig, 1.1, "GAME PAUSED", screen);
 		}
 		
 		if (notificationLevelUp) {
-			font.renderXCentered(2, 182, 12, 0xff050505, Text.font_kubastaBig, 1, "LEVEL UP!", screen);
-			font.renderXCentered(180, 12, 0xffdfbf00, Text.font_kubastaBig, 1, "LEVEL UP!", screen);
+			font.renderXCentered(2, 82, 12, 0xff050505, Text.font_kubastaBig, 1.1, "LEVEL UP!", screen);
+			font.renderXCentered(80, 12, 0xffdfbf00, Text.font_kubastaBig, 1.1, "LEVEL UP!", screen);
 		}
 			
 			if (turnCount < 2 && deltaTurnTimeSec < 2 && waveCount < 2)
-				font.renderXCentered(160, 2, 0xff61118e, Text.font_kubastaBig, 2, "Press SPACE to hit your enemy", screen);
+				font.renderXCentered(60, 2, 0xff61118e, Text.font_kubastaBig, 2.5, "Press SPACE to hit your enemy", screen);
 			if (turnCount < 2 && deltaTurnTimeSec > 3 && deltaTurnTimeSec < 5 && waveCount < 2)
-				font.renderXCentered(160, 2, 0xff61118e, Text.font_kubastaBig, 2, "Press ENTER to end your turn", screen);
+				font.renderXCentered(60, 2, 0xff61118e, Text.font_kubastaBig, 2.5, "Press ENTER to end your turn", screen);
 			if (turnCount < 2 && deltaTurnTimeSec > 6 && deltaTurnTimeSec < 8 && waveCount < 2)
-				font.renderXCentered(160, 2, 0xff61118e, Text.font_kubastaBig, 2, "Press Q,W,E,R to use your abilities", screen);
+				font.renderXCentered(60, 2, 0xff61118e, Text.font_kubastaBig, 2.5, "Press Q,W,E,R to use your abilities", screen);
 			if (turnCount < 2 && deltaTurnTimeSec > 9 && deltaTurnTimeSec < 11 && waveCount < 2)
-				font.renderXCentered(160, 2, 0xff61118e, Text.font_kubastaBig, 2, "Press G to switch between weapons", screen);
+				font.renderXCentered(60, 2, 0xff61118e, Text.font_kubastaBig, 2.5, "Press G to switch between weapons", screen);
 			
 			if (stage.getPlayer().getHealth() <= 0) {
 				font.renderXCentered(-4, 150, 10, 0xff4d0d0d, Text.font_kubastaBig, 1, "YOU HAVE DIED", screen);
@@ -573,11 +710,24 @@ public class Gameplay {
 	}
 	
 	protected void renderAbilityText(Screen screen, int n) {
-		font.render(20 + n * 130, GUI.screenBottomElements + 97, -8, 0, "[#" + stage.getPlayer().abilities.get(n).getID() + "] " + stage.getPlayer().abilities.get(n).getName(), screen);
-		font.render(22 + n * 130, GUI.screenBottomElements + 77, -8, 0xff2020cc, "(" + stage.getPlayer().abilities.get(n).getMPcost() + "mp)", screen);
-		font.render(110 + n * 130, GUI.screenBottomElements - 30, -8, 0xff20cc20, "(" + stage.getPlayer().abilities.get(n).getCooldown() + "cd)", screen);
-		font.render(55 + n * 130, GUI.screenBottomElements + 21, 0, 0xff101010, Text.font_kubastaBig, 2, "" + stage.getPlayer().abilities.get(n).isOnCooldownText(), screen);
-		font.render(53 + n * 130, GUI.screenBottomElements + 20, 0, 0xffdd1010, Text.font_kubastaBig, 2, "" + stage.getPlayer().abilities.get(n).isOnCooldownText(), screen);
+		// MANA COSTS
+		font.render(27 + n * 35, GUI.screenBottomElements + 3, -9, 0xff252525, "" + stage.getPlayer().abilities.get(n).getMPcost() + "", screen);
+		font.render(28 + n * 35, GUI.screenBottomElements + 3, -9, 0xff00ccff, "" + stage.getPlayer().abilities.get(n).getMPcost() + "", screen);
+		
+		// COOLDOWNS
+		font.render(4 + n * 35, GUI.screenBottomElements + 43, -9, 0xff252525, "" + stage.getPlayer().abilities.get(n).getCooldown() + "", screen);
+		font.render(5 + n * 35, GUI.screenBottomElements + 43, -9, 0xffccff00, "" + stage.getPlayer().abilities.get(n).getCooldown() + "", screen);
+		
+		// ONCOOLDOWN WARNING (temporary)
+		font.render(13 + n * 35, GUI.screenBottomElements + 22, -8, 0xff252525, Text.font_default, 2, "" + stage.getPlayer().abilities.get(n).isOnCooldownText(), screen);
+		font.render(14 + n * 35, GUI.screenBottomElements + 22, -8, 0xffccff00, Text.font_default, 1, "" + stage.getPlayer().abilities.get(n).isOnCooldownText(), screen);
+	}
+
+	protected void renderAbilityHelperText(Screen screen, int n) {
+		char[] qwer = {'Q', 'W', 'E', 'R'};
+		// QWER HELP KEYBIND
+		font.render(31 + n * 35, GUI.screenBottomElements + 38, -8, 0xff252525, "" + qwer[n], screen);
+		font.render(32 + n * 35, GUI.screenBottomElements + 38, -8, 0xffffffff, "" + qwer[n], screen);
 	}
 	
 	protected void newTurn() {
@@ -708,6 +858,7 @@ public class Gameplay {
 		for (int i = 0; i < n; i++) {
 		//	System.out.println("SPAWNING...");
 			onGlobalCooldown = false;
+	
 			if (!getSpawnSlotFilled(1) && !onGlobalCooldown) {
 				addMonster(1);
 				enableGlobalCooldown();
@@ -888,13 +1039,15 @@ public class Gameplay {
 	
 	private String getActionsLeftBar() {
 		String s = "";
-		if (showActionsLeft <= 18) {
+		if (showActionsLeft <= 10) {
 			for (int i = 0; i < showActionsLeft; i++) {
 				s = s.concat("#");
 			}			
 		}
 		else {
-			s = Integer.toString(showActionsLeft);
+			s = "    ";
+			s = s.concat(Integer.toString(showActionsLeft));
+			s = s.concat("#");
 		}
 		
 		return s;
@@ -982,8 +1135,10 @@ public class Gameplay {
 	
 	// GAMEFLOW CONTROL
 	public void gameFlow() {
-		if ( stage.getPlayer() == null) stage.setPlayer(new Player(input, null, stage));
+		// add player here : might be a duplicate, player is also added in the constructor !
+		if ( stage.getPlayer() == null) stage.setPlayer(new Player(input, inputM, null, stage));
 		
+		// earliest version of "game progession"
 		if (stage.getMonsters().size() < 1 && isBetween(stage.getPlayer().level, 0, 3) && (continueGame || turnCount == 0)) {newMonsterWave(1);}
 		else if (stage.getMonsters().size() < 1 && isBetween(stage.getPlayer().level, 3, 5) && continueGame) newMonsterWave(2);
 		else if (stage.getMonsters().size() < 1 && isBetween(stage.getPlayer().level, 5, 7) && continueGame) newMonsterWave(3);

@@ -46,6 +46,7 @@ public class Entity {
 	protected int hitDamage;
 	protected String lastAttacker;
 	protected int lastHitReceived = (lastHealth - health) * -1; // temporarily fix the value here
+	protected int lastHitChance;
 	
 	protected Weapon weapon;
 	
@@ -262,6 +263,7 @@ public class Entity {
 	
 	protected void death(Entity checked, Entity attacker) {
 		int buffXp = 0;
+		int buffGold = (10 * attacker.level) / 2;
 		if (attacker instanceof Player) buffXp = ((Player) attacker).getXpGained();
 		checked.isAlive = false;
 		
@@ -278,10 +280,11 @@ public class Entity {
 		}
 		
 		if (attacker instanceof Player) {
+			((Player) this).addGold(buffGold);
 			giveXP(attacker, buffXp);
 			((Player) this).checkLevelUp();
 		}
-		CombatLog.println(checked.name + " died. " + attacker.name + " receives " + buffXp + " XP for the kill.");
+		CombatLog.println(checked.name + " died. " + attacker.name + " receives " + buffXp + " XP and " + buffGold + " gold for the kill.");
 	}
 	
 	protected void useAbility(Entity e1, Ability a) {
@@ -420,6 +423,7 @@ public class Entity {
 		Random rand = new Random();
 		int r = rand.nextInt((100 - 0) + 1) - 0;
 		CombatLog.println("Hit chance roll: " + r);
+		lastHitChance = r;
 		if (r >= (100 - hitchance)) return true;
 		else return false;
 	}
@@ -613,6 +617,10 @@ public class Entity {
 	
 	public Weapon getWeapon() {
 		return weapon;
+	}
+	
+	public int getLastHitChance() {
+		return lastHitChance;
 	}
 	
 	// SETTERS

@@ -25,12 +25,13 @@ import com.daenils.moisei.graphics.GUI;
 import com.daenils.moisei.graphics.Screen;
 import com.daenils.moisei.graphics.Stage; // probably it should be in its own package later (e.g. moisei.stage.stage)
 import com.daenils.moisei.input.Keyboard;
+import com.daenils.moisei.input.Mouse;
 
 public class Game extends Canvas implements Runnable {
 
 	private static final long serialVersionUID = 1L;
-	private static int scale = 1;
-	private static int width = 1280;
+	private static int scale = 2;
+	private static int width = 640;
 	private static int height = (width / 16 * 9);
 	private static String title = "Project Moisei";
 	private static String version = "0.6";
@@ -43,6 +44,7 @@ public class Game extends Canvas implements Runnable {
 
 	private Screen screen;
 	private Keyboard key;
+	private Mouse mouse;
 
 	// I'll see if this works out, but I currently don't have any other idea
 	// other than having this as static. I mean it only has ONE instance
@@ -50,7 +52,7 @@ public class Game extends Canvas implements Runnable {
 	private static Gameplay gameplay;
 	private GUI gui;
 	private Gamestats gamestats;
-	private FileManager filemanager;
+//	private FileManager filemanager;
 	private static Stage stage;
 
 	private Player player;
@@ -74,8 +76,10 @@ public class Game extends Canvas implements Runnable {
 		frame = new JFrame();
 		
 		key = new Keyboard();
+		mouse = new Mouse();
 		
-		filemanager = new FileManager();
+		new FileManager();
+		
 		// Create statistics file (once per launch)
 		FileManager.createStatisticsFile();
 		// Create combat log file (once per launch)
@@ -84,12 +88,18 @@ public class Game extends Canvas implements Runnable {
 		freshGame();
 		
 		addKeyListener(key);
+		addMouseListener(mouse);
+		addMouseMotionListener(mouse);
 	}
-
+	
 	private void freshGame() {
+		freshGame(Stage.st1a);
+	}
+	
+	private void freshGame(Stage s) {
 		CombatLog.println("A new game has started.");
-		stage = new Stage(Stage.st1a);
-		gameplay = new Gameplay(key, stage);
+		stage = new Stage(s);
+		gameplay = new Gameplay(key, mouse, stage, this);
 		System.out.println("Gameplay control is running.");
 		gamestats = new Gamestats(stage);
 		System.out.println("Statistics collection is running.");
@@ -169,8 +179,8 @@ public class Game extends Canvas implements Runnable {
 		if (gameplay != null) gameplay.update();
 		
 		// KEY INPUT
-		if (key.debugForceNewWave && stage != null) resetStage();
-		if (key.debugAddMonster && stage == null) createStage();
+		if (key.debugForceNewWave && stage != null) clearStage();
+		if (key.debugAddMonster && stage == null) freshGame(Stage.stx);
 
 		
 		// temporarily here
@@ -191,8 +201,8 @@ public class Game extends Canvas implements Runnable {
 		screen.render(stage);
 
 		if (stage != null) stage.render(screen);
-		if (player != null) player.render(screen);
 		if (gameplay != null) gameplay.render(screen);
+		if (player != null) player.render(screen);
 		// dummyMonster.render(screen);
 
 		
@@ -262,6 +272,7 @@ public class Game extends Canvas implements Runnable {
 	
 	public void resetStage() {
 		clearStage();
+		createStage();
 	}
 	
 	public void clearStage() {

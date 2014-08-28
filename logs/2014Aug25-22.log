@@ -1,0 +1,52 @@
+|T0 : A new game has started.
+|T0 : Player's T Heal unlocked.
+|T0 : Player's T Fireball unlocked.
+|T0 : Player's T Stun unlocked.
+|T0 : Player's T Firestorm unlocked.
+|T0 : Player's Alpha Sword unlocked.
+|T0 : Player's T Greathammer unlocked.
+|T0 : Player's Shadow Dagger unlocked.
+|T0 : Basic Beast spawned.
+|T1 : New turn begins.
+|T1 : Targeted Basic Beast
+-T1 : Turn 1 has ended in 76.5 seconds (Game time: 4.1s)
++T2 : New turn begins.
+|T2 : Basic Beast --> Player (4 damage)
+-T2 : Turn 2 has ended in 4.5 seconds (Game time: 8.7s)
++T3 : New turn begins.
+|T3 : Ability (T Firestorm) used: 
+|T3 : Player hits Basic Beast with T Firestorm (15 damage)
+-T3 : Turn 3 has ended in 0.7 seconds (Game time: 9.4s)
++T4 : New turn begins.
+|T4 : Player --> Basic Beast (1 damage)
+|T4 : [Tick 1] Player dealt a DoT of 1
+|T4 : Basic Beast --> Player (5 damage)
+-T4 : Turn 4 has ended in 4.5 seconds (Game time: 14.0s)
++T5 : New turn begins.
+|T5 : Player --> Basic Beast (1 damage)
+|T5 : [Tick 1] Player dealt a DoT of 1
+|T5 : Hit chance roll: 68
+|T5 : Player hits Basic Beast with Alpha Sword (4 damage)
+-T5 : Turn 5 has ended in 4.2 seconds (Game time: 18.2s)
++T6 : New turn begins.
+|T6 : Player --> Basic Beast (1 damage)
+|T6 : [Tick 1] Player dealt a DoT of 1
+|T6 : Basic Beast --> Player (5 damage)
+-T6 : Turn 6 has ended in 4.5 seconds (Game time: 22.8s)
++T7 : New turn begins.
+-T7 : Turn 7 has ended in 0.3 seconds (Game time: 23.2s)
++T8 : New turn begins.
+|T8 : Basic Beast --> Player (2 damage)
+-T8 : Turn 8 has ended in 4.5 seconds (Game time: 27.7s)
++T9 : New turn begins.
+|T9 : Hit chance roll: 83
+|T9 : Player hits Basic Beast with Alpha Sword (7 damage)
+-T9 : Turn 9 has ended in 2.2 seconds (Game time: 30.0s)
++T10 : New turn begins.
+|T10 : Basic Beast --> Player (2 damage)
+-T10 : Turn 10 has ended in 4.5 seconds (Game time: 34.6s)
++T11 : New turn begins.
+|T11 : Hit chance roll: 8
+|T11 : Player missed.
+-T11 : Turn 11 has ended in 2.5 seconds (Game time: 37.2s)
+
