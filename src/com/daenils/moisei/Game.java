@@ -99,7 +99,8 @@ public class Game extends Canvas implements Runnable {
 	private void freshGame(Stage s) {
 		CombatLog.println("A new game has started.");
 		stage = new Stage(s);
-		gameplay = new Gameplay(key, mouse, stage, this);
+		gui = new GUI(screen); // needed for windows
+		gameplay = new Gameplay(key, mouse, stage, this, gui);
 		System.out.println("Gameplay control is running.");
 		gamestats = new Gamestats(stage);
 		System.out.println("Statistics collection is running.");
@@ -109,7 +110,6 @@ public class Game extends Canvas implements Runnable {
  //		Ability.load();
 
 		renderGUI = true;
-		gui = new GUI();
 		gameplay.setFirst();
 	}
 
@@ -177,10 +177,11 @@ public class Game extends Canvas implements Runnable {
 		// dummyMonster.update();
 		if (gamestats != null) gamestats.update();
 		if (gameplay != null) gameplay.update();
+		if (gui != null) gui.update();
 		
 		// KEY INPUT
 		if (key.debugForceNewWave && stage != null) clearStage();
-		if (key.debugAddMonster && stage == null) freshGame(Stage.stx);
+		if (key.debugAddMonster && stage == null) freshGame(Stage.st1a);
 
 		
 		// temporarily here
@@ -203,6 +204,7 @@ public class Game extends Canvas implements Runnable {
 		if (stage != null) stage.render(screen);
 		if (gameplay != null) gameplay.render(screen);
 		if (player != null) player.render(screen);
+		if (gui != null) gui.render();
 		// dummyMonster.render(screen);
 
 		
@@ -214,7 +216,6 @@ public class Game extends Canvas implements Runnable {
 			pixels[i] = screen.getPixels()[i];
 
 		g.drawImage(image, 0, 0, getWidth(), getHeight(), null);
-		if (gui != null) gui.render(g);
 		g.dispose();
 		bs.show();
 	}

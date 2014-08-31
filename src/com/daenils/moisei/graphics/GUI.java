@@ -3,6 +3,8 @@ package com.daenils.moisei.graphics;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
@@ -10,12 +12,17 @@ import com.daenils.moisei.Game;
 import com.daenils.moisei.entities.Gamestats;
 
 public class GUI {
+	private Screen screen;
 	
 	private String path;
 	protected int x, y, width, height;
 	protected int[] pixels;
 	
 	private Text font = new Text();
+	
+	// GUI WINDOW STUFF
+	protected List<Window> windows = new ArrayList<Window>();
+	protected static boolean noWindows;
 	
 	// GUI ELEMENTS
 	
@@ -56,28 +63,57 @@ public class GUI {
 		pixels = new int[w * h];
 	}
 	
-	public GUI() {
-		
+	public GUI(Screen screen) {
+		this.screen = screen;
+	//	createWindow(200, 120, 240, 120, 0xff4444ee, "Test Window", "Hello World! \n\n I am Daenil and this is my humble\nturn-based combat game, Project Moisei \n(working title only).\n\n\n HAVE FUN!");
+	}
+
+	// CREATE A CLEAN WINDOW
+	public void createWindow(int x, int y, int width, int height, int bgColor, String title) {
+		Window winnie = new Window(screen, x, y, width, height, bgColor, title);
+	//	winnie.add(1, Window.BUTTON_CLOSE);
+	//	winnie.add(4, 1);
+		windows.add(winnie);
 	}
 	
-	public void render(Graphics g) {
-		// TEXT RENDERING WILL MOVE HERE FROM GAMEPLAY.JAVA
-//		font.renderNew("Player H\tealth " + Game.getGameplay().getStage().getPlayer().getHealth(), Game.getRenderWidth(), Game.getRenderHeight(), 0, "Kubasta", 16, g);
-		
-	//	renderVersionInfo(g);
-	//	g.drawLine(25, 25, 50, 25);
-		
-		
-		
+	// CREATE A WINDOW WITH DISPLAYTEXT
+	public void createWindow(int x, int y, int width, int height, int bgColor, String title, String displayText) {
+		Window winnie = new Window(screen, x, y, width, height, bgColor, title);
+		winnie.add(displayText);
+		windows.add(winnie);
 	}
 	
-	private void renderVersionInfo(Graphics g) {
-		font.renderNew(Game.getTitle() + " " + Game.getVersion(), 1157, 10, 0, "Kubasta", 16, g);
-		font.renderNew(newLnLeftPad((Game.getTitle().length() + Game.getVersion().length()) - Game.getProjectStage().length() + 1) + Game.getProjectStage().toUpperCase(), 1157, 22, 0, "Kubasta", 16, g);
-		font.renderNew(Game.isFpsLockedString(), 1157, 34, 0, "Kubasta", 16, g);
-	//	font.render(1147, 0, -8, 0, Game.getTitle() + " " + Game.getVersion()
-	//			+ newLnLeftPad((Game.getTitle().length() + Game.getVersion().length()) - Game.getProjectStage().length() + 1) + Game.getProjectStage().toUpperCase()
-	//			+ newLnLeftPad((Game.getTitle().length() + Game.getVersion().length()) - Game.isFpsLockedString().length() + 1) + Game.isFpsLockedString(), screen);
+	public void update() {
+		// UPDATE NOWINDOWS
+		if (windows.size() > 0) noWindows = false;
+		else noWindows = true;
+		
+		// UPDATE WINDOWS
+		for (int i = 0; i < windows.size(); i++) {
+			windows.get(i).update();
+		}
+				
+		// LOOK FOR REMOVAL
+		for (int i = 0; i < windows.size(); i++) {
+	//		System.out.println(windows.get(i).needsClosing);
+			if (windows.size() > 0 && windows.get(i).needsClosing)
+				removeWindow(windows.get(i));
+		}
+	}
+	
+	public void render() {
+		// DISPLAY ALL WINDOWS THAT EXIST
+		for (int i = 0; i < windows.size(); i++) windows.get(i).render();
+	}
+	
+	// WINDOW STUFF
+	public void addWindow(Window w) {
+		windows.add(w);
+	}
+	
+	public void removeWindow(Window w) {
+		System.out.print("\nWindow '" + w.name + "' is closed.");
+		windows.remove(w);
 	}
 	
 	public String newLnLeftPad(int n) {
@@ -98,9 +134,17 @@ public class GUI {
 		}
 		System.out.println("GUI (" + GUI.class.getResource(path) + ") is loaded successfully.");
 	}
-
-	public static GUI getGUI(GUI g) {
-		return g;
+	
+	public int getWindowCount() {
+		return windows.size();
+	}
+	
+	public Window getWindow(int n) {
+		return windows.get(n);
+	}
+	
+	public static boolean getNoWindows() {
+		return noWindows;
 	}
 	
 }

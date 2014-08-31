@@ -23,6 +23,7 @@ import com.daenils.moisei.graphics.Stage;
 public class Gameplay {
 	private Stage stage;
 	private Game game;
+	private GUI gui;
 	
 	private long turnCount;
 	private boolean isPlayerTurn;
@@ -84,9 +85,10 @@ public class Gameplay {
 	protected boolean monstersAllDead;
 	protected int monstersAlive;
 	
-	public Gameplay(Keyboard input, Mouse inputM, Stage stage, Game game) {
+	public Gameplay(Keyboard input, Mouse inputM, Stage stage, Game game, GUI gui) {
 		this.game = game;
 		this.stage = stage;
+		this.gui = gui;
 		this.turnCount = 0;
 		this.isMonsterTurn = false;
 		this.isPlayerTurn = false;
@@ -127,6 +129,10 @@ public class Gameplay {
 	}
 
 	public void update() {
+		
+		if (input.debugShowDebugInfo) gui.createWindow(200, 120, 240, 120, 0xff4444ee, "Test Window"); 
+//		gui.getWindow(0).add("HEY BIATCHES!4!44!");
+		
 		// GAMESTATS REFUGEES
 		monstersAllDead = stage.checkIfAllDead();
 		monstersAlive = checkMonstersAliveCount();

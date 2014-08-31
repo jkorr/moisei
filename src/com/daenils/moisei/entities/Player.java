@@ -231,7 +231,7 @@ public class Player extends Entity {
 		
 
 		inputTargeting();
-		mouseInput();
+		if (GUI.getNoWindows()) mouseInput();
 
 	}
 	

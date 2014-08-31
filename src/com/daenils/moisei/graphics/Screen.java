@@ -71,6 +71,53 @@ public class Screen {
 		pixels[xp + yp* width] = color;
 	}
 	
+	public void renderGUIWindow(int x, int y, int width, int height, int bgcolor) {
+		for (int k = 0; k < height; k++)
+			for (int i = 0; i < width; i++) {
+				pixels[(x + i) + (y + k) * this.width] = bgcolor; 
+			}
+	}
+	
+	public void renderGUIWindowBorder(Window w, int horWidth, int verWidth, int horColor, int verColor) {
+		// TOP
+		renderVerLn(w.x, w.y, w.width, horWidth, horColor);
+		
+		// BOTTOM
+		renderVerLn(w.x, w.y + w.height, w.width, horWidth, horColor);
+		
+		// LEFT
+		renderHorLn(w.x, w.y, w.height, verWidth, verColor);
+		
+		// RIGHT
+		renderHorLn(w.x + w.width, w.y, w.height + verWidth, verWidth, verColor);
+	}
+	
+	public void renderGUIGrid(Window w, int columns, int rows, int horWidth, int verWidth, int horColor, int verColor) {
+		// 2x2 for testing purposes only
+		for (int i = 0; i < rows + 1; i++) {
+			renderVerLn(w.x + 5, (w.y + 20) + i * 31, columns * 31, 1, verColor);			
+		}
+		
+		for (int i = 0; i < columns + 1; i++) {
+			renderHorLn((w.x + 5) + i * 31, (w.y + 20), rows * 31 + 1, 1, horColor);
+		}
+		
+	}
+
+	private void renderVerLn(int x, int y, int length, int width, int color) {
+		for (int k = 0; k < width; k++)
+			for (int i = 0; i < length; i++) {
+				pixels[(x + i) + (y + k) * this.width] = color; 
+			}
+	}
+	
+	private void renderHorLn(int x, int y, int length, int width, int color) {
+		for (int k = 0; k < width; k++)
+			for (int i = 0; i < length; i++) {
+				pixels[(x + k) + (y + i) * this.width] = color; 
+			}
+	}
+	
 	public void renderCharacter(int xp, int yp, Sprite sprite, double scale, int color) {
 		for (int y = 0; y < sprite.height; y++){
 			double ya = y / scale + yp;
