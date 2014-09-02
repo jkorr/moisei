@@ -13,12 +13,13 @@ import com.daenils.moisei.CombatLog;
 import com.daenils.moisei.Game;
 import com.daenils.moisei.input.Keyboard;
 import com.daenils.moisei.input.Mouse;
-import com.daenils.moisei.entities.equipments.Ability;
+import com.daenils.moisei.entities.equipments.*;
 import com.daenils.moisei.files.FileManager;
 import com.daenils.moisei.graphics.Text;
 import com.daenils.moisei.graphics.GUI;
 import com.daenils.moisei.graphics.Screen;
 import com.daenils.moisei.graphics.Stage;
+import com.daenils.moisei.graphics.Window;
 
 public class Gameplay {
 	private Stage stage;
@@ -85,6 +86,10 @@ public class Gameplay {
 	protected boolean monstersAllDead;
 	protected int monstersAlive;
 	
+	// SHOP STUFF
+	protected boolean shopHasOpened; // set it true when first opens so it will only open once, set it back to false at
+											// the start of a new wave probably
+	
 	public Gameplay(Keyboard input, Mouse inputM, Stage stage, Game game, GUI gui) {
 		this.game = game;
 		this.stage = stage;
@@ -129,9 +134,8 @@ public class Gameplay {
 	}
 
 	public void update() {
-		
-		if (input.debugShowDebugInfo) gui.createWindow(200, 120, 240, 120, 0xff4444ee, "Test Window"); 
-//		gui.getWindow(0).add("HEY BIATCHES!4!44!");
+		if (shopHasOpened) shop();
+		if (shopHasOpened && turnCount > 2) shopHasOpened = false;
 		
 		// GAMESTATS REFUGEES
 		monstersAllDead = stage.checkIfAllDead();
@@ -738,7 +742,7 @@ public class Gameplay {
 	
 	protected void newTurn() {
 		turnPauseTime = 0;
-		deltaTurnTime = 0;	
+		deltaTurnTime = 0;
 		
 		CombatLog.printnt("New turn begins.");
 		startTurnTimer = System.currentTimeMillis();
@@ -1144,6 +1148,11 @@ public class Gameplay {
 		// add player here : might be a duplicate, player is also added in the constructor !
 		if ( stage.getPlayer() == null) stage.setPlayer(new Player(input, inputM, null, stage));
 		
+		// check for shop popup
+		if (waveCount %  3 == 0 && waveCount > 0 && turnCount == 1 && !shopHasOpened) {
+			openShop();
+		}
+		
 		// earliest version of "game progession"
 		if (stage.getMonsters().size() < 1 && isBetween(stage.getPlayer().level, 0, 3) && (continueGame || turnCount == 0)) {newMonsterWave(1);}
 		else if (stage.getMonsters().size() < 1 && isBetween(stage.getPlayer().level, 3, 5) && continueGame) newMonsterWave(2);
@@ -1156,6 +1165,50 @@ public class Gameplay {
 		return (comparedNum >= min && comparedNum < max);
 	}
 	
+	// MECHANIC: SHOP
+	private void openShop() {
+		shopHasOpened = true;
+		gui.createWindow(200, 120, 240, 120, 0xff4444ee, "SHOP");
+		gui.getWindow("shop").add(7,2);
+		gui.getWindow("shop").add(1, Window.BUTTON_CLOSE);
+		gui.getWindow("shop").add(new Weapon(null, 1));
+		gui.getWindow("shop").add(new Weapon(null, 2));
+		gui.getWindow("shop").add(new Weapon(null, 4));
+	}
+	
+	private void shop() {
+		if (Mouse.getB() == 1
+				&& gui.getWindow("shop") != null
+				&& gui.getWindow("shop").getRequestedItem() != null
+				&& gui.getWindow("shop").getRequestedItem().getShowTooltip()
+				&& !onGlobalCooldown) {
+			buyItem(gui.getWindow("shop").getRequestedItem());
+			enableGlobalCooldown();
+		}
+	}
+	
+	
+	private void buyItem(Equipment item) {
+		boolean enablePurchase = false;
+		if (stage.getPlayer().getGoldAmount() >= item.getVendorPrice()) {
+			if (item.isUnique()) {
+				if (item instanceof Weapon && stage.getPlayer().hasWeaponID(item.getID())) enablePurchase = false;
+				else enablePurchase = true;
+			} else if (!item.isUnique()) enablePurchase = true;
+			
+		}
+		else {
+			enablePurchase = false;
+			CombatLog.println("You cannot afford that.");
+		}
+		
+		if (enablePurchase) {
+			stage.getPlayer().unlockWeapon(stage.getPlayer(), item.getID());
+			stage.getPlayer().removeGold(item.getVendorPrice());
+			System.out.print("\nBuying " + item.getName());
+		}
+	}
+
 	// GAMESTATS REFUGEES
 	private int checkMonstersAliveCount() {
 		int n = 0;

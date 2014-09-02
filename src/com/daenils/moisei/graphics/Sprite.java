@@ -39,6 +39,18 @@ public class Sprite {
 	public static Sprite spell2 = new Sprite("/textures/gui/spells/spell2.png", 30, 30);
 	public static Sprite spell3 = new Sprite("/textures/gui/spells/spell3.png", 30, 30);
 	
+	/* 
+	 * --------------
+	 * 3. WEAPONS
+	 * --------------
+	 */
+	
+	public static Sprite noweapon = new Sprite("/textures/gui/weapons/noweapon.png", 30, 30);
+	public static Sprite weapon0 = new Sprite("/textures/gui/weapons/weapon0.png", 30, 30);
+	public static Sprite weapon1 = new Sprite("/textures/gui/weapons/weapon1.png", 30, 30);
+	public static Sprite weapon2 = new Sprite("/textures/gui/weapons/weapon2.png", 30, 30);
+	public static Sprite weapon3 = new Sprite("/textures/gui/weapons/weapon3.png", 30, 30);
+	
 	public Sprite(String path, int w, int h) {
 		this.width = w;
 		this.height = h;
@@ -47,6 +59,7 @@ public class Sprite {
 		
 		if (path.contains(".gif")) mapSprites.put(this.name.split(".gif")[0],this);
 		if (path.contains(".png")) mapSprites.put(this.name.split(".png")[0],this);
+
 		
 		load();
 	}
@@ -113,6 +126,7 @@ public class Sprite {
 	}
 	
 	public static Sprite parseSprite(String string) {
+//		System.out.println("Requesting sprite " + string + ":");
 		return mapSprites.get(string);
 	}
 }

@@ -4,7 +4,9 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.imageio.ImageIO;
 
@@ -22,6 +24,7 @@ public class GUI {
 	
 	// GUI WINDOW STUFF
 	protected List<Window> windows = new ArrayList<Window>();
+	protected Map<String, Integer> mapWindows = new HashMap<String, Integer>();
 	protected static boolean noWindows;
 	
 	// GUI ELEMENTS
@@ -73,6 +76,7 @@ public class GUI {
 		Window winnie = new Window(screen, x, y, width, height, bgColor, title);
 	//	winnie.add(1, Window.BUTTON_CLOSE);
 	//	winnie.add(4, 1);
+		mapWindows.put(winnie.name, windows.size());
 		windows.add(winnie);
 	}
 	
@@ -141,6 +145,12 @@ public class GUI {
 	
 	public Window getWindow(int n) {
 		return windows.get(n);
+	}
+	
+	public Window getWindow(String name) {
+		if (windows.size() > 0)
+			return windows.get(mapWindows.get(name));
+		else return null;
 	}
 	
 	public static boolean getNoWindows() {

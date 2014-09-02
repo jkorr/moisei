@@ -7,6 +7,7 @@ public class Equipment {
 	protected Sprite icon;
 	protected int hotbarSlot; // 1-4: Q-W-E-R
 	protected int x, y; // for rendering, but grab it from hotBarSlot
+	protected boolean showTooltip;
 	
 	protected Entity user;
 	protected int tick;
@@ -18,6 +19,8 @@ public class Equipment {
 	protected int id;
 	protected String name;
 	protected String description;
+	protected int vendorPrice;
+	protected boolean isUnique;
 	protected int APcost; 
 	protected int MPcost;
 	protected int cooldown;
@@ -116,6 +119,14 @@ public class Equipment {
 		return tick;
 	}
 	
+	public int getVendorPrice() {
+		return vendorPrice;
+	}
+	
+	public boolean getShowTooltip() {
+		return showTooltip;
+	}
+	
 	// OT/CD GETTERS
 	public boolean isOTActive() {
 		return OTActive;
@@ -127,6 +138,10 @@ public class Equipment {
 	
 	public long getLastUsed() {
 		return lastUsed;
+	}
+	
+	public boolean isUnique() {
+		return isUnique;
 	}
 	
 	// SETTERS
@@ -153,6 +168,10 @@ public class Equipment {
 	
 	public void resetTick() {
 		setTick(0);
+	}
+	
+	public void setShowTooltip(boolean b) {
+		showTooltip = b;
 	}
 	
 }

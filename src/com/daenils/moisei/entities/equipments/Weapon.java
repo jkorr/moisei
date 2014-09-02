@@ -53,24 +53,26 @@ public class Weapon extends Equipment {
 		this.weaponType = Byte.parseByte(tempString[1]);
 		this.name = tempString[2];
 		this.description = tempString[3];
-		this.icon = Sprite.parseSprite(tempString[4]); // null for now!
-		this.APcost = Integer.parseInt(tempString[5]);
-		this.minDamage = Integer.parseInt(tempString[6]);
-		this.maxDamage = Integer.parseInt(tempString[7]);
-		this.hitChance = Integer.parseInt(tempString[8]);
-		this.maxWeaponCharges = Integer.parseInt(tempString[9]);
+		this.icon = Sprite.parseSprite(tempString[4]);
+		this.vendorPrice = Integer.parseInt(tempString[5]);
+		this.isUnique = Boolean.parseBoolean(tempString[6]);
+		this.APcost = Integer.parseInt(tempString[7]);
+		this.minDamage = Integer.parseInt(tempString[8]);
+		this.maxDamage = Integer.parseInt(tempString[9]);
+		this.hitChance = Integer.parseInt(tempString[10]);
+		this.maxWeaponCharges = Integer.parseInt(tempString[11]);
 		this.weaponCharges = this.maxWeaponCharges;
-		this.healValue = Integer.parseInt(tempString[10]);
-		this.damageValue = Integer.parseInt(tempString[11]);
-		this.utilityValue = Integer.parseInt(tempString[12]);
-		this.isOT = Boolean.parseBoolean(tempString[13]);
-		this.hotValue = Integer.parseInt(tempString[14]);
-		this.dotValue = Integer.parseInt(tempString[15]);
-		this.motValue = Integer.parseInt(tempString[16]);
-		this.turnCount = Integer.parseInt(tempString[17]);
-		this.isStun = Boolean.parseBoolean(tempString[18]);
-		this.isDrainMP = Boolean.parseBoolean(tempString[19]);
-		this.isShield = Boolean.parseBoolean(tempString[20]);
+		this.healValue = Integer.parseInt(tempString[12]);
+		this.damageValue = Integer.parseInt(tempString[13]);
+		this.utilityValue = Integer.parseInt(tempString[14]);
+		this.isOT = Boolean.parseBoolean(tempString[15]);
+		this.hotValue = Integer.parseInt(tempString[16]);
+		this.dotValue = Integer.parseInt(tempString[17]);
+		this.motValue = Integer.parseInt(tempString[18]);
+		this.turnCount = Integer.parseInt(tempString[19]);
+		this.isStun = Boolean.parseBoolean(tempString[20]);
+		this.isDrainMP = Boolean.parseBoolean(tempString[21]);
+		this.isShield = Boolean.parseBoolean(tempString[22]);
 	}
 	
 	// LOAD WEAPONS

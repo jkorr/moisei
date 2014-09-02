@@ -7,6 +7,7 @@ import com.daenils.moisei.CombatLog;
 import com.daenils.moisei.Game;
 import com.daenils.moisei.graphics.GUI;
 import com.daenils.moisei.graphics.Screen;
+import com.daenils.moisei.graphics.Sprite;
 import com.daenils.moisei.graphics.Stage;
 import com.daenils.moisei.input.Keyboard;
 import com.daenils.moisei.input.Mouse;
@@ -57,7 +58,7 @@ public class Player extends Entity {
 		this.isAlive = true;
 		this.xp = 0;
 		this.level = 1;
-		
+		this.setGoldAmount(0);
 		
 		this.maxHealth = baseHealth;
 		this.maxMana = baseMana;
@@ -92,9 +93,9 @@ public class Player extends Entity {
 	}
 	
 	public void initWeapons() {
-		unlockWeapon(this, 1);
-		unlockWeapon(this, 2);
-		unlockWeapon(this, 4);
+//		unlockWeapon(this, 1);
+//		unlockWeapon(this, 2);
+//		unlockWeapon(this, 4);
 		if (this.weapons.size() > 0) this.weapon = weapons.get(0);
 	}
 	
@@ -173,7 +174,8 @@ public class Player extends Entity {
 					weaponSwitcher++;
 					this.weapon = weapons.get(weaponSwitcher);
 				}
-				CombatLog.println(this.name + " switched weapons.");
+				if (this.weapon != null) CombatLog.println(this.name + " equips " + this.weapon.getName());
+				else if (this.weapon == null) CombatLog.println(this.name + " sheaths his/her weapon.");
 				Game.getGameplay().enableGlobalCooldown();
 			}
 				
@@ -368,6 +370,10 @@ public class Player extends Entity {
 		for (int i = 0; i < abilities.size(); i++) {
 			screen.renderSprite(spellPosHelper[i], GUI.screenBottomElements + 11, abilities.get(i).getIcon(), 0);
 		}
+		
+		if (this.weapon != null) screen.renderSprite(600, 322, this.weapon.getIcon(), 0);
+		else if (this.weapon == null) screen.renderSprite(600, 322, Sprite.noweapon, 0);
+		
 	}
 	
 

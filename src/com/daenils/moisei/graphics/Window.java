@@ -1,7 +1,11 @@
 package com.daenils.moisei.graphics;
 
 import java.awt.Font;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.daenils.moisei.input.Mouse;
+import com.daenils.moisei.entities.equipments.*;
 
 public class Window {
 	private Screen screen;
@@ -10,6 +14,8 @@ public class Window {
 	protected String title;
 	protected Text font;
 	protected String name;
+	protected List<Equipment> contents = new ArrayList<Equipment>();
+	protected Equipment requestedItem, lastRequestedItem;
 	
 	protected int horGrid, verGrid;
 	
@@ -20,8 +26,13 @@ public class Window {
 	protected boolean hasGrid;
 	protected boolean hasDisplayText;
 	protected boolean hasDialogueOptions;
+	protected boolean hasContent;
+	protected boolean mouseOverItem;
 	
 	// finals
+	public static final int[] ITEM_POSITION1 = {6, 21};
+	public static final int ITEM_OFFSET = 31;
+	
 	public static final String BUTTON_OK = "[OK]";
 	public static final String BUTTON_CLOSE = "[Close]";
 	public static final String BUTTON_YES = "[Yes]";
@@ -42,22 +53,61 @@ public class Window {
 	}
 	
 	public void update() {
+		// CHECK CONTENT
+		if (contents.size() > 0) this.hasContent = true;
+		else this.hasContent = false;
+		
 		if (Mouse.getX() > 2 * (x + width - 10) && Mouse.getX() < 2 * (x + width)
 				&& Mouse.getY() > 2 * (y) && Mouse.getY() < 2 * (y + 10)
 				&& Mouse.getB() == 1) this.needsClosing = true;
+		
+		
 	}
 	
 	public void render() {
 		screen.renderGUIWindow(x, y, width, height, bgColor);
 		screen.renderGUIWindow(x, y, width, height - (height - 17), bgColor / 2); 
 		screen.renderGUIWindowBorder(this, 2, 2, 0xffffffff, 0xffffffff);
-		if (this.hasGrid) screen.renderGUIGrid(this, horGrid, verGrid, 1, 1, 0xffffffff, 0xffffffff);
+		if (this.hasGrid) {
+			screen.renderGUIGrid(this, horGrid, verGrid, 1, 1, 0xffffffff, 0xffffffff);
 
+			if (this.hasContent) {
+				// RENDER THE ICONS FOR THE CONTENT 
+				int line = 0, pos = 0;
+				for (int i = 0; i < contents.size(); i++) {
+					if (i % horGrid == 0 && i > 0) {
+						line++;
+						pos = 0;
+					}
+					screen.renderSprite(x + ITEM_POSITION1[0] + pos * ITEM_OFFSET, y + ITEM_POSITION1[1] + line * ITEM_OFFSET, contents.get(i).getIcon(), 0);
+					renderContentInfo(i, pos, line);
+					pos++;
+				}
+			}
+		}
+		
+		
 		renderTitleTop();
 		if (displayText != null) renderDisplayText();
 		if (dialogueOption != null) renderDialogueOption();
 	}
 	
+	private void renderContentInfo(int i, int pos, int line) {
+	//	System.out.print("\n" + contents.get(i).getShowTooltip());
+		if (Mouse.getX() > (x + ITEM_POSITION1[0] + pos * ITEM_OFFSET) * 2 && Mouse.getX() < (x + ITEM_POSITION1[0] + pos * ITEM_OFFSET) * 2 + 60
+				&& Mouse.getY() > (y + ITEM_POSITION1[1] + line * ITEM_OFFSET) * 2 && Mouse.getY() < (y + ITEM_POSITION1[1] + line * ITEM_OFFSET) * 2+ 60) {
+			font.render(x - 6 + 150, height * 2 - 21, -8, 0xffffffff, Text.font_default, 1, contents.get(i).getName(), screen);
+			font.render(x - 6 + 150, height * 2 - 10, -8, 0xffffffff, Text.font_default, 1, "$:" + contents.get(i).getVendorPrice(), screen);
+			if (Mouse.getB() == -1) contents.get(i).setShowTooltip(true);
+			if (Mouse.getB() == 1) shopRequestPurchase(contents.get(i));
+		}
+		else contents.get(i).setShowTooltip(false);
+	}
+	
+	public void shopRequestPurchase(Equipment equipment) {
+		setRequestedItem(equipment);
+	}
+
 	private void renderTitleTop() {
 		font.render((x-6) + 5, y + 5, -8, 0xffffffff, Text.font_default, 1.0, title + " (" + name + ")", screen);
 	}
@@ -89,6 +139,11 @@ public class Window {
 		this.setVerGrid(rows);
 		this.hasGrid = true;
 	}
+	
+	// ADD CONTENT (EQUIPMENT)
+	public void add(Equipment e) {
+		this.contents.add(e);
+	}
 
 	// SETTERS
 	// GENERATE A NAME FOR THE WINDOW FROM ITS TITLE (WITHOUT SPACES AND LOWER CASE INITIAL LETTER)
@@ -110,6 +165,13 @@ public class Window {
 		verGrid = n;
 	}
 
+	public void setRequestedItem(Equipment e) {
+		requestedItem = e;
+	}
+	
+	public void setLastRequestedItem(Equipment e) {
+		lastRequestedItem = e;
+	}
 	
 	// GETTERS
 	public int getX() {
@@ -138,5 +200,17 @@ public class Window {
 	
 	public String getName() {
 		return name;
+	}
+	
+	public Equipment getRequestedItem() {
+		return requestedItem;
+	}
+	
+	public Equipment getLastRequestedItem() {
+		return lastRequestedItem;
+	}
+	
+	public boolean getMouseOverItem() {
+		return mouseOverItem;
 	}
 }

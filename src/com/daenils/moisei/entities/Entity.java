@@ -1,7 +1,9 @@
 package com.daenils.moisei.entities;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import com.daenils.moisei.CombatLog;
@@ -60,6 +62,8 @@ public class Entity {
 
 	protected List<Ability> abilities = new ArrayList<Ability>();
 	protected List<Weapon> weapons = new ArrayList<Weapon>();
+	
+	protected Map<Integer, Integer> mapWeapons = new HashMap<Integer, Integer>();
 	
 	// LEVELS AND XP
 	protected int xpNeeded; // the amount of xp needed for the next level
@@ -489,6 +493,7 @@ public class Entity {
 	protected void unlockWeapon(Entity e, int id) {
 		if (e.weapons.size() < e.weaponCount) {
 			Weapon wep = new Weapon(e, id);
+			this.mapWeapons.put(id, weapons.size());
 			this.addWeapon(wep);
 			CombatLog.println(e.name + "'s " + wep.getName() + " unlocked.");
 		}
@@ -548,10 +553,13 @@ public class Entity {
 		this.spellPower = (int) Math.ceil(this.level * 0.3);
 	}
 	
-
-	
 	private void resetXp() {
 		this.xp -= getXpNeeded((byte) (level-1));
+	}
+	
+	public boolean hasWeaponID(int id) {
+		if (mapWeapons.get(id) != null) return true;
+		else return false;
 	}
 	
 	// GETTERS
