@@ -33,6 +33,7 @@ public class Entity {
 	protected double[] damageDbl = new double[2]; // for precision (needed for leveling)
 	protected int maxHealth, maxMana;
 	protected int health, mana, shield, xp;
+	protected int totalXp;
 	protected int lastHealth;
 	protected String description;
 	protected byte abilityCount;
@@ -138,7 +139,7 @@ public class Entity {
 		if(a == null) {
 			decreaseHealth(e1, e2, d);
 			stillAlive(e2, e1);
-			CombatLog.println("" + e1.name + " --> " + e2.name + " (" + d + " damage)");
+			if (!mute) CombatLog.println("" + e1.name + " --> " + e2.name + " (" + d + " damage)");
 		}
 		
 		else {
@@ -151,7 +152,7 @@ public class Entity {
 	}
 	
 	protected boolean affordToUseAbility(Entity e1, Ability a) {
-		return a.getAPcost() <= e1.actionPoints && a.getMPcost() <= e1.mana;
+		return a.getAPcost() <= e1.actionPoints && (a.getMPcost() * e1.spellPower) <= e1.mana;
 	}
 	
 	protected void doHealing(Entity e1, Entity e2, Equipment a, int h) {
@@ -287,11 +288,15 @@ public class Entity {
 			((Player) this).addGold(buffGold);
 			giveXP(attacker, buffXp);
 			((Player) this).checkLevelUp();
+			CombatLog.println(checked.name + " died. " + attacker.name + " receives " + buffXp + " XP and " + buffGold + " gold for the kill.");
 		}
-		CombatLog.println(checked.name + " died. " + attacker.name + " receives " + buffXp + " XP and " + buffGold + " gold for the kill.");
 	}
 	
 	protected void useAbility(Entity e1, Ability a) {
+		useAbility(e1, a, false);
+	}
+	
+	protected void useAbility(Entity e1, Ability a, boolean isFree) {
 		/* 
 		 * consider calling this regardless the type: just execute EVERYTHING, since a heal will have
 		 * damageValue 0 anyways
@@ -300,44 +305,51 @@ public class Entity {
 		 *
 		 * 
 		 * */
-		
+		a.setTarget(e1.currentTarget);
 		// the last condition (only use healing spell if its 
 		if (affordToUseAbility(e1, a) && !a.isOnCooldown()) {
-			CombatLog.println("Ability (" + a.getName() + ") used: ");
-			if (e1.type.startsWith("mon")) {
-				doAbility(a, e1.currentTarget);}
-			else {
-				if (a.getTargetType() == 1)
-					doAbility(a, e1.currentTarget);
-				if (a.getTargetType() == 3) {
-					int n = this.currentTarget.localId - 1;
-					doAbility(a, stage.getMonsters().get(n));
-					if (n == 0) {
-						if (aoeCheckRightNeighbor(n))
-							aoeDoAbilityRightNeighbor(a, n);
+			
+			// special requirements for casting a certain type of spell goes here (use ||):
+			if (
+					a.getHealValue() > 0 && e1.health < e1.maxHealth || // healing spells can only be used if health isn't full 
+					a.getHealValue() <= 0	// default, so all non-healing spells can be used without restrictions
+					) {
+				
+				if (e1.type.startsWith("mon")) {
+					doAbility(a, a.getTarget());}
+				else {
+					if (a.getTargetType() == 1)
+						doAbility(a, a.getTarget());
+					if (a.getTargetType() == 3) {
+						int n = this.currentTarget.localId - 1;
+						doAbility(a, stage.getMonsters().get(n));
+						if (n == 0) {
+							if (aoeCheckRightNeighbor(n))
+								aoeDoAbilityRightNeighbor(a, n);
+						}
+						if (n > 0 && n < 4) {
+							if (aoeCheckRightNeighbor(n))
+								aoeDoAbilityRightNeighbor(a, n);
+							if (aoeCheckLeftNeighbor(n))
+								aoeDoAbilityLeftNeighbor(a, n);
+						}
+						if (n == 4) {
+							if (aoeCheckLeftNeighbor(n))
+								aoeDoAbilityLeftNeighbor(a, n);
+						}
 					}
-					if (n > 0 && n < 4) {
-						if (aoeCheckRightNeighbor(n))
-							aoeDoAbilityRightNeighbor(a, n);
-						if (aoeCheckLeftNeighbor(n))
-							aoeDoAbilityLeftNeighbor(a, n);
-					}
-					if (n == 4) {
-						if (aoeCheckLeftNeighbor(n))
-							aoeDoAbilityLeftNeighbor(a, n);
+					if (a.getTargetType() == 5) {
+						for (int i = 0; i < stage.getMonsters().size(); i++) {
+							doAbility(a, stage.getMonsters().get(i));
+						}
 					}
 				}
-				if (a.getTargetType() == 5) {
-					for (int i = 0; i < stage.getMonsters().size(); i++) {
-						doAbility(a, stage.getMonsters().get(i));
-					}
+				
+				if (!isFree) compensateForCosts(this, this, a);
+					a.setLastUsed(Game.getGameplay().getTurnCount());
+					CombatLog.println("Ability (" + a.getName() + ") used.");
 				}
 			}
-			
-			compensateForCosts(this, this, a);
-			a.setLastUsed(Game.getGameplay().getTurnCount());
-		}
-
 	}
 
 	
@@ -357,7 +369,6 @@ public class Entity {
 
 	private void aoeDoAbilityRightNeighbor(Ability a, int n) {
 		doAbility(a, stage.getMonsters().get(n + 1));
-		
 	}
 	
 	private void aoeDoAbilityLeftNeighbor(Ability a, int n) {
@@ -375,13 +386,51 @@ public class Entity {
 		doAbility(a, e);
 	}
 	
+	
+	private void aoeDealDamageRightNeighbor(Equipment a, int n) {
+		dealDamage(this, stage.getMonsters().get(n + 1), a.getDotValue(), true);
+		OTTicked(a.getDotValue());
+	}
+	
+	private void aoeDealDamageLeftNeighbor(Equipment a, int n) {
+		dealDamage(this, stage.getMonsters().get(n - 1), a.getDotValue(), true);
+		OTTicked(a.getDotValue());
+		}
+	
 	public void applyOTs(Equipment a) {
 //		if ((a.getLastUsed() + a.getTurnCount()) >= Gamestats.turnCount - 1) tick = 0;
 		
 		if (health > 0 && a.getDotValue() > 0) {
-			dealDamage(this, currentTarget, a.getDotValue(), true);
-			this.tick++;
-			CombatLog.println("[Tick " + tick + "] " + this.name + " dealt a DoT of " + a.getDotValue());
+			
+			if (a.getTargetType() == 1) {
+				dealDamage(this, a.getTarget(), a.getDotValue(), true);			
+				OTTicked(a.getDotValue());
+			}
+			if (a.getTargetType() == 3) {
+				int n = a.getTarget().localId - 1;
+				dealDamage(this, a.getTarget(), a.getDotValue(), true);
+				OTTicked(a.getDotValue());
+				if (n == 0) {
+					if (aoeCheckRightNeighbor(n))
+						aoeDealDamageRightNeighbor(a, n);
+				}
+				if (n > 0 && n < 4) {
+					if (aoeCheckRightNeighbor(n))
+						aoeDealDamageRightNeighbor(a, n);
+					if (aoeCheckLeftNeighbor(n))
+						aoeDealDamageLeftNeighbor(a, n);
+				}
+				if (n == 4) {
+					if (aoeCheckLeftNeighbor(n))
+						aoeDealDamageLeftNeighbor(a, n);
+				}
+			}
+			if (a.getTargetType() == 5) {
+				for (int i = 0; i < stage.getMonsters().size(); i++) {
+					dealDamage(this, a.getTarget(), a.getDotValue(), true);
+					OTTicked(a.getDotValue());
+				}
+			}			
 		}
 		
 		if (health > 0 && a.getHotValue() > 0) {
@@ -396,9 +445,15 @@ public class Entity {
 			CombatLog.println("[Tick " + tick + "] " + this.name + " restores mana MoT of " + a.getMotValue());
 		}
 	}
+
+	private void OTTicked(int otValue) {
+		this.tick++;
+		CombatLog.println("[Tick " + tick + "] " + this.name + " dealt a DoT of " + otValue);
+	}
 	
 	private void giveXP(Entity e, int n) {
 		e.xp += n;
+		e.totalXp += n;
 	}
 
 	public void setDefaultTarget(Entity e) {
@@ -579,8 +634,12 @@ public class Entity {
 		return mana;
 	}
 	
-	public int getXP() {
+	public int getXp() {
 		return xp;
+	}
+	
+	public int getTotalXp() {
+		return totalXp;
 	}
 
 	public int getXpNeeded() {

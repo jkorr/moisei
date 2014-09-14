@@ -10,6 +10,7 @@ public class Equipment {
 	protected boolean showTooltip;
 	
 	protected Entity user;
+	protected Entity target;
 	protected int tick;
 	
 	// the costs, the heal/damage values probably should be refactored to 'base' (e.g. baseMPcost, baseHealValue, etc.)
@@ -127,6 +128,14 @@ public class Equipment {
 		return showTooltip;
 	}
 	
+	public Entity getUser() {
+		return user;
+	}
+	
+	public Entity getTarget() {
+		return target;
+	}
+	
 	// OT/CD GETTERS
 	public boolean isOTActive() {
 		return OTActive;
@@ -172,6 +181,14 @@ public class Equipment {
 	
 	public void setShowTooltip(boolean b) {
 		showTooltip = b;
+	}
+	
+	public void setTarget(Entity e) {
+		target = e;
+	}
+	
+	public void setUser(Entity e) {
+		user = e;
 	}
 	
 }

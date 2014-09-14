@@ -100,6 +100,7 @@ public class Player extends Entity {
 	}
 	
 	public void update() {
+		if (actionPoints == 0) Game.getGameplay().endTurn(this);
 
 		setPercentageValues();
 		updateAbilities();

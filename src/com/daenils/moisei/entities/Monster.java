@@ -237,7 +237,6 @@ public class Monster extends Entity {
 				}
 			}			
 		}
-		
 		isWaiting = true;
 	}
 

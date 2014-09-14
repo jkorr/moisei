@@ -16,7 +16,7 @@ import com.daenils.moisei.graphics.Stage;
 public class Gamestats {
 	private Stage stage;
 	
-	private static int playerLevel, playerXP, playerMaxHP, playerMaxMP, playerMaxAP;
+	private static int playerLevel, playerXP, playerTotalXP, playerMaxHP, playerMaxMP, playerMaxAP;
 	
 	// GAME STUFF
 	public static long turnCount;
@@ -60,7 +60,8 @@ public class Gamestats {
 	public void update() {
 		if (stage.getPlayer() != null) {
 			playerLevel = stage.getPlayer().level;
-			playerXP = stage.getPlayer().getXP();
+			playerXP = stage.getPlayer().getXp();
+			playerTotalXP = stage.getPlayer().getTotalXp();
 			playerMaxHP = stage.getPlayer().maxHealth;
 			playerMaxMP = stage.getPlayer().maxMana; 
 			playerMaxAP = stage.getPlayer().maxActionPoints;	
@@ -72,8 +73,8 @@ public class Gamestats {
 		isPlayerTurn = Game.getGameplay().getIsPlayerTurn();
 		isMonsterTurn = Game.getGameplay().getIsMonsterTurn(); 
 		
-		deltaTurnTime = Game.getGameplay().getDeltaTurnTime();
-		deltaGameTime = Game.getGameplay().getDeltaGameTime();
+		deltaTurnTime = Game.getGameplay().getDeltaTimeTurn();
+		deltaGameTime = Game.getGameplay().getDeltaTimeStage();
 		
 		spawnSlotFilled[0] = Game.getGameplay().getSpawnSlotFilled(1);
 		spawnSlotFilled[1] = Game.getGameplay().getSpawnSlotFilled(2);
@@ -88,7 +89,7 @@ public class Gamestats {
 			savedDeltaGameTime = deltaGameTime;
 			savedMonsterDeathCount += monsterDeathCount;
 			savedPlayerLevel = playerLevel;
-			savedPlayerTotalXP = playerXP;
+			savedPlayerTotalXP = playerTotalXP;
 			savedPlayerMaxHP = playerMaxHP;
 			savedPlayerMaxMana = playerMaxMP;
 			savedPlayerMaxAP = playerMaxAP;

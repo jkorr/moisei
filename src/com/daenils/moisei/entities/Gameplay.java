@@ -22,6 +22,8 @@ import com.daenils.moisei.graphics.Stage;
 import com.daenils.moisei.graphics.Window;
 
 public class Gameplay {
+	private final int BILLION = 1000000000;
+	
 	private Stage stage;
 	private Game game;
 	private GUI gui;
@@ -40,17 +42,19 @@ public class Gameplay {
 	// GLOBAL COOLDOWN STUFF
 	protected boolean onGlobalCooldown = false;
 	private double startGlobalCooldownTimer;
-	private double nowTime;
+	private double nowTimeOLD;
 	private double deltaGlobalCooldownTime;
 	private double deltaGlobalCooldownTimeSec;
 	private double globalCooldown = 400.0 / 1000.0; // modify first number only (ms)
 	
 	// TIMERS 'N STUFF
-	private double startTurnTimer, deltaTurnTime, deltaTurnTimeSec, pauseTurnTime; // TURN
-	private double startGameTimer, deltaGameTime, deltaGameTimeSec, pauseGameTime; // GAME
-	private double startWaveTimer, deltaWaveTime, deltaWaveTimeSec, pauseWaveTime; // WAVE
-	private double startPauseTimer, deltaPauseTime, deltaPauseTimeSec, turnPauseTime, wavePauseTime, totalPauseTime; // PAUSE
 	private double startWaitTimer, deltaWaitTime, deltaWaitTimeSec; // MONSTER WAIT
+	
+	// (NEW) TIMERS 'N STUFF
+	private long startTimeRunning, startTimeStage, startTimeWave, startTimeTurn, startTimeWait;
+	private long deltaTimeRunning, deltaTimeStage, deltaTimeWave, deltaTimeTurn, deltaTimeWait;
+	private long endTimeStage, endTimeWave, endTimeTurn, endTimeWait;
+	private long nowTime;
 	
 	// MONSTER WAIT
 	private boolean isWaitingOn;
@@ -98,10 +102,13 @@ public class Gameplay {
 		this.isMonsterTurn = false;
 		this.isPlayerTurn = false;
 		this.startGlobalCooldownTimer = System.currentTimeMillis();
-		this.startTurnTimer = System.currentTimeMillis();
-		resetGameplayTime();
-		this.startWaitTimer = System.currentTimeMillis();
-		this.startWaveTimer = System.currentTimeMillis();
+		resetStageTime();
+		
+		// NEW TIMER STUFF
+		this.startTimeRunning = System.nanoTime();
+		this.startTimeStage = System.nanoTime();
+		this.startTimeWave = System.nanoTime();
+		this.startTimeTurn = System.nanoTime();
 		
 		this.waveCount = 0;
 		
@@ -140,10 +147,9 @@ public class Gameplay {
 		// GAMESTATS REFUGEES
 		monstersAllDead = stage.checkIfAllDead();
 		monstersAlive = checkMonstersAliveCount();
-		
-		if (deltaTurnTime < 0) deltaPauseTime = 0;
 
-		nowTime = nowTime();
+		nowTimeOLD = nowTime();
+		nowTime = System.nanoTime();
 		gameFlow();
 		
 		if (monstersAllDead || stage.getPlayer().getHealth() <= 0) setContinueGame(false);
@@ -152,7 +158,7 @@ public class Gameplay {
 		// TODO: temporary solution to the monster spawn before all removed issue
 		if (!continueGame && monstersAllDead) removeDead();
 		
-		if (notificationStartTime > 0 && deltaGameTimeSec - notificationStartTime >= 2) {
+		if (notificationStartTime > 0 && (deltaTimeStage / BILLION) - notificationStartTime >= 2) {
 			notificationLevelUp = false;
 		}
 		
@@ -200,7 +206,7 @@ public class Gameplay {
 		}
 		else weaponString = "N / A";
 		
-		if (deltaWaveTime < 2.0) newWave = true;
+		if ((deltaTimeWave / BILLION) < 2.0) newWave = true;
 		else newWave = false;
 		
 		dealOTValues(stage.getPlayer());
@@ -212,14 +218,6 @@ public class Gameplay {
 		for (int i = 0; i < stage.getMonsters().size(); i++) {
 			checkForCooldowns(stage.getMonsters().get(i));
 		}
-		
-		if (deltaGameTime % 1 == 0) { 
-			d = new Date((long) nowTime - (long) startGameTimer - 3600000);
-		//	System.out.println(d.toString().split(" ")[3].split(":")[2]);
-		}
-		
-		
-		
 	}
 
 	
@@ -267,25 +265,17 @@ public class Gameplay {
 		if (continueGame) {
 		isPaused = false;
 		
-		// temporary solution to the pause issues:
-		deltaTurnTime = nowTime - startTurnTimer;
-		if (turnCount > 1) deltaTurnTime -= turnPauseTime;
-		deltaTurnTimeSec = (double) ((int) (deltaTurnTime / 100)) / 10;
-	
-		deltaGameTime = nowTime - startGameTimer - totalPauseTime;
-		deltaGameTimeSec = (double) ((int) (deltaGameTime / 100)) / 10;
+		deltaTimeRunning = nowTime - startTimeRunning;
+		deltaTimeStage = (nowTime - startTimeStage) + endTimeStage;
+		deltaTimeWave = (nowTime - startTimeWave) + endTimeWave;
+		deltaTimeTurn = (nowTime - startTimeTurn) + endTimeTurn;
 		
-		deltaWaitTime = nowTime - startWaitTimer;
+		// temporary solution to the pause issues:
+		deltaWaitTime = nowTimeOLD - startWaitTimer;
 		deltaWaitTimeSec = (double) ((int) (deltaWaitTime / 100)) / 10;
-//		System.out.println(deltaWaitTime);
-		
-		// temporary solution to the pause issues:
-		deltaWaveTime = nowTime - startWaveTimer;
-		if (turnCount > 1) deltaWaveTime -= wavePauseTime;
-		deltaWaveTimeSec = (double) ((int) (deltaWaveTime / 100)) / 10;
 		}
 		
-		deltaGlobalCooldownTime = nowTime - startGlobalCooldownTimer;
+		deltaGlobalCooldownTime = nowTimeOLD - startGlobalCooldownTimer;
 		deltaGlobalCooldownTimeSec = (double) ((int) (deltaGlobalCooldownTime / 100)) / 10; // not sure why I can't make it work in the previous line though
 		
 		
@@ -303,22 +293,15 @@ public class Gameplay {
 	public void handlePause() {
 		if (!continueGame) {
 			if (!isPaused) {
-				startPauseTimer = System.currentTimeMillis();
+				endTimeStage = deltaTimeStage;
+				endTimeWave = deltaTimeWave;
+				endTimeTurn = deltaTimeTurn;
 			}
 			isPaused = true;
 			
-			deltaPauseTime = (nowTime - startPauseTimer);
-			deltaPauseTimeSec = (double) ((int) (deltaPauseTime / 100)) / 10;
-			
-			totalUpdated = false;
-		}
-		else {
-			if (!totalUpdated) {
-				totalPauseTime += deltaPauseTime;
-				turnPauseTime += deltaPauseTime;
-				wavePauseTime += deltaPauseTime;
-				totalUpdated = true;
-			}
+			startTimeStage = nowTime;
+			startTimeWave = nowTime;
+			startTimeTurn = nowTime;
 		}
 	}
 	
@@ -499,11 +482,11 @@ public class Gameplay {
 	private void renderTurnInfoBox(Screen screen, String timeString) {
 //			font.render(645/2, 572/2, -6, 0xffffff00, Text.font_default, 1, "- TURN INFO -", screen);  
 		font.render(GUI.screenTurninfoPos - 35, 303, -8, 0xffdddddd, Text.font_default, 1,
-				"  T\n " + turnCount + "\n\n\n\n" + (int) deltaTurnTimeSec
+				"  T\n " + turnCount + "\n\n\n\n" +  (int) (deltaTimeTurn / BILLION)
 				, screen);
 		
 		font.render(GUI.screenTurninfoPos + 65, 303, -8, 0xffdddddd, Text.font_default, 1,
-				"W\n " + waveCount + "\n\n\n\n" + (int) deltaWaveTimeSec
+				"W\n " + waveCount + "\n\n\n\n" + (int) (deltaTimeWave / BILLION)
 				, screen);
 		
 		// ACTIONS BAR
@@ -520,9 +503,9 @@ public class Gameplay {
 		font.render(GUI.screenTurninfoPos, 572/2, -7, 0xffffff00,
 				"\n\n-> " + printWhosTurn() +
 				"\nACTIONS LEFT: " + getActionsLeftBar() + "" +
-				"\n\nTURN " + turnCount + " - " + deltaTurnTimeSec +
-				"\nWAVE " + waveCount + " - " + deltaWaveTimeSec +
-				"\nGAME TIME: " + deltaGameTimeSec
+				"\n\nTURN " + turnCount + " - " + (int) (deltaTimeTurn / BILLION) +
+				"\nWAVE " + waveCount + " - " + (int) (deltaTimeWave / BILLION) +
+				"\nGAME TIME: " + (int) (deltaTimeStage / BILLION)
 		//		"\nGAME TIME: " + timeString
 				, screen);
 	}
@@ -552,7 +535,7 @@ public class Gameplay {
 		
 		// XP TEXT
 		font.render(GUI.screenPlayerinfoPos-153, 325, -8, 0xffffffff, Text.font_default, 1, ""
-				+ "" + "" + stage.getPlayer().getXP() + "/" + stage.getPlayer().getXpNeeded() 
+				+ "" + "" + stage.getPlayer().getXp() + "/" + stage.getPlayer().getXpNeeded() 
 				, screen);
 		
 		// LEVEL
@@ -621,7 +604,8 @@ public class Gameplay {
 							+ "\nMonsters alive: " + monstersAlive
 							+ "\n\n" + individualMonsterDetails() + "\n"
 							+ "\nTotal TurnCount: " + Gamestats.getTotalTurnCount()
-							+ "\nTotal GameTime: " + deltaGameTimeSec
+							+ "\nTotal RunTime: " + (int) (deltaTimeRunning / BILLION)
+							+ "\nTotal GameTime: " + (int) (deltaTimeStage / BILLION)
 							+ "\nMonster deathcount: " + Monster.getDeathCount()
 							+ "\nTotal Monster deathcount: " + Gamestats.getTotalMonsterDeathCount()
 			//				+ "\nPl Ability 1 last used: " + Gamestats.player.abilities.get(0).getLastUsed() // these 3 lines are poorly written
@@ -634,7 +618,6 @@ public class Gameplay {
 							+ "\nCombat Log length: " + CombatLog.getSize()
 							+ "\nGame is paused: " + !continueGame
 							+ "\nPause forced: " + getForcedPause()
-							+ "\nTotal pause time: " + totalPauseTime
 							+ "\nPlayer's spellpower: " + stage.getPlayer().spellPower
 							+ "\n\nmX: " + Mouse.getX() + " mY: " + Mouse.getY() + " mB: " + Mouse.getB() 
 							
@@ -686,7 +669,8 @@ public class Gameplay {
 	}
 	
 	protected void renderNotifications(Screen screen) {
-		if (turnCount > 1 && deltaTurnTimeSec < 1.2) {
+		int deltaTimeTurnSeconds = (int) (deltaTimeTurn / BILLION);
+		if (turnCount > 1 && deltaTimeTurnSeconds < 1.2) {
 			font.renderXCentered(2, 62, 12, 0xff9a9a9a, Text.font_kubastaBig, 1.5, printWhosTurnTop(), screen);
 			font.renderXCentered(60, 12, 0xff4d4d4d, Text.font_kubastaBig, 1.5, printWhosTurnTop(), screen);
 		}
@@ -701,13 +685,13 @@ public class Gameplay {
 			font.renderXCentered(80, 12, 0xffdfbf00, Text.font_kubastaBig, 1.1, "LEVEL UP!", screen);
 		}
 			
-			if (turnCount < 2 && deltaTurnTimeSec < 2 && waveCount < 2)
+			if (turnCount < 2 && deltaTimeTurnSeconds < 2 && waveCount < 2)
 				font.renderXCentered(60, 2, 0xff61118e, Text.font_kubastaBig, 2.5, "Press SPACE to hit your enemy", screen);
-			if (turnCount < 2 && deltaTurnTimeSec > 3 && deltaTurnTimeSec < 5 && waveCount < 2)
+			if (turnCount < 2 && deltaTimeTurnSeconds > 3 && deltaTimeTurnSeconds < 5 && waveCount < 2)
 				font.renderXCentered(60, 2, 0xff61118e, Text.font_kubastaBig, 2.5, "Press ENTER to end your turn", screen);
-			if (turnCount < 2 && deltaTurnTimeSec > 6 && deltaTurnTimeSec < 8 && waveCount < 2)
+			if (turnCount < 2 && deltaTimeTurnSeconds > 6 && deltaTimeTurnSeconds < 8 && waveCount < 2)
 				font.renderXCentered(60, 2, 0xff61118e, Text.font_kubastaBig, 2.5, "Press Q,W,E,R to use your abilities", screen);
-			if (turnCount < 2 && deltaTurnTimeSec > 9 && deltaTurnTimeSec < 11 && waveCount < 2)
+			if (turnCount < 2 && deltaTimeTurnSeconds > 9 && deltaTimeTurnSeconds < 11 && waveCount < 2)
 				font.renderXCentered(60, 2, 0xff61118e, Text.font_kubastaBig, 2.5, "Press G to switch between weapons", screen);
 			
 			if (stage.getPlayer().getHealth() <= 0) {
@@ -741,11 +725,10 @@ public class Gameplay {
 	}
 	
 	protected void newTurn() {
-		turnPauseTime = 0;
-		deltaTurnTime = 0;
-		
+		startTimeTurn = nowTime;
+		endTimeTurn = 0;
+		// delta = null?
 		CombatLog.printnt("New turn begins.");
-		startTurnTimer = System.currentTimeMillis();
 		if ((!this.isMonsterTurn) && (this.isPlayerTurn)) {
 			this.isMonsterTurn = true;
 			this.isPlayerTurn = false;
@@ -781,10 +764,10 @@ public class Gameplay {
 		// THIS METHOD IS SPECIFICALLY TAILORED FOR THE MONSTER
 		// USE THE OTHER ONE WITH THE PLAYER
 	//	removeDead();
-		CombatLog.printet("Turn " + turnCount + " has ended in " + deltaTurnTimeSec + " seconds" + " (Game time: " + deltaGameTimeSec + "s)");
+		CombatLog.printet("Turn " + turnCount + " has ended in " + (int) (deltaTimeTurn / BILLION) + " seconds" + " (Game time: " + (int) (deltaTimeStage / BILLION) + "s)");
 		newTurn();
 		
-		for (int i = 0; i < monstersAlive; i++) {
+		for (int i = 0; i < stage.getMonsters().size(); i++) {
 			stage.getMonsters().get(i).resetActionPoints(stage.getMonsters().get(i));
 		}
 		Monster.resetMonstersAttacked();
@@ -793,7 +776,7 @@ public class Gameplay {
 	
 	protected void endTurn(Entity e) {
 	//	removeDead();
-		CombatLog.printet("Turn " + turnCount + " has ended in " + deltaTurnTimeSec + " seconds" + " (Game time: " + deltaGameTimeSec + "s)");
+		CombatLog.printet("Turn " + turnCount + " has ended in " + (int) (deltaTimeTurn / BILLION) + " seconds" + " (Game time: " + (int) (deltaTimeStage / BILLION) + "s)");
 		FileManager.saveCombatLogFile();
  
 		if(turnCount > 0) {
@@ -831,7 +814,6 @@ public class Gameplay {
 		}
 			
 		spawnMonster(n);
-	
 		waveCount++;
 	}
 
@@ -978,17 +960,16 @@ public class Gameplay {
 		return this.isPlayerTurn;
 	}
 	
-	public double getDeltaGameTime() {
-		return this.deltaGameTimeSec;
+	public double getDeltaTimeStage() {
+		return this.deltaTimeStage;
 	}
 	
-	
-	public double getDeltaTurnTime() {
-		return deltaTurnTimeSec;
+	public double getDeltaTimeTurn() {
+		return deltaTimeTurn;
 	}
 	
-	public double getTurnStartTime() {
-		return startTurnTimer;
+	public double getTurnTimeStart() {
+		return startTimeTurn;
 	}
 	
 	public double getStartWaitTimer() {
@@ -1007,12 +988,12 @@ public class Gameplay {
 		return spawnSlotFilled[n - 1];
 	}
 	
-	public double getStartWaveTimer() {
-		return startWaveTimer;
+	public double getStartTimeWave() {
+		return startTimeWave;
 	}
 	
-	public double getDeltaWaveTime() {
-		return deltaWaveTimeSec;
+	public double getDeltaTimeWave() {
+		return deltaTimeWave;
 	}
 	
 	public long getTurnCount() {
@@ -1074,16 +1055,19 @@ public class Gameplay {
 		this.startGlobalCooldownTimer = System.currentTimeMillis();
 	}
 	
-	public void resetGameplayTime() {
-		this.startGameTimer = System.currentTimeMillis();
+	public void resetStageTime() {
+		this.startTimeStage = nowTime;
+		this.endTimeStage = 0;
 	}
 	
 	public void resetTurnTime() {
-		this.startTurnTimer = System.currentTimeMillis();
+		this.startTimeTurn = nowTime;
+		this.endTimeTurn = 0;
 	}
 	
 	public void resetWaveTime() {
-		this.startWaveTimer = System.currentTimeMillis();
+		this.startTimeWave = nowTime;
+		this.endTimeWave = 0;
 	}
 	
 	public void setStartWaitTimer(double n) {
@@ -1139,7 +1123,7 @@ public class Gameplay {
 	}
 	
 	public void setNotificationLevelUp() {
-		notificationStartTime = (int) deltaGameTimeSec;
+		notificationStartTime = (int) (deltaTimeStage / BILLION);
 		notificationLevelUp = true;
 	}
 	
