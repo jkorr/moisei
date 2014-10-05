@@ -94,6 +94,9 @@ public class Gameplay {
 	protected boolean shopHasOpened; // set it true when first opens so it will only open once, set it back to false at
 											// the start of a new wave probably
 	
+	// LETTER INVENTORY STUFF
+	protected boolean letterWindowHasOpened;
+	
 	public Gameplay(Keyboard input, Mouse inputM, Stage stage, Game game, GUI gui) {
 		this.game = game;
 		this.stage = stage;
@@ -141,6 +144,11 @@ public class Gameplay {
 	}
 
 	public void update() {
+		if (!letterWindowHasOpened) {
+			openLetterWindow();
+			letterWindowHasOpened = true;
+		}
+		
 		if (shopHasOpened) shop();
 		if (shopHasOpened && turnCount > 2) shopHasOpened = false;
 		
@@ -313,6 +321,14 @@ public class Gameplay {
 	
 	// rendering the GUI text here is probably temporary
 	public void render(Screen screen) {
+		// render hiteffect (player)
+		/*
+		if (stage.getPlayer().getHealth() < stage.getPlayer().lastHealth && TIMESTAMP + DISPLAY_TIME < NOW) {
+			screen.renderBgFill(0xffff0000);
+		}
+		
+		*/
+		
 		// TEST STRING
 //		font.renderNew("Hi!", 50, 50, 0, Font.SANS_SERIF, 12, g);
 		
@@ -1147,6 +1163,13 @@ public class Gameplay {
 	
 	public boolean isBetween(int comparedNum, int min, int max) {
 		return (comparedNum >= min && comparedNum < max);
+	}
+	
+	// MECHANIC: LETTER WINDOW
+	private void openLetterWindow() {
+		gui.createWindow(240, 200, 164, 120, 0xff555555, "LETTERS");
+		gui.getWindow("letters").add(5,3);
+		gui.getWindow("letters").add(Letter.testletter);
 	}
 	
 	// MECHANIC: SHOP

@@ -71,6 +71,13 @@ public class Screen {
 		pixels[xp + yp* width] = color;
 	}
 	
+	public void renderBgFill(int col) {
+		for (int k = 0; k < Game.getRenderHeight(); k++)
+			for (int i = 0; i < Game.getRenderWidth(); i++) {
+				pixels[(0 + i) + (0 + k) * this.width] = col; 
+			}
+	}
+	
 	public void renderGUIWindow(int x, int y, int width, int height, int bgcolor) {
 		for (int k = 0; k < height; k++)
 			for (int i = 0; i < width; i++) {

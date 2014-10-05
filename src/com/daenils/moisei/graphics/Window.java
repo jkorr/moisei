@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.daenils.moisei.input.Mouse;
+import com.daenils.moisei.entities.Letter;
 import com.daenils.moisei.entities.equipments.*;
 
 public class Window {
@@ -15,6 +16,7 @@ public class Window {
 	protected Text font;
 	protected String name;
 	protected List<Equipment> contents = new ArrayList<Equipment>();
+	protected List<Letter> letterContents = new ArrayList<Letter>();
 	protected Equipment requestedItem, lastRequestedItem;
 	
 	protected int horGrid, verGrid;
@@ -27,6 +29,7 @@ public class Window {
 	protected boolean hasDisplayText;
 	protected boolean hasDialogueOptions;
 	protected boolean hasContent;
+	protected boolean hasLetterContent;
 	protected boolean mouseOverItem;
 	
 	// finals
@@ -57,6 +60,9 @@ public class Window {
 		if (contents.size() > 0) this.hasContent = true;
 		else this.hasContent = false;
 		
+		if (letterContents.size() > 0) this.hasLetterContent = true;
+		else this.hasLetterContent = false; 
+		
 		if (Mouse.getX() > 2 * (x + width - 10) && Mouse.getX() < 2 * (x + width)
 				&& Mouse.getY() > 2 * (y) && Mouse.getY() < 2 * (y + 10)
 				&& Mouse.getB() == 1) this.needsClosing = true;
@@ -81,6 +87,27 @@ public class Window {
 					}
 					screen.renderSprite(x + ITEM_POSITION1[0] + pos * ITEM_OFFSET, y + ITEM_POSITION1[1] + line * ITEM_OFFSET, contents.get(i).getIcon(), 0);
 					renderContentInfo(i, pos, line);
+					pos++;
+				}
+			}
+			
+			if (this.hasLetterContent) {
+				// RENDER THE ICONS FOR THE CONTENT 
+				int line = 0, pos = 0;
+				for (int i = 0; i < letterContents.size(); i++) {
+					if (i % horGrid == 0 && i > 0) {
+						line++;
+						pos = 0;
+					}
+					// RENDER BORDER DEPENDING ON ELEMENT:
+					for (int l = 0; l < letterContents.get(i).getIcon().height; l++) {
+						for (int k = 0; k < letterContents.get(i).getIcon().width; k++) {
+							screen.renderPixel(k + x + ITEM_POSITION1[0] + pos * ITEM_OFFSET, l + y + ITEM_POSITION1[1] + line * ITEM_OFFSET, letterContents.get(i).getFrame());
+						}
+					}
+					
+					screen.renderSprite(x + ITEM_POSITION1[0] + pos * ITEM_OFFSET, y + ITEM_POSITION1[1] + line * ITEM_OFFSET, letterContents.get(i).getIcon(), 0);
+			//		renderContentInfo(i, pos, line);
 					pos++;
 				}
 			}
@@ -144,6 +171,11 @@ public class Window {
 	public void add(Equipment e) {
 		this.contents.add(e);
 	}
+	
+	// ADD CONTENT (LETTERS)
+		public void add(Letter l) {
+			this.letterContents.add(l);
+		}
 
 	// SETTERS
 	// GENERATE A NAME FOR THE WINDOW FROM ITS TITLE (WITHOUT SPACES AND LOWER CASE INITIAL LETTER)

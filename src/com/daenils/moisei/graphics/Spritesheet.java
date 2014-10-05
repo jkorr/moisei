@@ -17,7 +17,9 @@ public class Spritesheet {
 	private Sprite[] sprites;
 	
 	// SPRITESHEETS
-	// fontsheet:
+	// lettersheet:
+	
+	public static Spritesheet lettersheet = new Spritesheet("/textures/letters/letter-grid.png", 180, 150, 30, 30);
 	
 	public Spritesheet(String path, int w, int h, int sw, int sh) {
 		this.path = path;

@@ -26,6 +26,7 @@ public class Sprite {
 //	public static Sprite monster_demo2 = new Sprite("/textures/entities/monster_demo2.png", 64, 104);
 	public static Sprite monster_demo3 = new Sprite("/textures/entities/monster_demo3.png", 64, 104);
 	public static Sprite monster_demo4 = new Sprite("/textures/entities/monster_demo4.gif", 64, 104);
+	public static Sprite unt = new Sprite("/textures/entities/unt.gif", 64, 104);
 	public static Sprite monster_generic_dead = new Sprite("/textures/entities/monster_generic_dead.gif", 64, 104);
 	
 	/* 
@@ -50,6 +51,14 @@ public class Sprite {
 	public static Sprite weapon1 = new Sprite("/textures/gui/weapons/weapon1.png", 30, 30);
 	public static Sprite weapon2 = new Sprite("/textures/gui/weapons/weapon2.png", 30, 30);
 	public static Sprite weapon3 = new Sprite("/textures/gui/weapons/weapon3.png", 30, 30);
+	
+	/* 
+	 * --------------
+	 * 4. LETTERS
+	 * --------------
+	 */
+	
+	public static Sprite[] letter = Sprite.split(Spritesheet.lettersheet);
 	
 	public Sprite(String path, int w, int h) {
 		this.width = w;

@@ -1,0 +1,217 @@
+|T0 : A new game has started.
+|T0 : Player's T Heal unlocked.
+|T0 : Player's T Fireball unlocked.
+|T0 : Player's T Stun unlocked.
+|T0 : Player's T Firestorm unlocked.
+|T0 : Basic Beast spawned.
+|T1 : New turn begins.
+|T1 : Targeted Basic Beast
+|T1 : Player --> Basic Beast (7 damage)
+-T1 : Turn 1 has ended in 32 seconds (Game time: 32s)
++T2 : New turn begins.
+|T2 : Basic Beast --> Player (5 damage)
+-T2 : Turn 2 has ended in 3 seconds (Game time: 35s)
++T3 : New turn begins.
+|T3 : Player --> Basic Beast (6 damage)
+-T3 : Turn 3 has ended in 1 seconds (Game time: 37s)
++T4 : New turn begins.
+|T4 : Basic Beast --> Player (4 damage)
+-T4 : Turn 4 has ended in 3 seconds (Game time: 40s)
++T5 : New turn begins.
+|T5 : Player --> Basic Beast (4 damage)
+-T5 : Turn 5 has ended in 18 seconds (Game time: 58s)
++T6 : New turn begins.
+|T6 : Basic Beast --> Player (3 damage)
+-T6 : Turn 6 has ended in 3 seconds (Game time: 61s)
++T7 : New turn begins.
+|T7 : Player --> Basic Beast (7 damage)
+-T7 : Turn 7 has ended in 20 seconds (Game time: 82s)
++T8 : New turn begins.
+|T8 : Basic Beast --> Player (4 damage)
+-T8 : Turn 8 has ended in 3 seconds (Game time: 85s)
++T9 : New turn begins.
+|T9 : Congratulations, you have reached level 2!
+|T9 : Basic Beast died. Player receives 10 XP and 5 gold for the kill.
+|T9 : Player --> Basic Beast (6 damage)
+-T9 : Turn 9 has ended in 1 seconds (Game time: 87s)
++T10 : New turn begins.
+|T10 : Monster removed
+|T0 : Weak Wolf's (M) Basic Attack unlocked.
+|T0 : Weak Wolf spawned.
+|T1 : New turn begins.
+|T1 : Targeted Weak Wolf
+-T1 : Turn 1 has ended in 0 seconds (Game time: 87s)
++T2 : New turn begins.
+|T2 : Hit chance roll: 34
+|T2 : Weak Wolf missed.
+-T2 : Turn 2 has ended in 3 seconds (Game time: 90s)
++T3 : New turn begins.
+|T3 : Player --> Weak Wolf (6 damage)
+-T3 : Turn 3 has ended in 2 seconds (Game time: 92s)
++T4 : New turn begins.
+|T4 : Hit chance roll: 15
+|T4 : Weak Wolf missed.
+-T4 : Turn 4 has ended in 3 seconds (Game time: 95s)
++T5 : New turn begins.
+|T5 : Player --> Weak Wolf (8 damage)
+-T5 : Turn 5 has ended in 1 seconds (Game time: 97s)
++T6 : New turn begins.
+|T6 : Hit chance roll: 12
+|T6 : Weak Wolf missed.
+-T6 : Turn 6 has ended in 3 seconds (Game time: 100s)
++T7 : New turn begins.
+|T7 : Player --> Weak Wolf (6 damage)
+-T7 : Turn 7 has ended in 21 seconds (Game time: 121s)
++T8 : New turn begins.
+|T8 : Hit chance roll: 38
+|T8 : Weak Wolf missed.
+-T8 : Turn 8 has ended in 3 seconds (Game time: 124s)
++T9 : New turn begins.
+|T9 : Player --> Weak Wolf (8 damage)
+-T9 : Turn 9 has ended in 35 seconds (Game time: 160s)
++T10 : New turn begins.
+|T10 : Hit chance roll: 31
+|T10 : Weak Wolf missed.
+-T10 : Turn 10 has ended in 3 seconds (Game time: 163s)
++T11 : New turn begins.
+|T11 : Player --> Weak Wolf (4 damage)
+-T11 : Turn 11 has ended in 3 seconds (Game time: 166s)
++T12 : New turn begins.
+|T12 : Targeted Weak Wolf
+|T12 : Hit chance roll: 36
+|T12 : Weak Wolf missed.
+-T12 : Turn 12 has ended in 3 seconds (Game time: 170s)
++T13 : New turn begins.
+|T13 : Weak Wolf died. Player receives 12 XP and 10 gold for the kill.
+|T13 : Player --> Weak Wolf (8 damage)
+-T13 : Turn 13 has ended in 1 seconds (Game time: 171s)
++T14 : New turn begins.
+|T14 : Monster removed
+|T0 : Wicked Wizard's T Fireball unlocked.
+|T0 : Wicked Wizard's T ManaDrain unlocked.
+|T0 : Wicked Wizard's T Shield unlocked.
+|T0 : Wicked Wizard spawned.
+|T1 : New turn begins.
+|T1 : Targeted Wicked Wizard
+-T1 : Turn 1 has ended in 0 seconds (Game time: 171s)
++T2 : New turn begins.
+|T2 : Wicked Wizard hits Player with T Fireball (10 damage)
+|T2 : Ability (T Fireball) used.
+-T2 : Turn 2 has ended in 3 seconds (Game time: 174s)
++T3 : New turn begins.
+|T3 : [Tick 1] Wicked Wizard dealt a DoT of 2
+|T3 : Player hits Wicked Wizard with T Fireball (10 damage)
+|T3 : Ability (T Fireball) used.
+-T3 : Turn 3 has ended in 36 seconds (Game time: 210s)
++T4 : New turn begins.
+|T4 : [Tick 1] Player dealt a DoT of 2
+|T4 : [Tick 1] Wicked Wizard dealt a DoT of 2
+|T4 : Wicked Wizard --> Player (3 damage)
+-T4 : Turn 4 has ended in 3 seconds (Game time: 213s)
++T5 : New turn begins.
+|T5 : [Tick 1] Player dealt a DoT of 2
+|T5 : Player --> Wicked Wizard (7 damage)
+-T5 : Turn 5 has ended in 3 seconds (Game time: 216s)
++T6 : New turn begins.
+|T6 : Wicked Wizard hits Player with T Fireball (10 damage)
+|T6 : Ability (T Fireball) used.
+-T6 : Turn 6 has ended in 3 seconds (Game time: 216s)
++T7 : New turn begins.
+|T7 : [Tick 1] Wicked Wizard dealt a DoT of 2
+|T7 : Player --> Wicked Wizard (4 damage)
+-T7 : Turn 7 has ended in 9 seconds (Game time: 226s)
++T8 : New turn begins.
+|T8 : [Tick 1] Wicked Wizard dealt a DoT of 2
+|T8 : Wicked Wizard --> Player (3 damage)
+-T8 : Turn 8 has ended in 3 seconds (Game time: 229s)
++T9 : New turn begins.
+|T9 : Player --> Wicked Wizard (4 damage)
+-T9 : Turn 9 has ended in 3 seconds (Game time: 232s)
++T10 : New turn begins.
+|T10 : Wicked Wizard --> Player (1 damage)
+-T10 : Turn 10 has ended in 3 seconds (Game time: 232s)
++T11 : New turn begins.
+|T11 : Wicked Wizard died. Player receives 12 XP and 10 gold for the kill.
+|T11 : Player --> Wicked Wizard (8 damage)
+-T11 : Turn 11 has ended in 10 seconds (Game time: 243s)
++T12 : New turn begins.
+|T12 : Monster removed
+|T0 : Wicked Wizard's T Fireball unlocked.
+|T0 : Wicked Wizard's T ManaDrain unlocked.
+|T0 : Wicked Wizard's T Shield unlocked.
+|T0 : Wicked Wizard spawned.
+|T1 : New turn begins.
+|T1 : Targeted Wicked Wizard
+-T1 : Turn 1 has ended in 0 seconds (Game time: 243s)
++T2 : New turn begins.
+|T2 : Wicked Wizard hits Player with T Fireball (10 damage)
+|T2 : Ability (T Fireball) used.
+-T2 : Turn 2 has ended in 0 seconds (Game time: 243s)
++T3 : New turn begins.
+|T3 : [Tick 1] Wicked Wizard dealt a DoT of 2
+|T3 : Player hits Wicked Wizard with T Fireball (10 damage)
+|T3 : Ability (T Fireball) used.
+-T3 : Turn 3 has ended in 1 seconds (Game time: 244s)
++T4 : New turn begins.
+|T4 : [Tick 1] Player dealt a DoT of 2
+|T4 : [Tick 1] Wicked Wizard dealt a DoT of 2
+|T4 : Wicked Wizard --> Player (2 damage)
+-T4 : Turn 4 has ended in 3 seconds (Game time: 247s)
++T5 : New turn begins.
+|T5 : [Tick 1] Player dealt a DoT of 2
+|T5 : Player --> Wicked Wizard (4 damage)
+-T5 : Turn 5 has ended in 2 seconds (Game time: 249s)
++T6 : New turn begins.
+|T6 : Wicked Wizard hits Player with T Fireball (10 damage)
+|T6 : Ability (T Fireball) used.
+-T6 : Turn 6 has ended in 0 seconds (Game time: 250s)
++T7 : New turn begins.
+|T7 : [Tick 1] Wicked Wizard dealt a DoT of 2
+|T7 : Player --> Wicked Wizard (5 damage)
+-T7 : Turn 7 has ended in 4 seconds (Game time: 255s)
++T8 : New turn begins.
+|T8 : [Tick 1] Wicked Wizard dealt a DoT of 2
+|T8 : Wicked Wizard --> Player (1 damage)
+-T8 : Turn 8 has ended in 3 seconds (Game time: 258s)
++T9 : New turn begins.
+|T9 : Player --> Wicked Wizard (4 damage)
+-T9 : Turn 9 has ended in 2 seconds (Game time: 261s)
++T10 : New turn begins.
+|T10 : Wicked Wizard --> Player (2 damage)
+-T10 : Turn 10 has ended in 0 seconds (Game time: 261s)
++T11 : New turn begins.
+|T11 : Player --> Wicked Wizard (4 damage)
+-T11 : Turn 11 has ended in 10 seconds (Game time: 272s)
++T12 : New turn begins.
+|T12 : Wicked Wizard --> Player (2 damage)
+-T12 : Turn 12 has ended in 10 seconds (Game time: 272s)
++T13 : New turn begins.
+|T13 : Congratulations, you have reached level 3!
+|T13 : Wicked Wizard died. Player receives 12 XP and 10 gold for the kill.
+|T13 : Player --> Wicked Wizard (6 damage)
+-T13 : Turn 13 has ended in 3 seconds (Game time: 275s)
++T14 : New turn begins.
+|T14 : Monster removed
+|T0 : Wicked Wizard's T Fireball unlocked.
+|T0 : Wicked Wizard's T ManaDrain unlocked.
+|T0 : Wicked Wizard's T Shield unlocked.
+|T0 : Wicked Wizard spawned.
+|T0 : Weak Wolf's (M) Basic Attack unlocked.
+|T0 : Weak Wolf spawned.
+|T1 : New turn begins.
+|T1 : Targeted Wicked Wizard
+-T1 : Turn 1 has ended in 0 seconds (Game time: 275s)
++T2 : New turn begins.
+|T2 : Wicked Wizard hits Player with T Fireball (10 damage)
+|T2 : Ability (T Fireball) used.
+|T2 : Targeted Weak Wolf
+|T2 : Hit chance roll: 44
+|T2 : Weak Wolf hits Player with (M) Basic Attack (4 damage)
+-T2 : Turn 2 has ended in 3 seconds (Game time: 278s)
++T3 : New turn begins.
+|T3 : [Tick 1] Wicked Wizard dealt a DoT of 2
+|T3 : Targeted Wicked Wizard
+|T3 : Player hits Wicked Wizard with T Fireball (10 damage)
+|T3 : Ability (T Fireball) used.
+-T3 : Turn 3 has ended in 3 seconds (Game time: 281s)
+
