@@ -1,0 +1,16 @@
+##################################
+# PROJECT MOISEI V0.4.x (latest) #
+##################################
+
+TESTER QUESTIONNAIRE
+
+1. What do you think of the letter generation rules?
+[Currently there can only be 15 letters and only two of each letters (regardless of how frequently they appear in English words) at the same time. The amount of vowels is always between 5-7.]
+
+2A. Is the >50% rule too strict for the crafting of elemental words? Should it be >=50%? [AKA do you feel like it makes you play shorter words?]
+
+2B. Do neutral letters make crafting elemental words too difficult?
+
+3. Should the letter inventory always refill to the initial amount of letters like it does now, or it should be more randomized with a minimum and maximum amount of letters?
+
+4. What's your opinion on giving players a fixed amount of time (think seconds, like 20 or 30) to complete their turn in order to create a more exciting gameplay?

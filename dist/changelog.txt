@@ -1,0 +1,37 @@
+##################################
+# PROJECT MOISEI V0.4.1 (latest) #
+##################################
+
+made by Daenil, 2014-2015
+
+last update: 2015-02-08
+
+------------
+0. CHANGELOG
+------------
+
+* added full keyboard control
+
+	* keys 'A-Z' can now be used to type the letters instead of clicking them
+
+	* when a letter can be found more than once in the player's inventory, a 		radial menu pops up and allows the player to select one
+
+	* 'Backspace' can be used to deselect the last letter
+
+
+
+* added the earliest version of the radial menu: it appears below the letterbar and displays 2-4 letters available for selection
+
+* maximum amount per letter temporarily changed to 3 (from 2)
+
+* everything that previously was bound to letter keys is now rebound:
+
+	* Spell 1 - 'Q' : '6'
+    
+	* Spell 4 - 'R' : '9'
+    
+	* Spawn New Monster - 'M' : 'F2'
+   
+	* Reset - 'N' : 'F3'
+    
+	* Pause - 'P' : N/A

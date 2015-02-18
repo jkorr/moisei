@@ -56,6 +56,7 @@ public class Entity {
 	protected boolean isWaiting;
 	
 	protected boolean isStunned;
+	protected boolean isWindBuffed;
 	
 	protected Entity currentTarget;
 	protected boolean testFlagMonsterAdded;
@@ -173,6 +174,17 @@ public class Entity {
 		e2.actionPoints -= e2.actionPoints * ((double) a.getUtilityValue() / 100.0);
 		e2.isStunned = true;
 		CombatLog.print(e1.name + " stuns " + e2.name + " for the next turn.");
+	}
+	
+	protected void letterStun(Entity e1, Entity e2) {
+		// currently this only works for the next turn, cannot just extend it for 2 or more
+		e2.actionPoints -= e2.actionPoints;
+		e2.isStunned = true;
+		CombatLog.print(e1.name + " stuns " + e2.name + " for the next turn.");
+	}
+	
+	protected void letterWindBuff(Entity e1) {
+		this.isWindBuffed = true;
 	}
 	
 	private void abilityDrainMP(Entity e1, Entity e2, Equipment a) {
@@ -503,12 +515,12 @@ public class Entity {
 	}
 	
 	// ABILITIES
-	protected void addAbility(Ability a) {
+	private void addAbility(Ability a) {
 		// this is a vanilla method, DO NOT use this directly, use unlockAbility() instead!
 		abilities.add(a);
 	}
 	
-	protected void removeAbility(int n) {
+	private void removeAbility(int n) {
 		// this is a vanilla method, DO NOT use this directly, use lockAbility() instead!
 		abilities.remove(n);
 	}

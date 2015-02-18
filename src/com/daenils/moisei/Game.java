@@ -33,10 +33,10 @@ public class Game extends Canvas implements Runnable {
 	private static int scale = 2;
 	private static int width = 640;
 	private static int height = (width / 16 * 9);
-	private static String title = "Project Moisei";
-	private static String version = "0.6";
+	private static String title = "      MOISEI";
+	private static String version = "0.4.1";
 	private static String projectStage = "f&f alpha";
-	private static boolean fpsLock = false;
+	private static boolean fpsLock = true;
 	private static boolean renderGUI;
 
 	private Thread thread;

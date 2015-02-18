@@ -1,59 +1,57 @@
 ##################################
-# PROJECT MOISEI V0.6.x (latest) #
+# PROJECT MOISEI V0.4.1 (latest) #
 ##################################
 
-made by Daenil, 2014
+made by Daenil, 2014-2015
 
 --------
 1. ABOUT
 --------
 
-Project Moisei (working title only) is a fantasy brawler of sorts in which you face various monsters which will try their best to end your life before you do the same with theirs. The game has a turn-based combat system, so strategy will be more important than reflexes if you wish to survive the endless waves of enemies.
+Project Moisei (working title only) is a fantasy brawler of sorts in which you face various monsters which will try their best to end your life before you do the same with theirs. The game has a turn-based combat system and the player has to craft English words from a random set of letters in order to defeat the endless waves of enemies.
 
 -----------
 2. CONTROLS
 -----------
 
-Currently controls are restricted to keyboard only and the mapping cannot be changed. The default mapping:
+Currently the games is controlled mostly by the mouse and the mapping of the keys cannot be changed. The default mapping:
 
 // NORMAL CONTROLS
-0 - cycle through targets
-1-5 - select specific target (if there is an alive monster on that spot)
-Q - player ability 1
-W - player ability 2
-E - player ability 3
-R - player ability 4
-SPACEBAR - player basic attack
-ENTER - end turn / new wave (if all monsters are dead)
+Q - replace 2 random letters at the cost of your turn
+ENTER - end turn without action / new wave (if all monsters are dead)
 P - toggle pause (currently it should not be used in the first turns, see 3. KNOWN ISSUES)
+SPACE - [debug/old] hits the enemy with a basic attack, has nothing to do with letters and the new gameplay, do not use it!
 
 // DEBUG CONTROLS
-F1 - switch between normal and percentage-only view
+F1 - toggle old UI (old code, not useful at all)
 F11 - toggle debug information
 F12 - toggle fps lock
+R - instant kill the enemy
 
 PgUp - remove the last player ability
 PgDn - add a random ability
-M - spawn an additional monster (should NOT be used when there are dead enemies on the screen!)
+M - spawn an additional monster (old code, should not be used at all)
+N - drops the game, press M to reset it (may lead to issues, needs proper testing)
+
+--------------
+3. HOW TO PLAY
+--------------
+
+You have a fixed amount of 15 letters in your inventory. Letters can either be assigned to one of the four elements (fire, water, earth, wind) or they can be neutral. By combining letters of the same element, you can deal more damage, heal yourself up, stun your enemy for a turn or boost your next elemental word.
+Basic damage is simply one hitpoint per letter, but elemental words modify that, for instance fire words deal more damage, but water words are weaker than neutral ones to compensate for the healing. Wind words are unique, they boost your next elemental word, making them more effective (do even more damage or healing). In order to craft an elemental word, more than half of its letters should be of the same element.
+
+Also, for now, pressing Q replaces two random letters with new ones (they also get random elements!) at the cost of your turn. ENTER should not be used until the monster is alive (because pressing OK automatically ends your turn if the word you submitted is valid), since it will count as passing your turn.
 
 ---------------
-3. KNOWN ISSUES
+4. KNOWN ISSUES
 ---------------
 
-[140810.1][UNSOLVED][min] Healing can be used even if you are at max health, there's no safety net there
+[140914.1][UNSOLVED][min] Monster wait timer still uses the old system (ms, instead of ns)
 
-[140811.2][UNSOLVED][min] If the player attacks with a weapon that does OT stuff, the OT stuff will not trigger if the player switches weapons (to be more precise, the OT stuff will only trigger while the player wields the weapon)
-
-[140814.1][UNSOLVED][maj]DoTs/HoTs only affect the current target, so abilities like Firestorm are not working correctly
-
-[140814.3][UNSOLVED][cri]Time management is still pretty unstable, for now players should not use manual pause ('P' key) in the first turn of any wave, as that definitely leads to issues (part of a temporary solution to other problems related to the timing code)
-
-[140818.1][UNSOLVED][maj]If there are 2 monsters and you kill the "first" one, the other one won't attack anymore because the way endturn waiting is handled (the first one's wait will trigger, wait 1.5s and end the turn before the other's 3sec wait could end)
-
-[140818.2][UNSOLVED][min]Mana value check is wrong, e.g. you can use a spell and have negative mana left (probably related to the introduction of spellpower)	
+[150201.1][UNSOLVED][maj] The new Q function (replace 2 random letters) is prone to crashes. I mean it crashes a lot.
 
 ----------
-4. CONTACT
+5. CONTACT
 ----------
 
 Feel free to contact me at daenil@outlook.com if you have any issues, questions, or comments about the game.

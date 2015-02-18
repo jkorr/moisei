@@ -2,10 +2,12 @@ package com.daenils.moisei.entities;
 
 import java.awt.Font;
 import java.awt.Graphics;
+import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -13,6 +15,7 @@ import com.daenils.moisei.CombatLog;
 import com.daenils.moisei.Game;
 import com.daenils.moisei.input.Keyboard;
 import com.daenils.moisei.input.Mouse;
+import com.daenils.moisei.entities.Letter.Element;
 import com.daenils.moisei.entities.equipments.*;
 import com.daenils.moisei.files.FileManager;
 import com.daenils.moisei.graphics.Text;
@@ -94,8 +97,7 @@ public class Gameplay {
 	protected boolean shopHasOpened; // set it true when first opens so it will only open once, set it back to false at
 											// the start of a new wave probably
 	
-	// LETTER INVENTORY STUFF
-	protected boolean letterWindowHasOpened;
+
 	
 	public Gameplay(Keyboard input, Mouse inputM, Stage stage, Game game, GUI gui) {
 		this.game = game;
@@ -144,10 +146,7 @@ public class Gameplay {
 	}
 
 	public void update() {
-		if (!letterWindowHasOpened) {
-			openLetterWindow();
-			letterWindowHasOpened = true;
-		}
+		
 		
 		if (shopHasOpened) shop();
 		if (shopHasOpened && turnCount > 2) shopHasOpened = false;
@@ -338,6 +337,7 @@ public class Gameplay {
 		
 		// CURRENT VERSION
 		renderVersionInfo(screen);
+		if (!debugView) renderDebugInfoLetterDroptable(screen);
 		
 		// TURN INFO BOX
 		if (percentageView) renderTurnInfoBoxPercentages(screen, timeString);
@@ -567,6 +567,16 @@ public class Gameplay {
 				"$" +
 				stage.getPlayer().getGoldAmount()
 				, screen);
+		
+		// WINDBUFF
+		if (getStage().getPlayer().isWindBuffed) {
+			font.render(GUI.screenPlayerinfoPos-133, 340, -8, 0xff444444, Text.font_default, 1, 
+					"WIND"
+					, screen);
+			font.render(GUI.screenPlayerinfoPos-132, 340, -8, 0xffbbbbbb, Text.font_default, 1, 
+					"WIND"
+					, screen);
+		}
 	}
 	
 	private void renderPlayerHealthBar(Screen screen) {
@@ -619,6 +629,10 @@ public class Gameplay {
 							+ "\nMonsters spawned: " + stage.getMonsters().size()
 							+ "\nMonsters alive: " + monstersAlive
 							+ "\n\n" + individualMonsterDetails() + "\n"
+							+ "\n" + getStage().getPlayer().letterCountString
+							+ "\nVowels: " + getStage().getPlayer().vowelCount
+							+ "/ Consonants: " + getStage().getPlayer().consonantCount
+							+ "/ TOTAL: " + getStage().getPlayer().letterInventory.size()
 							+ "\nTotal TurnCount: " + Gamestats.getTotalTurnCount()
 							+ "\nTotal RunTime: " + (int) (deltaTimeRunning / BILLION)
 							+ "\nTotal GameTime: " + (int) (deltaTimeStage / BILLION)
@@ -635,12 +649,26 @@ public class Gameplay {
 							+ "\nGame is paused: " + !continueGame
 							+ "\nPause forced: " + getForcedPause()
 							+ "\nPlayer's spellpower: " + stage.getPlayer().spellPower
-							+ "\n\nmX: " + Mouse.getX() + " mY: " + Mouse.getY() + " mB: " + Mouse.getB() 
+							+ "\n\nmX: " + Mouse.getX() + " mY: " + Mouse.getY() + " mB: " + Mouse.getB()
+							
 							
 	
 							
 				//			+ "\nMONSTER ATTACKED: " + Gamestats.monstersAttacked
 							, screen);
+	}
+	
+	protected void renderDebugInfoLetterDroptable(Screen screen) {
+		String droptable = "DROPTABLE:" + "[" + getStage().getPlayer().vowelCount + ":" + getStage().getPlayer().consonantCount + "]";
+		for (int i = 0; i < 26; i++) {
+			droptable += "\n" + (char) (i+65) + ":" + getStage().getPlayer().letterDroprate[i] + " | " + getStage().getPlayer().letterDroprateBracket[i];
+		}
+		
+		font.render(-4, 2, -8, 0xffaa0055, Text.font_default, 1, "DEBUG STUFF" + " [" + getStage().getPlayer().letterCountString + "]" + "\n"
+				+ droptable
+				+ "\nTOTAL: " + getStage().getPlayer().rollMax
+				, screen);
+		
 	}
 
 	private String individualMonsterDetails() {
@@ -757,6 +785,32 @@ public class Gameplay {
 	//	System.out.print("\n+T" + turnCount + " | ");
 //		System.out.println("\nA new turn has began! (Turn " + turnCount + ")");
 		
+		// LETTER STUFF
+		if (getStage().getPlayer().getLetterInventory().size() < getStage().getPlayer().initialLetterSpawn) {
+	/*		// check vowels --> THIS IS THE OLD MAKESHIFT SYSTEM
+			int vowelCounter = 0;
+			for (int i = 0; i < getStage().getPlayer().getLetterInventory().size(); i++) {
+				if (getStage().getPlayer().isVowel(getStage().getPlayer().getLetterInventory().get(i).value))
+					vowelCount++;
+			}
+			CombatLog.printet("Vowelcount:" + vowelCount);
+			
+			// the number 5 below is fixed for 40% value
+			if (vowelCount < 6) getStage().getPlayer().spawnVowels(6 - vowelCount);
+			
+			getStage().getPlayer().spawnConsonants(15 - getStage().getPlayer().getLetterInventory().size());
+			
+			*/
+			
+			getStage().getPlayer().spawnLettersNEW(getStage().getPlayer().initialLetterSpawn - getStage().getPlayer().getLetterInventory().size());
+			
+	//		getStage().getPlayer().spawnVowels(15 - getStage().getPlayer().getLetterInventory().size());
+	//		while (getStage().getPlayer().getLetterInventory().size() < 10) getStage().getPlayer().spawnLetter();
+			
+			// PRINT LETTERCOUNT
+	//		getStage().getPlayer().printLetterCount();
+		}
+		
 		// reset dot flags
 		for (int i = 0; i < stage.getPlayer().abilities.size(); i++) {
 			stage.getPlayer().abilities.get(i).setAppliedOT(false);
@@ -845,7 +899,7 @@ public class Gameplay {
 		if (Monster.monstersLoaded > 1) n = Monster.monstersLoaded;
 		Random rand = new Random();
 		int r = rand.nextInt(((n - 1) - 1) + 1) + 1;
-		Monster emma = new Monster(r, slot, stage.getPlayer(), stage);
+		Monster emma = new Monster(1, slot, stage.getPlayer(), stage); // TODO: replace 1 with r for random
 		stage.add(emma);
 		CombatLog.println("" + emma.name + " spawned.");
 		Game.getGameplay().enableGlobalCooldown(); 
@@ -1149,28 +1203,28 @@ public class Gameplay {
 		if ( stage.getPlayer() == null) stage.setPlayer(new Player(input, inputM, null, stage));
 		
 		// check for shop popup
-		if (waveCount %  3 == 0 && waveCount > 0 && turnCount == 1 && !shopHasOpened) {
-			openShop();
-		}
+	//	if (waveCount %  3 == 0 && waveCount > 0 && turnCount == 1 && !shopHasOpened) {
+	//		openShop();
+	//	}
+
+		// game progression for the new stuff
+		if ((stage.getMonsters().size() < 1) && (continueGame || turnCount == 0)) newMonsterWave(1);
 		
+		/*
 		// earliest version of "game progession"
 		if (stage.getMonsters().size() < 1 && isBetween(stage.getPlayer().level, 0, 3) && (continueGame || turnCount == 0)) {newMonsterWave(1);}
 		else if (stage.getMonsters().size() < 1 && isBetween(stage.getPlayer().level, 3, 5) && continueGame) newMonsterWave(2);
 		else if (stage.getMonsters().size() < 1 && isBetween(stage.getPlayer().level, 5, 7) && continueGame) newMonsterWave(3);
 		else if (stage.getMonsters().size() < 1 && isBetween(stage.getPlayer().level, 7, 9) && continueGame) newMonsterWave(4);
 		else if (stage.getMonsters().size() < 1 && stage.getPlayer().level >= 9 && continueGame) newMonsterWave(5);
+		*/
 	}
 	
 	public boolean isBetween(int comparedNum, int min, int max) {
 		return (comparedNum >= min && comparedNum < max);
 	}
 	
-	// MECHANIC: LETTER WINDOW
-	private void openLetterWindow() {
-		gui.createWindow(240, 200, 164, 120, 0xff555555, "LETTERS");
-		gui.getWindow("letters").add(5,3);
-		gui.getWindow("letters").add(Letter.testletter);
-	}
+	
 	
 	// MECHANIC: SHOP
 	private void openShop() {
@@ -1225,4 +1279,10 @@ public class Gameplay {
 		return n;
 	}
 
+	
+	// GET GUI
+	public GUI getGUI() {
+		return gui;
+	}
+	
 }

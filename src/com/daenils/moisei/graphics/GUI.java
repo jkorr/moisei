@@ -72,8 +72,13 @@ public class GUI {
 	}
 
 	// CREATE A CLEAN WINDOW
+	// LEGACY CONSTRUCTOR (BEFORE ADDING isBorderless)
 	public void createWindow(int x, int y, int width, int height, int bgColor, String title) {
-		Window winnie = new Window(screen, x, y, width, height, bgColor, title);
+		createWindow(x, y, width, height, bgColor, false, title);
+	}
+	
+	public void createWindow(int x, int y, int width, int height, int bgColor, boolean isBorderless, String title) {
+		Window winnie = new Window(screen, x, y, width, height, bgColor, isBorderless, title);
 	//	winnie.add(1, Window.BUTTON_CLOSE);
 	//	winnie.add(4, 1);
 		mapWindows.put(winnie.name, windows.size());
@@ -86,6 +91,15 @@ public class GUI {
 		winnie.add(displayText);
 		windows.add(winnie);
 	}
+	
+	// CREATE A WINDOW FOR LETTERS
+	public void createWindow(int x, int y, int width, int height, int bgColor, String title, int n) {
+		Window winnie = new Window(screen, x, y, width, height, bgColor, title);
+		winnie.type = n;
+		windows.add(winnie);
+	}
+	
+	
 	
 	public void update() {
 		// UPDATE NOWINDOWS
