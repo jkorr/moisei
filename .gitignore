@@ -1,3 +1,8 @@
 
 doc/separator.xcf
 res/working files/gui.xcf
+dist/doc samples/
+dist/builds/
+.settings/
+.externalToolBuilders/
+logs/

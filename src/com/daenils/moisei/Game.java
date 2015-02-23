@@ -34,7 +34,7 @@ public class Game extends Canvas implements Runnable {
 	private static int width = 640;
 	private static int height = (width / 16 * 9);
 	private static String title = "      MOISEI";
-	private static String version = "0.4.1";
+	private static String version = "0.4.2";
 	private static String projectStage = "f&f alpha";
 	private static boolean fpsLock = true;
 	private static boolean renderGUI;
@@ -93,7 +93,7 @@ public class Game extends Canvas implements Runnable {
 	}
 	
 	private void freshGame() {
-		freshGame(Stage.st1a);
+		freshGame(Stage.map0);
 	}
 	
 	private void freshGame(Stage s) {
@@ -178,6 +178,7 @@ public class Game extends Canvas implements Runnable {
 		if (gamestats != null) gamestats.update();
 		if (gameplay != null) gameplay.update();
 		if (gui != null) gui.update();
+		
 		
 		// KEY INPUT
 		if (key.debugForceNewWave && stage != null) clearStage();

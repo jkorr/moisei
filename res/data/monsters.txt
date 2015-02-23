@@ -1,4 +1,4 @@
 0:mon_dummy,Dummy Dave,no desc,monster_demo3,50,0,0,25,0,0,0,0,none,none
-1:mon_basic,Basic Beast,no desc,unt,30,0,1,0,0,2,5,0,none,none
+1:mon_basic,Basic Beast,no desc,testenemy,30,0,1,0,0,2,5,0,none,none
 2:mon_evilwiz,Wicked Wizard,no desc,monster_demo3,20,20,1,10,0,1,3,3,2;7;8,none
 3:mon_wolf,Weak Wolf,no desc,monster_demo4,30,0,1,0,0,3,6,0,none,3

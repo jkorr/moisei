@@ -24,6 +24,9 @@ public class Sprite {
 
 //	public static Sprite monster_demo = new Sprite("/textures/entities/monster_demo.png", 64, 104);
 //	public static Sprite monster_demo2 = new Sprite("/textures/entities/monster_demo2.png", 64, 104);
+	public static Sprite player0 = new Sprite("/textures/entities/palyer.png", 64, 64);
+	public static Sprite mon0 = new Sprite("/textures/entities/testenemy.png", 64, 64);
+	
 	public static Sprite monster_demo3 = new Sprite("/textures/entities/monster_demo3.png", 64, 104);
 	public static Sprite monster_demo4 = new Sprite("/textures/entities/monster_demo4.gif", 64, 104);
 	public static Sprite unt = new Sprite("/textures/entities/unt.gif", 64, 104);

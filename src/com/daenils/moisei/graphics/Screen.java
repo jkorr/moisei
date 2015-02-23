@@ -17,13 +17,13 @@ public class Screen {
 
 		if (Game.isGUIrendered()) {
 			renderStage(stage.getStage());
-		renderGUI(GUI.screenSpellPos1, GUI.screenBottomElements+11, GUI.gui_spelldefQ);
-		renderGUI(GUI.screenSpellPos2, GUI.screenBottomElements+11, GUI.gui_spelldefW);
-		renderGUI(GUI.screenSpellPos3, GUI.screenBottomElements+11, GUI.gui_spelldefE);
-		renderGUI(GUI.screenSpellPos4, GUI.screenBottomElements+11, GUI.gui_spelldefR);
+//		renderGUI(GUI.screenSpellPos1, GUI.screenBottomElements+11, GUI.gui_spelldefQ);
+//		renderGUI(GUI.screenSpellPos2, GUI.screenBottomElements+11, GUI.gui_spelldefW);
+//		renderGUI(GUI.screenSpellPos3, GUI.screenBottomElements+11, GUI.gui_spelldefE);
+//		renderGUI(GUI.screenSpellPos4, GUI.screenBottomElements+11, GUI.gui_spelldefR);
 //		renderGUI(GUI.screenTurninfoPos, GUI.screenBottomElements-15, GUI.gui_turninfo);
 //		renderGUI(GUI.screenPlayerinfoPos, GUI.screenBottomElements-15, GUI.gui_playerinfo);
-		renderGUI(0, GUI.screenBottomBack, GUI.gui_back);
+//		renderGUI(0, GUI.screenBottomBack, GUI.gui_back);
 		}
 	}
 	

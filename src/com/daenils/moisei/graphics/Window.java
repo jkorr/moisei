@@ -98,7 +98,8 @@ public class Window {
 		if (!this.isBorderless) {
 			screen.renderGUIWindow(x, y, width, height, bgColor);
 			screen.renderGUIWindow(x, y, width, height - (height - 17), bgColor / 2); 
-			screen.renderGUIWindowBorder(this, 2, 2, 0xffffffff, 0xffffffff);		
+			screen.renderGUIWindowBorder(this, 2, 2, 0xffffffff, 0xffffffff);	
+			renderTitleTop();
 		}
 		
 		if (this.hasGrid) {
@@ -154,7 +155,7 @@ public class Window {
 			}
 		
 		
-		renderTitleTop();
+		
 		if (displayText != null) renderDisplayText();
 		if (dialogueOption != null) renderDialogueOption();
 	}

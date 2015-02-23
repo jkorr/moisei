@@ -18,6 +18,8 @@ import com.daenils.moisei.graphics.Sprite;
 import com.daenils.moisei.graphics.Stage;
 
 public class Monster extends Entity {
+	Random randomPick = new Random();
+	
 	private int spawnSlot;
 	private int[] XY = new int[2];
 	private int[] randomWait = new int[2];
@@ -45,6 +47,8 @@ public class Monster extends Entity {
 	
 	public static int monstersLoaded;
 	public static boolean monstersCounted;
+	
+	
 		
 	public Monster(int id, int spawnSlot, Entity defaultTarget, Stage stage) {
 		this.stage = stage;
@@ -232,7 +236,9 @@ public class Monster extends Entity {
 			monsterWait(3);
 		if (!isWaiting) {
 				if (actionPoints > 0) {
-					basicAttack(this, currentTarget, weapon);
+					pickAWord(); 
+					for (int i = 0; i < currentWord.length; i++) System.out.print(currentWord[i]);
+					basicAttack(this, currentTarget, null);
 					monstersAttacked++;
 				}
 			}			
@@ -293,6 +299,22 @@ public class Monster extends Entity {
 		}
 	}
 	
+	private void pickAWord() {
+	 	resetCurrentWord();
+		int max = 0, n = 0, length = 0;
+		do {
+			max = FileManager.lines.size();
+			n = randomPick.nextInt(((max - 0) + 0) + 1);
+			length = FileManager.lines.get(n).length();
+			System.out.println("\nWORD: " + FileManager.lines.get(n));
+		} while (length > 10);
+		for (int i = 0; i < length; i++) {
+			currentWord[i] = FileManager.lines.get(n).toUpperCase().charAt(i);
+		}
+		for (int i = 0; i < currentWord.length; i++)
+			if (currentWord[i] != 0) this.currentWordLength++;
+	}
+	
 	public void render(Screen screen) {
 		screen.renderSprite(x, y, sprite, 1);
 	}
@@ -303,7 +325,7 @@ public class Monster extends Entity {
 	}
 	
 	
-	private int[] setXY(int spawnSlot) {
+/*	private int[] setXY(int spawnSlot) {
 		if (spawnSlot < 1 || spawnSlot > 5) { XY[0] = 100 / 2; XY[1] = 250 / 2; }
 		else if (spawnSlot == 1)  { XY[0] = spawnSlot1[0]; XY[1] = spawnSlot1[1]; }
 		else if (spawnSlot == 2)  { XY[0] = spawnSlot2[0]; XY[1] = spawnSlot2[1]; }
@@ -311,6 +333,11 @@ public class Monster extends Entity {
 		else if (spawnSlot == 4)  { XY[0] = spawnSlot4[0]; XY[1] = spawnSlot4[1]; }
 		else if (spawnSlot == 5)  { XY[0] = spawnSlot5[0]; XY[1] = spawnSlot5[1]; }
 		
+		return XY;
+	} */
+	
+	private int[] setXY(int spawnSlot) {
+		XY[0] = 390; XY[1] = 134;
 		return XY;
 	}
 	

@@ -35,6 +35,7 @@ public class Stage {
 	public static Stage st1b = new Stage("/textures/stages/st1b.png");
 	public static Stage st1c = new Stage("/textures/stages/st1c.png");
 	public static Stage stx = new Stage("/textures/stages/stx.png");
+	public static Stage map0 = new Stage("/textures/stages/map0a.png");
 	
 	public Stage(Stage stage) {
 		this.playStage = stage;

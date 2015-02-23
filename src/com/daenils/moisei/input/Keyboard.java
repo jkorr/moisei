@@ -84,8 +84,8 @@ public class Keyboard implements KeyListener {
 		playerTarget[3] = keys[KeyEvent.VK_4];
 		playerTarget[4] = keys[KeyEvent.VK_5];
 		
-		playerSwitchGUIView = keys[KeyEvent.VK_F1];
-		playerPauseGame = keys[KeyEvent.VK_P];
+		playerSwitchGUIView = keys[KeyEvent.VK_F5];
+		playerPauseGame = keys[KeyEvent.VK_F1];
 		
 		debugShowDebugInfo = keys[KeyEvent.VK_F11];
 		debugLockAbility = keys[KeyEvent.VK_PAGE_UP];

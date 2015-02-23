@@ -1,29 +1,22 @@
 package com.daenils.moisei.entities;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Random;
 import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.Random;
 
 import com.daenils.moisei.CombatLog;
 import com.daenils.moisei.Game;
+import com.daenils.moisei.entities.Letter.Element;
 import com.daenils.moisei.files.FileManager;
 import com.daenils.moisei.graphics.GUI;
+import com.daenils.moisei.graphics.Notification;
 import com.daenils.moisei.graphics.Screen;
 import com.daenils.moisei.graphics.Sprite;
 import com.daenils.moisei.graphics.Stage;
+import com.daenils.moisei.graphics.Text;
 import com.daenils.moisei.graphics.Window;
 import com.daenils.moisei.input.Keyboard;
 import com.daenils.moisei.input.Mouse;
-import com.daenils.moisei.entities.Letter.Element;
-import com.daenils.moisei.entities.equipments.Ability;
-import com.daenils.moisei.entities.equipments.Weapon;
 
 public class Player extends Entity {
 	private Keyboard input;
@@ -60,10 +53,10 @@ public class Player extends Entity {
 	private char lastLetter = 'A';
 	
 	private int[] letterBaseDroprate = {81, 15, 27, 43, 120, 23, 
-			20, 59, 73, 1, 7, 40,
-				26, 70, 77, 18, 1, 60,
-					63, 91, 29, 11, 21, 2,
-						21, 1};
+			20, 59, 73, 3, 7, 40,
+				26, 70, 77, 18, 3, 60,
+					63, 91, 29, 11, 21, 5,
+						21, 3};
 	
 	protected int[] letterDroprate = new int[26];
 	protected int[] letterDroprateBracket = new int[26];
@@ -74,11 +67,11 @@ public class Player extends Entity {
 		this.name = "Player";
 		this.type = "player";
 		this.id = -1;
+		this.sprite = Sprite.player0;
 		
 		this.stage = stage;
 		
-		this.x = 0;
-		this.y = 0;
+		setXY();
 		
 		this.input = input;
 		this.inputM = inputM;
@@ -93,8 +86,8 @@ public class Player extends Entity {
 //		this.playerAbility[2] = new Ability(3, this);
 //		this.playerAbility[3] = new Ability(1, this);
 		
-		initAbilities();
-		initWeapons();
+	//	initAbilities();
+	//	initWeapons();
 		
 		this.baseHealth = 100;
 		this.baseMana = 25;
@@ -153,10 +146,10 @@ public class Player extends Entity {
 	}
 
 	public void initAbilities() {
-		unlockAbility(this, 1);
-		unlockAbility(this, 2);
-		unlockAbility(this, 3);
-		unlockAbility(this, 0);
+//		unlockAbility(this, 1);
+//		unlockAbility(this, 2);
+//		unlockAbility(this, 3);
+//		unlockAbility(this, 0);
 	}
 	
 	public void initWeapons() {
@@ -205,15 +198,15 @@ public class Player extends Entity {
 		
 		// KEY BINDINGS
 		// BASIC ATTACK
-		if (input.playerBasicAttack && canUseSkills) {
+/*		if (input.playerBasicAttack && canUseSkills) {
 			basicAttack(this, currentTarget, weapon);
 			Game.getGameplay().enableGlobalCooldown();
-		}
+		}*/
 		
 		// ALPHABET
 		for (int i = 0; i < 26; i++) {
-			if (input.alphabet[i] && canUseSkills && !isRadialMenuUp) {
-				CombatLog.println("Letter " + (char) (i+65) + ".");
+			if (input.alphabet[i] && canUseSkills && !isRadialMenuUp && Game.getGameplay().getIsPlayerTurn()) {
+		//		CombatLog.println("Letter " + (char) (i+65) + ".");
 				if (letterCount[i] == 1) {
 					selectLetterByValue(i);
 				}
@@ -239,10 +232,12 @@ public class Player extends Entity {
 		}
 		
 		// Q ABILITY
-		if (input.playerQ && canUseSkills && (abilities.size() > 0)) {
+	//	if (input.playerQ && canUseSkills && (abilities.size() > 0)) {
+		if (input.playerQ && canUseSkills) {
 		//	useAbility(this, abilities.get(0));
 		//	getUnstuck();
-			Game.getGameplay().endTurn(this);
+			Game.getGameplay().testNotif();
+		//	Game.getGameplay().endTurn(this);
 			Game.getGameplay().enableGlobalCooldown();
 		}
 		
@@ -269,6 +264,7 @@ public class Player extends Entity {
 		if (input.playerEndTurn && !Game.getGameplay().onGlobalCooldown && Game.getGameplay().getIsPlayerTurn() && !Game.getGameplay().getForcedPause()) {
 			// System.out.println("!!!");
 			if (Game.getGameplay().monstersAlive > 0) {
+				this.resetCurrentWord();
 				submitWord();
 			//	Game.getGameplay().endTurn(this);
 			}
@@ -281,7 +277,7 @@ public class Player extends Entity {
 		}
 		
 		// SWITCH WEAPONS
-		if (input.playerSwitchWeapon && !Game.getGameplay().onGlobalCooldown && Game.getGameplay().getIsPlayerTurn()) {
+/*		if (input.playerSwitchWeapon && !Game.getGameplay().onGlobalCooldown && Game.getGameplay().getIsPlayerTurn()) {
 			if (this.weapons.size() > 0) {
 				if (weaponSwitcher == weapons.size() - 1) {
 					this.weapon = null;
@@ -297,7 +293,7 @@ public class Player extends Entity {
 			}
 				
 		}
-		
+		*/
 		// SWITCH GUI VIEW
 		if (input.playerSwitchGUIView && !Game.getGameplay().onGlobalCooldown) {
 			if (!Game.getGameplay().getPercentageView()) Game.getGameplay().setPercentageView(true);
@@ -319,10 +315,10 @@ public class Player extends Entity {
 		}
 		
 		// DEBUG: ADD MONSTER
-		if (input.debugAddMonster && !Game.getGameplay().onGlobalCooldown) {
-			if (Game.getGameplay().monstersAlive > 0) Game.getGameplay().spawnMonster();
-			else Game.getGameplay().newMonsterWave();
-		}
+	//	if (input.debugAddMonster && !Game.getGameplay().onGlobalCooldown) {
+	//		if (Game.getGameplay().monstersAlive > 0) Game.getGameplay().spawnMonster();
+	//		else Game.getGameplay().newMonsterWave();
+	//	}
 		
 		// DEBUG: FORCE NEW WAVE
 		if (input.debugForceNewWave && !Game.getGameplay().onGlobalCooldown) {
@@ -514,17 +510,22 @@ public class Player extends Entity {
 		}
 	}
 	
-	
+	private void setXY() {
+		x = 190; y = 134;
+	}
 	
 	public void render(Screen screen) {
+		// RENDER SELF
+		screen.renderSprite(x, y, sprite, 1);
+		
 		// RENDER ABILITIES AT THE ACTION BAR
 		int[] spellPosHelper = new int[]{GUI.screenSpellPos1, GUI.screenSpellPos2, GUI.screenSpellPos3, GUI.screenSpellPos4};
 		for (int i = 0; i < abilities.size(); i++) {
 			screen.renderSprite(spellPosHelper[i], GUI.screenBottomElements + 11, abilities.get(i).getIcon(), 0);
 		}
 		
-		if (this.weapon != null) screen.renderSprite(600, 322, this.weapon.getIcon(), 0);
-		else if (this.weapon == null) screen.renderSprite(600, 322, Sprite.noweapon, 0);
+//		if (this.weapon != null) screen.renderSprite(600, 322, this.weapon.getIcon(), 0);
+//		else if (this.weapon == null) screen.renderSprite(600, 322, Sprite.noweapon, 0);
 		
 		// RENDER RADIAL MENU
 		int[][] radialMenuIcon = {
@@ -556,7 +557,7 @@ public class Player extends Entity {
 	// LETTER MECHANICS
 	// MECHANIC: LETTER WINDOW
 		private void openLetterWindow() {
-			Game.getGameplay().getGUI().createWindow(360, 200, 260, 90, 0xff555555, true, "INVENTORY");
+			Game.getGameplay().getGUI().createWindow(191, 241, 260, 0, 0xff555555, true, "INVENTORY");
 			Game.getGameplay().getGUI().getWindow("inventory").add(8,2);
 			Game.getGameplay().getGUI().getWindow("inventory").setLetterContents(this.getLetterInventory());
 		//	getContents(gui.getWindow("letters"), this.letterInventory);
@@ -565,9 +566,9 @@ public class Player extends Entity {
 		
 		// MECHANIC: LETTER BAR
 		private void openLetterBar() {
-			Game.getGameplay().getGUI().createWindow(160, 5, 320, 70, 0xff555555, true, "LETTERBAR");
+			Game.getGameplay().getGUI().createWindow(160, 303, 320, 0, 0xff555555, true, "LETTERBAR");
 			Game.getGameplay().getGUI().getWindow("letterbar").add(10,1);
-			Game.getGameplay().getGUI().getWindow("letterbar").add(1, Window.BUTTON_OK);
+		//	Game.getGameplay().getGUI().getWindow("letterbar").add(1, Window.BUTTON_OK);
 			Game.getGameplay().getGUI().getWindow("letterbar").setLetterContents(this.getLetterBar());
 		//	getContents(gui.getWindow("letterbar"), this.letterBar);
 		}
@@ -647,13 +648,17 @@ public class Player extends Entity {
 		
 		private void submitWord() {
 			String word = getWordFromBar();
+			//CURRENTWORD STUFF
+			for (int i = 0; i < word.length(); i++) this.currentWord[i] = word.charAt(i);
+			this.currentWordLength = word.length();
+			
 			CombatLog.println("Word submitted: " + word);
 			checkWord(word);
 		}
 		
 		private void checkWord(String word) {
 			int playerDamage;
-			int dominantElement;
+			int[] dominantElement;
 			if (lookupWord(word.toLowerCase())) {
 				CombatLog.println("Yay! Such a nice word: " + word.toLowerCase() + "!");
 				dominantElement = identifyDominantElement(letterBar);
@@ -677,6 +682,7 @@ public class Player extends Entity {
 			String word = "";
 			for (int i = 0; i < this.getLetterBar().size(); i++) {
 				word += (this.getLetterBar().get(i).getValue());
+				currentWordColors[i] = this.getLetterBar().get(i).getFrame();
 			}
 			return word;
 		}
@@ -692,11 +698,11 @@ public class Player extends Entity {
 	// LETTER STUFF
 	// COMBAT
 		
-		private int identifyDominantElement(List<Letter> list) {
+		private int[] identifyDominantElement(List<Letter> list) {
 			// sum damage sources (letters by elements)
 			int[] elementConstituents = new int[5]; //N-F-WA-E-WI
-			int dominantElement = 0;
-			int returnValue = -1;
+			int dominantElement[] = {0, 0, 0};
+			int returnValue[] = {-1, -1, -1};
 			for (int i = 0; i < list.size(); i++) {
 				switch(list.get(i).getType()) {
 				case NEUTRAL: elementConstituents[0]++; break;
@@ -719,70 +725,114 @@ public class Player extends Entity {
 			// check for tier 2 bonus
 			// TODO: Finish this, either the rounding is wrong or something definitely is!
 			for (int i = 0; i < elementConstituents.length; i++) {
-				if (elementConstituents[i] > dominantElement) dominantElement = elementConstituents[i];
+				if (elementConstituents[i] > dominantElement[0]) dominantElement[0] = elementConstituents[i];
 			}
 
 			// i > 0 is only so neutral won't count as dominant in a word (every word without any dominant element is neutral inherently!)
 			String[] elementName = {"Neutral","Fire","Water","Earth","Wind"};
 			for (int i = 0; i < elementConstituents.length; i++) {
-				if (elementConstituents[i] == dominantElement && dominantElement > list.size() / 2 && i > 0) {
-					returnValue = i;
-					CombatLog.println("Dominant element: " + elementName[i]);
+				if (elementConstituents[i] == dominantElement[0] && dominantElement[0] > list.size() / 2 && i > 0) {
+					returnValue[0] = i;
+					CombatLog.println("Dominant element: " + elementName[i]);					
 				}
+				else if (elementConstituents[i] == dominantElement[0] && dominantElement[0] >= Math.ceil(list.size()) / 2 && i > 0)
+					if (returnValue[1] == -1) {
+						returnValue[1] = i;
+						CombatLog.println("Minor Dom element 1: " + elementName[i]);
+					}
+					else {
+						returnValue[2] = i;
+						CombatLog.println("Minor Dom element 2: " + elementName[i]);
+					}
 			}
 			return returnValue;
 		}
 		
-		private int getWordDamage(int wordLength, int dominantElement) {
+		private int getWordDamage(int wordLength, int[] dominantElement) {
 			double baseDamage = 0;
 			double eDamage = 0;
 			int healing = 0; // percent (of player hp)
+			double[] temp;
 			// BASIC DAMAGE CODE HERE
 			baseDamage = wordLength * 1; // value is 1 for testing purposes only, it should be a multiplier later
 			
 			// is there dominant element?
- 			if (dominantElement > 0) {
+ 			if (dominantElement[0] > 0) {
  				// DOMINANT ELEMENT-RELATED CODE HERE
- 				CombatLog.println("The dominant element is " + dominantElement);
- 				switch(dominantElement) {
- 				case 1:
- 					CombatLog.println("FIRE!");
- 					if (this.isWindBuffed) {
- 						baseDamage *= 2;
- 						this.isWindBuffed = false;
- 					}
- 					else baseDamage *= 1.5;
- 					break;
- 				case 2:
- 					CombatLog.println("WATER!"); 
- 					baseDamage *= 0.5;
- 					if (this.isWindBuffed) {
- 						healing = 20;
- 						this.isWindBuffed = false;
- 					}
- 					else healing = 10;
- 					// maybe change it to the proper method you used with spells earlier, but now it seems to work just fine:
- 					if (this.pHealth > (100 - healing)) this.restoreHealth(100);
- 					else this.restoreHealth(this.pHealth + healing); 
- 					CombatLog.println(healing + " percent of player health has been restored.");
- 					break;
- 				case 3:
- 					CombatLog.println("EARTH!");
- 					baseDamage *= 1.0;
- 					letterStun(this, this.currentTarget);
- 					CombatLog.println(this.currentTarget.name + " is stunned for 1 turn.");
- 					break;
- 				case 4:
- 					CombatLog.println("WIND!");
- 					baseDamage *= 0.5;
- 					letterWindBuff(this);
- 					break;
- 				}
+ 				letterDominantEffect(this);
+ 				CombatLog.println("The dominant element is " + dominantElement[0]);
+ 				temp = lookUpWordEffect(dominantElement[0], baseDamage, healing);
+ 				baseDamage = temp[0];
+ 				healing = (int) temp[1];
  			} else
  				CombatLog.println("No dominant element.");
  			
+ 			if (dominantElement[1] > 0) {
+ 				CombatLog.println("The minor dominant element 1 is " + dominantElement[1]);
+ 				temp = lookUpWordEffect(dominantElement[1], baseDamage, healing);
+ 				baseDamage = temp[0];
+ 				healing = (int) temp[1];
+ 			}
+ 			if (dominantElement[2] > 0) {
+ 				CombatLog.println("The minor dominant element 2 is " + dominantElement[2]);
+ 				temp = lookUpWordEffect(dominantElement[2], baseDamage, healing);
+ 				baseDamage = temp[0];
+ 				healing = (int) temp[1];
+ 			}
+ 			
  			// RETURN
 			return (int) (baseDamage + eDamage);
+		}
+		
+		private double[] lookUpWordEffect(int n, double baseDamage, int healing) {
+			double[] results = new double[2];
+			switch(n) {
+				case 1:
+					CombatLog.println("FIRE!");
+					if (this.hasDominantEffect) {
+						baseDamage *= 2;
+						this.hasDominantEffect = false;
+					}
+					else baseDamage *= 1.5;
+					break;
+				case 2:
+					CombatLog.println("WATER!"); 
+					if (this.hasDominantEffect) {
+						baseDamage *= 0.5;
+						healing = 10;
+						this.hasDominantEffect = false;
+					}
+					else healing = 5;
+					// maybe change it to the proper method you used with spells earlier, but now it seems to work just fine:
+					if (this.pHealth > (100 - healing)) this.restoreHealth(100);
+					else this.restoreHealth(this.pHealth + healing); 
+					CombatLog.println(healing + " percent of player health has been restored.");
+					break;
+				case 3:
+					CombatLog.println("EARTH!");
+					if (this.hasDominantEffect) {
+						baseDamage *= 1.0;
+						letterStun(this, this.currentTarget);
+						CombatLog.println(this.currentTarget.name + " is stunned for 1 turn.");
+						this.hasDominantEffect = false;
+					} else baseDamage *= 1.5;
+					break;
+				case 4:
+					CombatLog.println("WIND!");
+					if (this.hasDominantEffect) {
+						baseDamage = 0;
+						this.damageReduction = 90;
+						this.hasDominantEffect = false;
+					} else {
+						baseDamage *= 0.5;
+						this.damageReduction = 40;						
+					}
+					break;
+				}
+			
+			results[0] = baseDamage;
+			results[1] = healing;
+			return results;
 		}
 		
 		// GET UNSTUCK: replace random letters with new ones at the cost of your turn
@@ -1024,7 +1074,7 @@ public class Player extends Entity {
 							
 							// get a random letter according to the drop table
 							int randomNum = rand.nextInt(((rollMax - 1) + 1) + 1);
-							CombatLog.println("[ROLL " + randomNum + "]");
+				//			CombatLog.println("[ROLL " + randomNum + "]");
 					
 							
 							// look through 'bracket )'
@@ -1036,7 +1086,7 @@ public class Player extends Entity {
 							this.letterCount[randomCharacters[i] - 65]++;		
 							
 							updateVowelCounter(randomCharacters[i]);
-							System.out.println(genVowelCount);
+				//			System.out.println(genVowelCount);
 							updateLetterDroprate();
 							updateLetterDroprateBracket();
 							updateRollMax();
@@ -1087,7 +1137,7 @@ public class Player extends Entity {
 				for (int i = 0; i < 26; i++) {
 					rollMax += letterDroprate[i];
 				}
-				System.out.println("ROLLMAX: " + rollMax);	
+		//		System.out.println("ROLLMAX: " + rollMax);	
 			}
 			
 			private void updateLetterDroprate() {
@@ -1097,16 +1147,24 @@ public class Player extends Entity {
 				}
 				
 				// VOWELCOUNT-BASED PRIORITY ADJUSTMENT
-				if (genVowelCount < 6) {
-					letterDroprate[0] *= 3;
-					letterDroprate[4] *= 3;
-					letterDroprate[8] *= 3;
-					letterDroprate[14] *= 3;
-					letterDroprate[20] *= 3;
-					System.out.println("ERR! NOT ENOUGH VOWELS!");
+				int dropMod = 4;
+				if (genVowelCount < 5) {
+					letterDroprate[0] *= dropMod;
+					letterDroprate[4] *= dropMod;
+					letterDroprate[8] *= dropMod;
+					letterDroprate[14] *= dropMod;
+					letterDroprate[20] *= dropMod;
+					System.out.print("[ERR #01: NOT ENOUGH VOWELS (" + genVowelCount + ")] ");
+				} else {
+					letterDroprate[0] /= 2;
+					letterDroprate[4] /= 2;
+					letterDroprate[8] /= 2;
+					letterDroprate[14] /= 2;
+					letterDroprate[20] /= 2;
 				}
 				
 				// LOOKING UP THE LETTERS THAT NEED ADJUSTMENTS (I.E. EVERYTHING THAT HAS 1 OR MORE COPIES IN THE INVENTORY)
+				// MAKING ADJUSTMENTS (HALVING, ETC.)
 				for (int i = 0; i < letterDroprate.length; i++) {
 					switch(letterCount[i]) {
 					case 0:
@@ -1114,31 +1172,27 @@ public class Player extends Entity {
 					case 1:
 						Math.ceil(letterDroprate[i] /= 2);
 						if(letterDroprate[i] == 0) letterDroprate[i]++; // TODO: this is cheating!
-						System.out.println("1 of " + (char) (i+65) + ". Droprate is now: " + letterDroprate[i]);
+	//					System.out.println("1 of " + (char) (i+65) + ". Droprate is now: " + letterDroprate[i]);
 						break;
 					case 2:
 						Math.ceil(letterDroprate[i] /= 4);
 						if(letterDroprate[i] == 0) letterDroprate[i]++;
-						System.out.println("2 of " + (char) (i+65) + ". Droprate is now: " + letterDroprate[i]);
+	//					System.out.println("2 of " + (char) (i+65) + ". Droprate is now: " + letterDroprate[i]);
 						break;
 					case 3:
 						Math.ceil(letterDroprate[i] /= 8);
 						if(letterDroprate[i] == 0) letterDroprate[i]++;
-						System.out.println("3 of " + (char) (i+65) + ". Droprate is now: " + letterDroprate[i]);
+	//					System.out.println("3 of " + (char) (i+65) + ". Droprate is now: " + letterDroprate[i]);
 						break;
 					case 4:
-						Math.ceil(letterDroprate[i] /= 16);
-						if(letterDroprate[i] == 0) letterDroprate[i]++;
-						System.out.println("4 of " + (char) (i+65) + ". Droprate is now: " + letterDroprate[i]);
+						Math.ceil(letterDroprate[i] = 0);
+	//					if(letterDroprate[i] == 0) letterDroprate[i]++;
+	//					System.out.println("4 of " + (char) (i+65) + ". Droprate is now: " + letterDroprate[i]);
 						break;
 					default:
-						System.out.println("ERR! MORE THAN 4 of letter " + (char) (i+65) + "!");
+						System.out.print("[ERR #02: 5+ LETTER " + (char) (i+65) + "] ");
 					}
-				}
-				
-				// MAKING ADJUSTMENTS (HALVING, ETC.)
-				
-				
+				}				
 			}
 	
 	// 2. REMOVE LETTER FROM PLAYER INVENTORY (FOR GOOD)
@@ -1298,7 +1352,7 @@ public class Player extends Entity {
 				|| n >= 88 && n <= 90
 				);
 		
-		return (char) n;			
+		return (char) n;	
 	}
 	
 	private char getRandomConsonant() {
@@ -1312,6 +1366,7 @@ public class Player extends Entity {
 	}
 
 	private Element getRandomElement() {
+		// TODO: rewrite this like the new letter generation code (use that more dynamic loot table here as well)
 		int n = rand.nextInt( ( 100 - 1 ) + 1) + 1;
 		Element e;
 		
@@ -1325,14 +1380,6 @@ public class Player extends Entity {
 			CombatLog.print("ERROR: Random element roll is higher than 100.");
 		}
 		
-		switch (n) {
-		case 1:  break;
-		case 2:  break;
-		case 3:  break;
-		case 4:  break;
-		case 5:  break;
-		default:  break;
-		}
 		return e;
 	}
 	

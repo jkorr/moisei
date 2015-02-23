@@ -16,6 +16,8 @@ import com.daenils.moisei.graphics.Stage;
 public class Gamestats {
 	private Stage stage;
 	
+	final int BILLION = 1000000000;
+	
 	private static int playerLevel, playerXP, playerTotalXP, playerMaxHP, playerMaxMP, playerMaxAP;
 	
 	// GAME STUFF
@@ -66,6 +68,10 @@ public class Gamestats {
 			playerMaxMP = stage.getPlayer().maxMana; 
 			playerMaxAP = stage.getPlayer().maxActionPoints;	
 		}
+		
+		if (stage.getMonsters().size() > 0 && !stage.getMonsters().get(0).isAlive) {
+			monsterDeathCount++;
+		}
 	
 		// Game
 		turnCount = Game.getGameplay().getCurrentTurn();
@@ -74,7 +80,7 @@ public class Gamestats {
 		isMonsterTurn = Game.getGameplay().getIsMonsterTurn(); 
 		
 		deltaTurnTime = Game.getGameplay().getDeltaTimeTurn();
-		deltaGameTime = Game.getGameplay().getDeltaTimeStage();
+		deltaGameTime = Game.getGameplay().getDeltaTimeStage() / BILLION;
 		
 		spawnSlotFilled[0] = Game.getGameplay().getSpawnSlotFilled(1);
 		spawnSlotFilled[1] = Game.getGameplay().getSpawnSlotFilled(2);
@@ -83,11 +89,12 @@ public class Gamestats {
 		spawnSlotFilled[4] = Game.getGameplay().getSpawnSlotFilled(5);
 		}
 	
+	
 		public static void submitStats_endWave() {
 			savedTurnCount += turnCount;
 			savedWaveCount = waveCount;
 			savedDeltaGameTime = deltaGameTime;
-			savedMonsterDeathCount += monsterDeathCount;
+			savedMonsterDeathCount = monsterDeathCount;
 			savedPlayerLevel = playerLevel;
 			savedPlayerTotalXP = playerTotalXP;
 			savedPlayerMaxHP = playerMaxHP;

@@ -50,12 +50,14 @@ public class Entity {
 	protected String lastAttacker;
 	protected int lastHitReceived = (lastHealth - health) * -1; // temporarily fix the value here
 	protected int lastHitChance;
+	protected int damageReduction;
 	
 	protected Weapon weapon;
 	
 	protected boolean isWaiting;
 	
 	protected boolean isStunned;
+	protected boolean hasDominantEffect;
 	protected boolean isWindBuffed;
 	
 	protected Entity currentTarget;
@@ -76,6 +78,10 @@ public class Entity {
 	protected byte pAP;
 	protected byte pXP;
 	
+	protected char[] currentWord = new char[10];
+	protected int[] currentWordColors = new int[10];
+	protected int currentWordLength = 0;
+	
 	
 	public void update() {
 	}
@@ -90,8 +96,16 @@ public class Entity {
 	protected void basicAttack(Entity e1, Entity e2, Weapon w) {
 		if (w == null) {
 			if (e2.health > 0) {
+				if (e1.type == "player") {
 				hitDamage = getRandomHitDamage(e1);
 //				System.out.println(hitDamage);
+				} else {
+					hitDamage = ((Monster) e1).currentWordLength;
+				}
+				
+				// check for dmg reduction
+				if (e2.damageReduction > 0) hitDamage *= ((100 - e2.damageReduction) / 100.0);
+				
 				dealDamage(e1, e2, hitDamage);
 				compensateForCosts(e1, e2);
 				
@@ -183,8 +197,8 @@ public class Entity {
 		CombatLog.print(e1.name + " stuns " + e2.name + " for the next turn.");
 	}
 	
-	protected void letterWindBuff(Entity e1) {
-		this.isWindBuffed = true;
+	protected void letterDominantEffect(Entity e1) {
+		this.hasDominantEffect = true;
 	}
 	
 	private void abilityDrainMP(Entity e1, Entity e2, Equipment a) {
@@ -569,6 +583,14 @@ public class Entity {
 	protected void lockWeapon(Entity e, int n) {
 		CombatLog.println(e.name + "'s " + weapons.get(n).getName() + " locked.");
 		removeWeapon(n);
+	}
+	
+	protected void resetCurrentWord() {
+		for (int i = 0; i < this.currentWord.length; i++) {
+			this.currentWord[i] = 0;
+			this.currentWordColors[i] = 0;
+		}
+		this.currentWordLength = 0;
 	}
 	
 	// LEVEL UP STUFF
