@@ -52,6 +52,16 @@ public class Player extends Entity {
 	protected int[] letterlistUpperBr = new int[26];
 	private char lastLetter = 'A';
 	
+	private int radialMenuSize;
+	private int radialMenuX = 305, radialMenuY = 130;
+	private int[][] radialMenuIcon = {
+			{radialMenuX, radialMenuY - 5}, // FIRE
+			{radialMenuX + 26 + 5, radialMenuY + 26}, // WIND
+			{radialMenuX, radialMenuY + 26 + 26 + 5}, // WATER
+			{radialMenuX - 26 - 5, radialMenuY + 26}, // EARTH
+			{radialMenuX, radialMenuY + 26} // NEUTRAL
+	};
+	
 	private int[] letterBaseDroprate = {81, 15, 27, 43, 120, 23, 
 			20, 59, 73, 3, 7, 40,
 				26, 70, 77, 18, 3, 60,
@@ -62,6 +72,8 @@ public class Player extends Entity {
 	protected int[] letterDroprateBracket = new int[26];
 	protected int rollMax = -1;
 	protected int genVowelCount = 0;
+	
+	private int selectedInRadialMenuCount = 0;
 
 	public Player(Keyboard input, Mouse inputM, Entity defaultTarget, Stage stage) {
 		this.name = "Player";
@@ -167,13 +179,17 @@ public class Player extends Entity {
 
 		if (!letterWindowHasOpened) {
 			openLetterWindow();
-			openLetterBar();
+		//	openLetterBar();
 			letterWindowHasOpened = true;
 		}
 		
 		updateLetterContents();
 		letterWindow();
-		letterBar();
+	//	letterBar();
+		
+		radialMenuSize = 0;
+		for (int i= 0; i < letterInventory.size(); i++)
+			if (letterInventory.get(i).getIsSelectedInRadialMenu()) radialMenuSize++;
 		
 		setPercentageValues();
 		updateAbilities();
@@ -205,9 +221,10 @@ public class Player extends Entity {
 		
 		// ALPHABET
 		for (int i = 0; i < 26; i++) {
+			
 			if (input.alphabet[i] && canUseSkills && !isRadialMenuUp && Game.getGameplay().getIsPlayerTurn()) {
 		//		CombatLog.println("Letter " + (char) (i+65) + ".");
-				if (letterCount[i] == 1) {
+				if (letterCount[i] == 1 && !checkLetterByValue(i)) {
 					selectLetterByValue(i);
 				}
 				else if (letterCount[i] > 1) {
@@ -224,12 +241,15 @@ public class Player extends Entity {
 		}
 		
 		// RADIAL MENU
-		for (int i = 0; i < radialMenu.size(); i++) {
+		// TODO: change it to a switch?
+		for (int i = 0; i < 5; i++) {
 			if (input.radialChoice[i] && canUseSkills && isRadialMenuUp) {
-				selectLetterFromRadialMenuByOrder(i);
+				selectLetterFromRadialMenuByElement(i);
 				isRadialMenuUp = false;
 				}
 		}
+		
+//		System.out.println(radialMenuSize);
 		
 		// Q ABILITY
 	//	if (input.playerQ && canUseSkills && (abilities.size() > 0)) {
@@ -527,37 +547,67 @@ public class Player extends Entity {
 //		if (this.weapon != null) screen.renderSprite(600, 322, this.weapon.getIcon(), 0);
 //		else if (this.weapon == null) screen.renderSprite(600, 322, Sprite.noweapon, 0);
 		
+		
 		// RENDER RADIAL MENU
-		int[][] radialMenuIcon = {
-				{180, 100 - 5},
-				{180 + 26 + 5, 100 + 26},
-				{180, 100 + 26 + 26 + 5},
-				{180 - 26 - 5, 100 + 26}
-		};
-
-		for (int i = 0; i < radialMenu.size(); i++) {
-			for (int l = 0; l < 30; l++) {
-				for (int k = 0; k < 30; k++) {
-					screen.renderPixel(k + radialMenuIcon[i][0], l + radialMenuIcon[i][1], radialMenu.get(i).getFrame());
-				}
-			}			
-		}
+		int[] frameColors = {0xffff0000, 0xffbbbbbb, 0xff0000ff, 0xff00ff00, 0xffffffff};
 		
+		// render empty
 		if (isRadialMenuUp) {
-			if (radialMenu.size() > 0) screen.renderSprite(radialMenuIcon[0][0], radialMenuIcon[0][1], radialMenu.get(0).icon, 1); // UP
-			if (radialMenu.size() > 1) screen.renderSprite(radialMenuIcon[1][0], radialMenuIcon[1][1], radialMenu.get(1).icon, 1); // RIGHT
-			if (radialMenu.size() > 2) screen.renderSprite(radialMenuIcon[2][0], radialMenuIcon[2][1], radialMenu.get(2).icon, 1); // DOWN
-			if (radialMenu.size() > 3) screen.renderSprite(radialMenuIcon[3][0], radialMenuIcon[3][1], radialMenu.get(3).icon, 1); // LEFT
-			
+			for (int i = 0; i < 5; i++) {
+				screen.renderSprite( radialMenuIcon[0][0], radialMenuIcon[0][1], Sprite.letter[27+5], 1);
+				screen.renderSprite( radialMenuIcon[1][0], radialMenuIcon[1][1], Sprite.letter[30+5], 1);
+				screen.renderSprite( radialMenuIcon[2][0], radialMenuIcon[2][1], Sprite.letter[28+5], 1);
+				screen.renderSprite( radialMenuIcon[3][0], radialMenuIcon[3][1], Sprite.letter[29+5], 1);
+				screen.renderSprite( radialMenuIcon[4][0], radialMenuIcon[4][1], Sprite.letter[26+5], 1);
+				
+				/*	for (int l = 0; l < 30; l++) {
+					for (int k = 0; k < 30; k++) {
+						screen.renderPixel(k + radialMenuIcon[i][0], l + radialMenuIcon[i][1], frameColors[i]);
+					}
+				} */	
+			}
 		}
 		
+		for (int i = 0; i < letterInventory.size(); i++) {
+			if (letterInventory.get(i).getIsSelectedInRadialMenu()) {
+				switch(letterInventory.get(i).getType()) {
+				case NEUTRAL:
+					renderRadialMenuItem(screen, i, 4);
+					break;
+				case FIRE:
+					renderRadialMenuItem(screen, i, 0);
+					break;
+				case WATER:
+					renderRadialMenuItem(screen, i, 2);
+					break;
+				case EARTH:
+					renderRadialMenuItem(screen, i, 3);
+					break;
+				case WIND:
+					renderRadialMenuItem(screen, i, 1);
+					break;
+				default:	
+					break;
+				}
+			}
+		}
+	}
+	
+	// RENDERCODE FOR RADIAL MENU ITEMS
+	private void renderRadialMenuItem(Screen screen, int i, int e) {
+		for (int l = 0; l < 30; l++) {
+			for (int k = 0; k < 30; k++) {
+				screen.renderPixel(k + radialMenuIcon[e][0], l + radialMenuIcon[e][1], letterInventory.get(i).getFrame());
+			}
+		}		
+		screen.renderSprite(radialMenuIcon[e][0], radialMenuIcon[e][1], letterInventory.get(i).getIcon(), 1);
 	}
 	
 	// LETTER STUFF
 	// LETTER MECHANICS
 	// MECHANIC: LETTER WINDOW
 		private void openLetterWindow() {
-			Game.getGameplay().getGUI().createWindow(191, 241, 260, 0, 0xff555555, true, "INVENTORY");
+			Game.getGameplay().getGUI().createWindow(191, 271, 260, 0, 0xff555555, true, "INVENTORY");
 			Game.getGameplay().getGUI().getWindow("inventory").add(8,2);
 			Game.getGameplay().getGUI().getWindow("inventory").setLetterContents(this.getLetterInventory());
 		//	getContents(gui.getWindow("letters"), this.letterInventory);
@@ -580,7 +630,7 @@ public class Player extends Entity {
 					&& Game.getGameplay().getGUI().getWindow("inventory").getRequestedLetter() != null
 					&& Game.getGameplay().getGUI().getWindow("inventory").getRequestedLetter().getIsHoveredOver()
 					&& !Game.getGameplay().onGlobalCooldown) {
-				this.selectLetterById(Game.getGameplay().getGUI().getWindow("inventory").getRequestedLetter().getId());
+		//		this.selectLetterById(Game.getGameplay().getGUI().getWindow("inventory").getRequestedLetter().getId());
 				Game.getGameplay().enableGlobalCooldown();
 			}
 			
@@ -596,7 +646,7 @@ public class Player extends Entity {
 		}
 
 		private void updateLetterContents() {
-			Game.getGameplay().getGUI().getWindow("letterbar").setLetterContents(this.getLetterBar());
+	//		Game.getGameplay().getGUI().getWindow("letterbar").setLetterContents(this.getLetterBar());
 			Game.getGameplay().getGUI().getWindow("inventory").setLetterContents(this.getLetterInventory());
 		}
 		
@@ -624,13 +674,29 @@ public class Player extends Entity {
 			// ADD ALL LETTERS TO THE RADIAL MENU
 			for (int i = 0; i < letterCount[n]; i++) {
 				isRadialMenuUp = true;
-				addLetterToRadialByValue(n);
+				
+				int ic = 0;
+				for (int l = 0; l < letterInventory.size(); l++) {
+					if (letterInventory.get(l).getValue() == (char) n+65 && !letterInventory.get(l).getIsSelectedInRadialMenu()) {
+						addLetterToRadialByValue(n);
+						ic++;
+					}
+				}
+		//		System.out.println(ic);
+		
+			
+			}
+			// CHECK IF ONLY ONE ELEMENT IS IN THE RADIALMENU AND SELECT THAT IF SO
+			checkSelectedInRadialMenuCount();
+			if (selectedInRadialMenuCount < 2) {
+				for (int i = 0; i < letterInventory.size(); i++) {
+					selectLetterFromRadialMenuByOrder(i);
+					isRadialMenuUp = false;
+				}
 			}
 			
-			// DISPLAY THE RADIAL MENU
-			
 			// [TEMP DISPLAY CODE]
-			for (int i = 0; i < radialMenu.size(); i++) {
+			for (int i = 0; i < radialMenuSize; i++) {
 				CombatLog.println(radialString[i] + ": " + radialMenu.get(i).getType().toString());
 			}
 		}
@@ -663,7 +729,9 @@ public class Player extends Entity {
 				CombatLog.println("Yay! Such a nice word: " + word.toLowerCase() + "!");
 				dominantElement = identifyDominantElement(letterBar);
 				playerDamage = getWordDamage(letterBar.size(), dominantElement);
+				removeSelectedLetters();
 				this.clearLetterBar();
+
 				this.dealDamage(this, this.currentTarget, playerDamage);
 				Game.getGameplay().endTurn(this);
 			} else
@@ -1059,7 +1127,6 @@ public class Player extends Entity {
 				// TODO: make it into a nice hashmap like the other stuff and read it from file
 					
 				//	if (letterInventory.size() == 16) letterInventory.removeAll(letterInventory);
-					
 					updateLetterDroprate();
 					updateLetterDroprateBracket();
 					updateRollMax();
@@ -1111,7 +1178,7 @@ public class Player extends Entity {
 						CombatLog.println("New letter(s): " + newLetters);
 						
 						// printLetterCount();
-						genVowelCount = vowelCount;
+				
 						
 			}
 
@@ -1149,6 +1216,7 @@ public class Player extends Entity {
 				// VOWELCOUNT-BASED PRIORITY ADJUSTMENT
 				int dropMod = 4;
 				if (genVowelCount < 5) {
+					System.out.print("[!] VOWEL DROPRATE + (" + genVowelCount + ")] ");
 					letterDroprate[0] *= dropMod;
 					letterDroprate[4] *= dropMod;
 					letterDroprate[8] *= dropMod;
@@ -1156,6 +1224,7 @@ public class Player extends Entity {
 					letterDroprate[20] *= dropMod;
 					System.out.print("[ERR #01: NOT ENOUGH VOWELS (" + genVowelCount + ")] ");
 				} else {
+					System.out.print("[!] VOWEL DROPRATE - (" + genVowelCount + ")] ");
 					letterDroprate[0] /= 2;
 					letterDroprate[4] /= 2;
 					letterDroprate[8] /= 2;
@@ -1233,35 +1302,150 @@ public class Player extends Entity {
 		for (int i = 0; i < letterInventory.size(); i++) {
 			if (letterInventory.get(i).getValue() == (char) n+65) {
 				CombatLog.println("Letter " + letterInventory.get(i).getValue() + " got selected (by value).");
+				letterInventory.get(i).setIsSelected(true);
 				letterBar.add(letterInventory.get(i));
-				removeLetter(i, letterInventory);
+		//		removeLetter(i, letterInventory);
 			}
 		}
-
 	}
 	
 	protected void selectLetterFromRadialMenuByOrder(int n) {
-		for (int i = 0; i < radialMenu.size(); i++) {
-			if (i == n) {
-				CombatLog.println("Letter " + radialMenu.get(i).getValue() + " got selected (by order).");
-				letterBar.add(radialMenu.get(i));
-				removeLetter(i, radialMenu);
+		int[] selection = new int[4];
+		int ic = 0;
+		for (int i = 0; i < letterInventory.size(); i++) {
+			if (letterInventory.get(i).getIsSelectedInRadialMenu()) {
+			//	System.out.println("ic: " + ic);
+				selection[ic] = i;
+				ic++;
 			}
+			if (letterInventory.get(i).getIsSelectedInRadialMenu() && selection[n] == i && (ic - 1) == n) {
+				System.out.println("s: " + selection[n] + " | i = " + i + " | n = " + n + " | ic = " + ic);
+				CombatLog.println("Letter " + letterInventory.get(i).getValue() + " got selected (by order).");
+				letterInventory.get(i).setIsSelected(true);
+				letterBar.add(letterInventory.get(i));
+			//	removeLetter(i, radialMenu);
+			}
+			letterInventory.get(i).setIsSelectedInRadialMenu(false);
 		}
 	}
 	
+	protected void selectLetterFromRadialMenuByElement(int n) {
+		switch(n) {
+		case 0:
+			// fire
+			checkForElement(Element.FIRE);
+			break;
+		case 1:
+			// wind
+			checkForElement(Element.WIND);
+			break;
+		case 2:
+			// water
+			checkForElement(Element.WATER);
+			break;
+		case 3:
+			// earth
+			checkForElement(Element.EARTH);
+			break;
+		case 4:
+			// neutral
+			checkForElement(Element.NEUTRAL);
+			break;
+		default:
+			break;
+		}
+	}
+	
+	private void selectionByElement(Element e) {
+		for (int i = 0; i < letterInventory.size(); i++) {
+			if (letterInventory.get(i).getIsSelectedInRadialMenu() && letterInventory.get(i).getType() == e) {
+				CombatLog.println("Letter " + letterInventory.get(i).getValue() + " got selected (by element).");
+				letterInventory.get(i).setIsSelected(true);
+				letterBar.add(letterInventory.get(i));
+			}
+			letterInventory.get(i).setIsSelectedInRadialMenu(false);
+		}
+	}
+	
+	private void checkSelectedInRadialMenuCount() {
+		selectedInRadialMenuCount = 0;
+		for (int i = 0; i < letterInventory.size(); i++)
+			if (letterInventory.get(i).getIsSelectedInRadialMenu()) selectedInRadialMenuCount++;
+	}
+	
+	private void checkForElement(Element e) {
+		if (radialMenuHasElement(e)) {
+			selectionByElement(e);
+		} else {
+			System.out.println("No " + e.name());
+			disableRadialMenu();
+		}
+	}
+	
+	private void disableRadialMenu() {
+		for (int i = 0; i < letterInventory.size(); i++)
+		letterInventory.get(i).setIsSelectedInRadialMenu(false);
+	}
+	
+	protected boolean checkLetterByValue(int n) {
+		for (int i = 0; i < letterInventory.size(); i++) {
+			if (letterInventory.get(i).getValue() == (char) n+65)
+				return letterInventory.get(i).getIsSelected();
+	//		else {
+	//		System.out.println("ERR! LETTER CHECKING FAILED, AUTOMATIC FALSE SENT.");
+	//		}
+		}
+		return false;
+	}
 	
 	protected void addLetterToRadialByValue(int n) {
 		for (int i = 0; i < letterInventory.size(); i++) {
-			if (letterInventory.get(i).getValue() == (char) n+65) {
+			if (letterInventory.get(i).getValue() == (char) n+65
+					&& !letterInventory.get(i).getIsSelected()
+					&& !radialMenuHasElement(letterInventory.get(i).getType())
+					){
+				letterInventory.get(i).setIsSelectedInRadialMenu(true);
 				CombatLog.println("Letter " + letterInventory.get(i).getValue() + " got selected (by value).");
-				radialMenu.add(letterInventory.get(i));
-				removeLetter(i, letterInventory);
+			//	radialMenu.add(letterInventory.get(i));
+			//	removeLetter(i, letterInventory);
 			}
 		}
 
 	}
 	
+	private boolean radialMenuHasElement(Element e) {
+		// 0: neutral 1: fire 2: water 3: earth 4: wind
+		boolean[] elementsIn = new boolean[5];
+		for (int i = 0; i < letterInventory.size(); i++)
+			if (letterInventory.get(i).getIsSelectedInRadialMenu()) {
+				switch(letterInventory.get(i).getType()) {
+				case NEUTRAL:
+					elementsIn[0] = true;
+					break;
+				case FIRE:
+					elementsIn[1] = true;
+					break;
+				case WATER:
+					elementsIn[2] = true;
+					break;
+				case EARTH:
+					elementsIn[3] = true;
+					break;
+				case WIND:
+					elementsIn[4] = true;
+					break;
+				default:
+					System.out.println("ERR #03: WRONG ELEMENT IN THE RADIAL MENU.");
+				}
+			}
+		
+		if (e == Element.NEUTRAL && elementsIn[0] == false) return false;
+		if (e == Element.FIRE && elementsIn[1] == false) return false;
+		if (e == Element.WATER && elementsIn[2] == false) return false;
+		if (e == Element.EARTH && elementsIn[3] == false) return false;
+		if (e == Element.WIND && elementsIn[4] == false) return false;
+		else return true;
+	}
 	
 	// 2. MOVE LETTER FROM THE BAR BACK TO THE INVENTORY
 	protected void deselectLetter(int n) {
@@ -1271,11 +1455,10 @@ public class Player extends Entity {
 	}
 	
 	protected void deselectLetterById(int n) {
-		for (int i = 0; i < letterBar.size(); i++) {
-			if (letterBar.get(i).getId() == n) {
-				CombatLog.println("Letter " + letterBar.get(i).getValue() + " got deselected (by id).");		
-				letterInventory.add(letterBar.get(i));
-				removeLetter(i, letterBar);
+		for (int i = 0; i < letterInventory.size(); i++) {
+			if (letterInventory.get(i).getId() == n) {
+				CombatLog.println("Letter " + letterInventory.get(i).getValue() + " got deselected (by id).");						
+				letterInventory.get(i).setIsSelected(false);
 			}
 		}
 	}
@@ -1283,7 +1466,7 @@ public class Player extends Entity {
 	protected void deselectLast() {
 		int n = letterBar.size() - 1;
 		CombatLog.println("Letter " + letterBar.get(n).getValue() + " got deselected.");
-		letterInventory.add(letterBar.get(n));
+		deselectLetterById(letterBar.get(n).id);
 		removeLetter(n, letterBar);
 	}
 	
@@ -1431,6 +1614,25 @@ public class Player extends Entity {
 		goldAmount -= n;
 	}
 
+	protected void removeSelectedLetters() {
+		int ic = 0;
+		
+		//	System.out.println(ic);
+			do {
+				ic = 0;
+				for (int i = 0; i < letterInventory.size(); i++) {
+					if (letterInventory.get(i).getIsSelected()) ic++;
+				}
+				
+				for (int i = 0; i < letterInventory.size(); i++) {
+					if (letterInventory.get(i).getIsSelected()) letterInventory.remove(i);				
+				}
+			} while (ic > 0);
+			
+			updateVowelCount();
+			genVowelCount = vowelCount;
+	}
+	
 	protected void clearLetterBar() {
 	//	int[] idsToClear = new int[letterBar.size()]; 
 	//	for (int i = 0; i < letterBar.size(); i++) {

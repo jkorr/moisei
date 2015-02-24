@@ -19,7 +19,7 @@ public class Spritesheet {
 	// SPRITESHEETS
 	// lettersheet:
 	
-	public static Spritesheet lettersheet = new Spritesheet("/textures/letters/letter-grid.png", 180, 150, 30, 30);
+	public static Spritesheet lettersheet = new Spritesheet("/textures/letters/letter-grid.png", 180, 180, 30, 30);
 	
 	public Spritesheet(String path, int w, int h, int sw, int sh) {
 		this.path = path;

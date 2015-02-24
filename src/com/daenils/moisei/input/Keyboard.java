@@ -13,7 +13,7 @@ public class Keyboard implements KeyListener {
 	public boolean playerCycleTargets;
 	
 	public boolean[] alphabet = new boolean[26];
-	public boolean[] radialChoice = new boolean[4];
+	public boolean[] radialChoice = new boolean[5];
 	public boolean removeLast;
 	
 	public boolean playerBasicAttack;
@@ -67,6 +67,7 @@ public class Keyboard implements KeyListener {
 		radialChoice[1] = keys[KeyEvent.VK_RIGHT];
 		radialChoice[2] = keys[KeyEvent.VK_DOWN];
 		radialChoice[3] = keys[KeyEvent.VK_LEFT];
+		radialChoice[4] = keys[KeyEvent.VK_SPACE];
 		
 		playerQ = keys[KeyEvent.VK_6];
 		playerW = keys[KeyEvent.VK_7];

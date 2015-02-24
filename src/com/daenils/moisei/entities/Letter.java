@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.TreeMap;
 
+import com.daenils.moisei.Game;
 import com.daenils.moisei.files.FileManager;
 import com.daenils.moisei.graphics.Sprite;
 
@@ -28,6 +29,7 @@ public class Letter {
 	protected Sprite icon;
 	protected int frameColor;
 	protected boolean isHoveredOver;
+	protected boolean isSelected, isSelectedInRadialMenu;
 	
 	public static Letter testletter = new Letter('G', Element.FIRE);
 	
@@ -80,9 +82,30 @@ public class Letter {
 		else return null;
 	}
 	
+	public boolean getIsSelected() {
+		return isSelected;
+	}
+	
+	public boolean getIsSelectedInRadialMenu() {
+		return isSelectedInRadialMenu;
+	}
+	
 	// SETTERS
 	public void setIsHoveredOver(boolean b) {
 		isHoveredOver = b;
+	}
+	
+	public void setIsSelected(boolean b) {
+		isSelected = b;
+	}
+	
+	public void setSelected() {
+		isSelected = true;
+	//	selectionId = Game.getGameplay().nextSelectionId;
+	}
+	
+	public void setIsSelectedInRadialMenu(boolean b) {
+		isSelectedInRadialMenu = b;
 	}
 
 }

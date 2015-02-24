@@ -683,6 +683,8 @@ public class Gameplay {
 					, screen);
 		}		
 		
+	
+		
 		if (getStage().getMonsters().size() > 0 && (deltaTimeTurn / BILLION) < 2 && isPlayerTurn) {
 			for (int i = 0; i < getStage().getMonsters().get(0).currentWordLength; i++) {
 				int x = 380, y = 96;

@@ -146,6 +146,13 @@ public class Window {
 							screen.renderPixel(k + x + ITEM_POSITION1[0] + pos * ITEM_OFFSET, l + y + ITEM_POSITION1[1] + line * ITEM_OFFSET, letterContents.get(i).getFrame());
 						}
 					}
+
+					for (int l = 0; l < letterContents.get(i).getIcon().height; l++) {
+						for (int k = 0; k < letterContents.get(i).getIcon().width / 2; k++) {
+							if (letterContents.get(i).getIsSelectedInRadialMenu()) screen.renderPixel(k + x + ITEM_POSITION1[0] + pos * ITEM_OFFSET, l + y + ITEM_POSITION1[1] + line * ITEM_OFFSET, 0xffff00ff);
+							if (letterContents.get(i).getIsSelected()) screen.renderPixel(k + (x + (letterContents.get(i).getIcon().width / 2)) + ITEM_POSITION1[0] + pos * ITEM_OFFSET, l + y + ITEM_POSITION1[1] + line * ITEM_OFFSET, 0xffffff00);
+						}
+					}
 					
 					screen.renderSprite(x + ITEM_POSITION1[0] + pos * ITEM_OFFSET, y + ITEM_POSITION1[1] + line * ITEM_OFFSET, letterContents.get(i).getIcon(), 0);
 					updateLetterContent(i, pos, line);
