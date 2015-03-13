@@ -53,10 +53,7 @@ public class Monster extends Entity {
 	public Monster(int id, int spawnSlot, Entity defaultTarget, Stage stage) {
 		this.stage = stage;
 		load();
-		updateSpawnSlots();
 		
-		this.spawnSlot = spawnSlot;
-		Game.getGameplay().spawnSlotFilled[spawnSlot - 1] = true;
 		this.localId = spawnSlot;
 				
 		setXY(spawnSlot);
@@ -204,6 +201,14 @@ public class Monster extends Entity {
 	//	if (this.actionPoints > 0) this.imUp = true;
 	//	else this.imUp = false;
 		
+	/*	if ((Math.round((Game.getGameplay().getDeltaTimeStage() / 100000000))) % 5 == 0) {
+			this.isGettingDamage = false;
+			System.out.println(Math.round((Game.getGameplay().getDeltaTimeStage() / 100000000)));
+		}
+	*/
+		
+		if (isGettingDamage && System.nanoTime() > (this.flashStart + this.flashDuration)) this.isGettingDamage = false;
+		
 		setPercentageValues();
 		
 		// the following 3 lines make the dynamic monster changing possible:
@@ -316,7 +321,8 @@ public class Monster extends Entity {
 	}
 	
 	public void render(Screen screen) {
-		screen.renderSprite(x, y, sprite, 1);
+		if (this.isGettingDamage) screen.renderSpriteAsColor(x, y, sprite, 1, 0xffffffff);
+		else screen.renderSprite(x, y, sprite, 1);
 	}
 	
 	private boolean checkCanUseSkills() {

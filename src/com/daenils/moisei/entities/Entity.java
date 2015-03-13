@@ -52,6 +52,8 @@ public class Entity {
 	protected int lastHitChance;
 	protected int damageReduction;
 	
+	public boolean isGettingDamage;
+	
 	protected Weapon weapon;
 	
 	protected boolean isWaiting;
@@ -69,6 +71,11 @@ public class Entity {
 	
 	protected Map<Integer, Integer> mapWeapons = new HashMap<Integer, Integer>();
 	
+	// DAMAGE FLASH TIMER
+    protected long flashDuration;
+    long flashStart;
+	private long flashEnd;
+	
 	// LEVELS AND XP
 	protected int xpNeeded; // the amount of xp needed for the next level
 	protected int xpGained;
@@ -78,8 +85,8 @@ public class Entity {
 	protected byte pAP;
 	protected byte pXP;
 	
-	protected char[] currentWord = new char[10];
-	protected int[] currentWordColors = new int[10];
+	protected char[] currentWord = new char[10 * 2]; // becuase player's currentWord has to store color codes as well
+	protected int[] currentWordColors = new int[10 * 2];
 	protected int currentWordLength = 0;
 	
 	
@@ -135,9 +142,18 @@ public class Entity {
 	
 	// LEGACY METHOD (not muted by default)
 	protected void dealDamage(Entity e1, Entity e2, int d) {
+		if (e1 instanceof Player) Game.getGameplay().displayDamage(d, true);
+		else Game.getGameplay().displayDamage(d, false);
 		dealDamage(e1, e2, null, d, false);
+		e2.setGettinDamage(true);
 	}
 	
+	private void setGettinDamage(boolean b) {
+		this.isGettingDamage = true;
+		this.flashStart = System.nanoTime();
+		this.flashDuration = 75000000;
+	}
+
 	// METHOD FOR NON-ABILITIES (mutable by the 4th argument)
 	protected void dealDamage(Entity e1, Entity e2, int d, Boolean mute) {
 		dealDamage(e1, e2, null, d, mute);
@@ -299,13 +315,12 @@ public class Entity {
 		checked.isAlive = false;
 		
 		if (checked instanceof Monster) {
-			Game.getGameplay().setSpawnSlotFilled(((Monster) checked).getSpawnSlot(), false);
 			Monster.addDeathCount();
 			((Player) attacker).newCycledTarget();
 		}
 		
 		if (checked instanceof Player) {
-			Gamestats.submitStats_endWave();
+			Game.getGameplay().submitStats_endWave();
 			FileManager.saveStatisticsFile();
 			FileManager.saveCombatLogFile();
 		}
@@ -349,20 +364,7 @@ public class Entity {
 					if (a.getTargetType() == 3) {
 						int n = this.currentTarget.localId - 1;
 						doAbility(a, stage.getMonsters().get(n));
-						if (n == 0) {
-							if (aoeCheckRightNeighbor(n))
-								aoeDoAbilityRightNeighbor(a, n);
-						}
-						if (n > 0 && n < 4) {
-							if (aoeCheckRightNeighbor(n))
-								aoeDoAbilityRightNeighbor(a, n);
-							if (aoeCheckLeftNeighbor(n))
-								aoeDoAbilityLeftNeighbor(a, n);
-						}
-						if (n == 4) {
-							if (aoeCheckLeftNeighbor(n))
-								aoeDoAbilityLeftNeighbor(a, n);
-						}
+						
 					}
 					if (a.getTargetType() == 5) {
 						for (int i = 0; i < stage.getMonsters().size(); i++) {
@@ -377,29 +379,6 @@ public class Entity {
 				}
 			}
 	}
-
-	
-	private boolean aoeCheckRightNeighbor(int n) {
-		if (Gamestats.spawnSlotFilled[n + 1] && stage.getMonsters().get(n + 1).isAlive) {
-			return true;
-		}
-		return false;
-	}
-	
-	private boolean aoeCheckLeftNeighbor(int n) {
-		if (Gamestats.spawnSlotFilled[n - 1] && stage.getMonsters().get(n - 1).isAlive) {
-			return true;
-		}
-		return false;
-	}
-
-	private void aoeDoAbilityRightNeighbor(Ability a, int n) {
-		doAbility(a, stage.getMonsters().get(n + 1));
-	}
-	
-	private void aoeDoAbilityLeftNeighbor(Ability a, int n) {
-		doAbility(a, stage.getMonsters().get(n - 1));
-	}
 	
 	private void doAbility(Equipment a, Entity e) {
 		a.setLastUsed(Game.getGameplay().getTurnCount()); // TODO: add this reset to resetGame() ! (+ maybe dots/hots as well?)
@@ -411,17 +390,6 @@ public class Entity {
 	private void doWeaponAbility(Equipment a, Entity e) {
 		doAbility(a, e);
 	}
-	
-	
-	private void aoeDealDamageRightNeighbor(Equipment a, int n) {
-		dealDamage(this, stage.getMonsters().get(n + 1), a.getDotValue(), true);
-		OTTicked(a.getDotValue());
-	}
-	
-	private void aoeDealDamageLeftNeighbor(Equipment a, int n) {
-		dealDamage(this, stage.getMonsters().get(n - 1), a.getDotValue(), true);
-		OTTicked(a.getDotValue());
-		}
 	
 	public void applyOTs(Equipment a) {
 //		if ((a.getLastUsed() + a.getTurnCount()) >= Gamestats.turnCount - 1) tick = 0;
@@ -436,20 +404,6 @@ public class Entity {
 				int n = a.getTarget().localId - 1;
 				dealDamage(this, a.getTarget(), a.getDotValue(), true);
 				OTTicked(a.getDotValue());
-				if (n == 0) {
-					if (aoeCheckRightNeighbor(n))
-						aoeDealDamageRightNeighbor(a, n);
-				}
-				if (n > 0 && n < 4) {
-					if (aoeCheckRightNeighbor(n))
-						aoeDealDamageRightNeighbor(a, n);
-					if (aoeCheckLeftNeighbor(n))
-						aoeDealDamageLeftNeighbor(a, n);
-				}
-				if (n == 4) {
-					if (aoeCheckLeftNeighbor(n))
-						aoeDealDamageLeftNeighbor(a, n);
-				}
 			}
 			if (a.getTargetType() == 5) {
 				for (int i = 0; i < stage.getMonsters().size(); i++) {
@@ -722,6 +676,10 @@ public class Entity {
 	
 	public int getLastHitChance() {
 		return lastHitChance;
+	}
+	
+	public int getActionPoints() {
+		return actionPoints;
 	}
 	
 	// SETTERS

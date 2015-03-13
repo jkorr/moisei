@@ -8,7 +8,6 @@ import com.daenils.moisei.CombatLog;
 import com.daenils.moisei.Game;
 import com.daenils.moisei.entities.Letter.Element;
 import com.daenils.moisei.files.FileManager;
-import com.daenils.moisei.graphics.GUI;
 import com.daenils.moisei.graphics.Notification;
 import com.daenils.moisei.graphics.Screen;
 import com.daenils.moisei.graphics.Sprite;
@@ -74,8 +73,26 @@ public class Player extends Entity {
 	protected int genVowelCount = 0;
 	
 	private int selectedInRadialMenuCount = 0;
+	
+	private int[] elementBaseDroprate = {	25,			// NEUTRAL 
+												100, 		// FIRE
+												100, 		// WATER
+												100, 		// EARTH
+												75,};		// WIND
+													
+	
+	protected int[] elementDroprate = new int[5];
+	protected int[] elementDroprateBracket = new int[5];
+	
+	// NEW GAMEPLAY STUFF (ELEMENTAL POWER)
+	protected int[] elementalPower = new int[4]; // fi wa ea wi
+	protected int[] elementalPowerCap = new int[4]; // each item equals to the amount of points required to have that segment filled -> add all of them to get the cap for the bar
+	protected int elementalPowerCapSum;
 
 	public Player(Keyboard input, Mouse inputM, Entity defaultTarget, Stage stage) {
+		// FILL TEST CAPS
+		fillBaseElementalPowerCaps();
+		
 		this.name = "Player";
 		this.type = "player";
 		this.id = -1;
@@ -148,6 +165,13 @@ public class Player extends Entity {
 		spawnLetter('A', Element.WIND); */
 	
 	}
+
+	private void fillBaseElementalPowerCaps() {
+		for (int i = 0; i < elementalPowerCap.length; i++) 	{
+			elementalPowerCap[i] = (i+1) * 3;
+			elementalPowerCapSum += elementalPowerCap[i];
+		}
+	}
 	
 	private void initLetters() {
 	//	for (int i = 0; i < 10; i++) {
@@ -172,6 +196,8 @@ public class Player extends Entity {
 	}
 	
 	public void update() {
+		
+		if (isGettingDamage && System.nanoTime() > (this.flashStart + this.flashDuration)) this.isGettingDamage = false;
 
 	//	System.out.println(Letter.mapLetterDroptable);
 	//	System.out.println(Letter.mapLetterDroptableSorted);
@@ -314,12 +340,6 @@ public class Player extends Entity {
 				
 		}
 		*/
-		// SWITCH GUI VIEW
-		if (input.playerSwitchGUIView && !Game.getGameplay().onGlobalCooldown) {
-			if (!Game.getGameplay().getPercentageView()) Game.getGameplay().setPercentageView(true);
-			else if (Game.getGameplay().getPercentageView()) Game.getGameplay().setPercentageView(false);
-			Game.getGameplay().enableGlobalCooldown(); 
-		}
 		
 		// PAUSE GAME
 		if (input.playerPauseGame && !Game.getGameplay().onGlobalCooldown) {
@@ -366,7 +386,7 @@ public class Player extends Entity {
 		
 
 		inputTargeting();
-		if (GUI.getNoWindows()) mouseInput();
+		if (Screen.getNoWindows()) mouseInput();
 
 		
 		// THE FOLLOWING TWO PROBABLY DO NOT NEED TO BE CONSTANTLY UPDATED (CAN BE MOVED LATER ON)
@@ -488,34 +508,6 @@ public class Player extends Entity {
 			else stage.getMonsters().get(i).showDetails = false;
 		}
 		
-		// QWER ABILITIES
-		for (int i = 0; i < abilities.size(); i++) {
-			int[] spellPos = {GUI.screenSpellPos1, GUI.screenSpellPos2, GUI.screenSpellPos3, GUI.screenSpellPos4};
-			if (Mouse.getB() == 1 && canUseSkills && (abilities.size() > i)
-					&& !Game.getGameplay().onGlobalCooldown
-					&& Mouse.getX() > spellPos[i] * Game.getScale()
-					&& Mouse.getX() < (spellPos[i] + 30) * Game.getScale()
-					&& Mouse.getY() > 620
-					&& Mouse.getY() < 680) {
-				useAbility(this, abilities.get(i));
-				Game.getGameplay().enableGlobalCooldown();
-			}
-		}
-		
-		
-		// HOVER: QWER ABILITY TOOLTIPS
-		for (int i = 0; i < abilities.size(); i++) {
-			int[] spellPos = {GUI.screenSpellPos1, GUI.screenSpellPos2, GUI.screenSpellPos3, GUI.screenSpellPos4};
-			if (Mouse.getB() == -1 && (abilities.size() > i)
-					&& Mouse.getX() > spellPos[i] * Game.getScale()
-					&& Mouse.getX() < (spellPos[i] + 30) * Game.getScale()
-					&& Mouse.getY() > 620
-					&& Mouse.getY() < 680) {
-				abilities.get(i).showTooltip = true;
-			}
-			else abilities.get(i).showTooltip = false;
-		}
-		
 		// END TURN
 		if (Mouse.getB() == 1 && !Game.getGameplay().onGlobalCooldown && Game.getGameplay().getIsPlayerTurn() && !Game.getGameplay().getForcedPause()
 				&& Mouse.getX() > 395
@@ -536,17 +528,8 @@ public class Player extends Entity {
 	
 	public void render(Screen screen) {
 		// RENDER SELF
-		screen.renderSprite(x, y, sprite, 1);
-		
-		// RENDER ABILITIES AT THE ACTION BAR
-		int[] spellPosHelper = new int[]{GUI.screenSpellPos1, GUI.screenSpellPos2, GUI.screenSpellPos3, GUI.screenSpellPos4};
-		for (int i = 0; i < abilities.size(); i++) {
-			screen.renderSprite(spellPosHelper[i], GUI.screenBottomElements + 11, abilities.get(i).getIcon(), 0);
-		}
-		
-//		if (this.weapon != null) screen.renderSprite(600, 322, this.weapon.getIcon(), 0);
-//		else if (this.weapon == null) screen.renderSprite(600, 322, Sprite.noweapon, 0);
-		
+		if (this.isGettingDamage) screen.renderSpriteAsColor(x, y, sprite, 1, 0xffffffff);
+		else screen.renderSprite(x, y, sprite, 1);
 		
 		// RENDER RADIAL MENU
 		int[] frameColors = {0xffff0000, 0xffbbbbbb, 0xff0000ff, 0xff00ff00, 0xffffffff};
@@ -591,6 +574,10 @@ public class Player extends Entity {
 				}
 			}
 		}
+		
+		
+		
+		
 	}
 	
 	// RENDERCODE FOR RADIAL MENU ITEMS
@@ -606,39 +593,40 @@ public class Player extends Entity {
 	// LETTER STUFF
 	// LETTER MECHANICS
 	// MECHANIC: LETTER WINDOW
+
 		private void openLetterWindow() {
-			Game.getGameplay().getGUI().createWindow(191, 271, 260, 0, 0xff555555, true, "INVENTORY");
-			Game.getGameplay().getGUI().getWindow("inventory").add(8,2);
-			Game.getGameplay().getGUI().getWindow("inventory").setLetterContents(this.getLetterInventory());
+			Screen.createWindow(191, 271, 260, 0, 0xff555555, true, "INVENTORY");
+			Screen.getWindow("inventory").add(8,2);
+			Screen.getWindow("inventory").setLetterContents(this.getLetterInventory());
 		//	getContents(gui.getWindow("letters"), this.letterInventory);
 		}
 
 		
 		// MECHANIC: LETTER BAR
-		private void openLetterBar() {
-			Game.getGameplay().getGUI().createWindow(160, 303, 320, 0, 0xff555555, true, "LETTERBAR");
-			Game.getGameplay().getGUI().getWindow("letterbar").add(10,1);
-		//	Game.getGameplay().getGUI().getWindow("letterbar").add(1, Window.BUTTON_OK);
-			Game.getGameplay().getGUI().getWindow("letterbar").setLetterContents(this.getLetterBar());
+/*		private void openLetterBar() {
+			Screen.createWindow(160, 303, 320, 0, 0xff555555, true, "LETTERBAR");
+			Screen.getWindow("letterbar").add(10,1);
+		//	Screen.getWindow("letterbar").add(1, Window.BUTTON_OK);
+			Screen.getWindow("letterbar").setLetterContents(this.getLetterBar());
 		//	getContents(gui.getWindow("letterbar"), this.letterBar);
-		}
+		} */
 		
 		private void letterWindow() {
 			if (Mouse.getB() == 1
-					&& Game.getGameplay().getGUI().getWindow("inventory") != null
+					&& Screen.getWindow("inventory") != null
 				//	&& gui.getWindow("inventory").getRequestedLetterNum() > 0
-					&& Game.getGameplay().getGUI().getWindow("inventory").getRequestedLetter() != null
-					&& Game.getGameplay().getGUI().getWindow("inventory").getRequestedLetter().getIsHoveredOver()
+					&& Screen.getWindow("inventory").getRequestedLetter() != null
+					&& Screen.getWindow("inventory").getRequestedLetter().getIsHoveredOver()
 					&& !Game.getGameplay().onGlobalCooldown) {
-		//		this.selectLetterById(Game.getGameplay().getGUI().getWindow("inventory").getRequestedLetter().getId());
+		//		this.selectLetterById(Screen.getWindow("inventory").getRequestedLetter().getId());
 				Game.getGameplay().enableGlobalCooldown();
 			}
 			
 			if (Mouse.getB() == 3
-					&& Game.getGameplay().getGUI().getWindow("inventory") != null
-					&& Game.getGameplay().getGUI().getWindow("inventory").getRequestedLetterNum() > 0
-					&& Game.getGameplay().getGUI().getWindow("inventory").getRequestedLetter() != null
-					&& Game.getGameplay().getGUI().getWindow("inventory").getRequestedLetter().getIsHoveredOver()
+					&& Screen.getWindow("inventory") != null
+					&& Screen.getWindow("inventory").getRequestedLetterNum() > 0
+					&& Screen.getWindow("inventory").getRequestedLetter() != null
+					&& Screen.getWindow("inventory").getRequestedLetter().getIsHoveredOver()
 					&& !Game.getGameplay().onGlobalCooldown) {
 		//		this.despawnLetter(gui.getWindow("inventory").getRequestedLetterNum(), l);
 				Game.getGameplay().enableGlobalCooldown();
@@ -646,22 +634,22 @@ public class Player extends Entity {
 		}
 
 		private void updateLetterContents() {
-	//		Game.getGameplay().getGUI().getWindow("letterbar").setLetterContents(this.getLetterBar());
-			Game.getGameplay().getGUI().getWindow("inventory").setLetterContents(this.getLetterInventory());
+	//		Screen.getWindow("letterbar").setLetterContents(this.getLetterBar());
+			Screen.getWindow("inventory").setLetterContents(this.getLetterInventory());
 		}
 		
 		private void letterBar() {
 			if (Mouse.getB() == 1
-					&& Game.getGameplay().getGUI().getWindow("letterbar") != null
+					&& Screen.getWindow("letterbar") != null
 				//	&& gui.getWindow("letterbar").getRequestedLetterNum() > -1
-					&& Game.getGameplay().getGUI().getWindow("letterbar").getRequestedLetter() != null
-					&& Game.getGameplay().getGUI().getWindow("letterbar").getRequestedLetter().getIsHoveredOver()
+					&& Screen.getWindow("letterbar").getRequestedLetter() != null
+					&& Screen.getWindow("letterbar").getRequestedLetter().getIsHoveredOver()
 					&& !Game.getGameplay().onGlobalCooldown) {
-				this.deselectLetterById(Game.getGameplay().getGUI().getWindow("letterbar").getRequestedLetter().getId());
+				this.deselectLetterById(Screen.getWindow("letterbar").getRequestedLetter().getId());
 				Game.getGameplay().enableGlobalCooldown();
 			}
 			
-			if (Game.getGameplay().getGUI().getWindow("letterbar").getClickedDialogueOption()
+			if (Screen.getWindow("letterbar").getClickedDialogueOption()
 					&& !Game.getGameplay().onGlobalCooldown) {
 				submitWord();
 				Game.getGameplay().enableGlobalCooldown();
@@ -715,8 +703,21 @@ public class Player extends Entity {
 		private void submitWord() {
 			String word = getWordFromBar();
 			//CURRENTWORD STUFF
-			for (int i = 0; i < word.length(); i++) this.currentWord[i] = word.charAt(i);
-			this.currentWordLength = word.length();
+			int i = 0, k = 0;
+			
+			while (i < word.length()) {
+				if (k % 2 == 0) {
+					this.currentWord[k] = (char) (currentWordColors[i] + 48);
+					k++;
+				} else {
+					this.currentWord[k] = word.charAt(i);
+					i++;
+					k++;					
+				}
+			}
+			
+			this.currentWordLength = word.length() * 2;
+			
 			
 			CombatLog.println("Word submitted: " + word);
 			checkWord(word);
@@ -729,6 +730,7 @@ public class Player extends Entity {
 				CombatLog.println("Yay! Such a nice word: " + word.toLowerCase() + "!");
 				dominantElement = identifyDominantElement(letterBar);
 				playerDamage = getWordDamage(letterBar.size(), dominantElement);
+				countElementalPowerPoints();
 				removeSelectedLetters();
 				this.clearLetterBar();
 
@@ -750,11 +752,56 @@ public class Player extends Entity {
 			String word = "";
 			for (int i = 0; i < this.getLetterBar().size(); i++) {
 				word += (this.getLetterBar().get(i).getValue());
-				currentWordColors[i] = this.getLetterBar().get(i).getFrame();
+				switch (this.getLetterBar().get(i).getFrame()) {
+				case 0xffffffff: currentWordColors[i] = 1; break;			// N
+				case 0xffff0000: currentWordColors[i] = 2; break;		// FIRE
+				case 0xff0000ff: currentWordColors[i] = 4; break; 		// WATER
+				case 0xff00ff00: currentWordColors[i] = 3; break;		// EARTH
+				case 0xffbbbbbb: currentWordColors[i] = 5; break;		// WIND
+				default: currentWordColors[i] = 0; break;
+				}
 			}
+			
 			return word;
 		}
+	
 		
+		private void countElementalPowerPoints() {
+			for (int i = 0; i < currentWordColors.length; i++) {
+				switch(currentWordColors[i]) {
+				case 2:
+					// FIRE
+					if (elementalPower[0] < elementalPowerCapSum){
+						addElementalPower(0);						
+					}
+					break;
+				case 4:
+					// WATER
+					if (elementalPower[1] < elementalPowerCapSum){						
+						addElementalPower(1);
+					}
+					break;
+				case 3:
+					// EARTH
+					if (elementalPower[2] < elementalPowerCapSum){						
+						addElementalPower(2);
+					}
+					break;
+				case 5:
+					// WIND
+					if (elementalPower[3] < elementalPowerCapSum){						
+						addElementalPower(3);
+					}
+					break;
+				default:	
+					// NOTHING
+					System.out.println("ERR? Nothing happens.");
+					break;
+				}
+			}
+			
+		}
+
 		private void getContents(Window w, List<Letter> list) {
 			w.clean();
 			for (int i = 0; i < list.size(); i++) {
@@ -874,6 +921,7 @@ public class Player extends Entity {
 					// maybe change it to the proper method you used with spells earlier, but now it seems to work just fine:
 					if (this.pHealth > (100 - healing)) this.restoreHealth(100);
 					else this.restoreHealth(this.pHealth + healing); 
+					Game.getGameplay().displayHealing(healing, true);
 					CombatLog.println(healing + " percent of player health has been restored.");
 					break;
 				case 3:
@@ -1180,6 +1228,22 @@ public class Player extends Entity {
 						// printLetterCount();
 				
 						
+			}
+			
+			private void updateElementDroprate() {
+				// SETTING THE DEFAULT VALUES (ZEROING)
+				for (int i = 0; i < elementDroprate.length; i++) {
+					elementDroprate[i] = elementBaseDroprate[i];
+				}
+			}
+			
+			private void updateElementDroprateBracket() {
+				elementDroprateBracket[0] = elementDroprate[0];
+			//	System.out.println(letterDroprateBracket[0]);
+				for (int i = 1; i < elementDroprate.length; i++) {
+					elementDroprateBracket[i] = elementDroprateBracket[i - 1] + elementDroprate[i];
+			//		System.out.println(letterDroprateBracket[i]);
+				}
 			}
 
 			private void updateLetterlistUpperBracket() {
@@ -1548,7 +1612,7 @@ public class Player extends Entity {
 		return (char) n;
 	}
 
-	private Element getRandomElement() {
+/*	private Element getRandomElement() {
 		// TODO: rewrite this like the new letter generation code (use that more dynamic loot table here as well)
 		int n = rand.nextInt( ( 100 - 1 ) + 1) + 1;
 		Element e;
@@ -1563,6 +1627,31 @@ public class Player extends Entity {
 			CombatLog.print("ERROR: Random element roll is higher than 100.");
 		}
 		
+		return e;
+	} */
+	
+	private Element getRandomElement() {
+		Element e = Element.NEUTRAL;
+		Element[] eList = {Element.NEUTRAL, Element.FIRE, Element.WATER, Element.EARTH, Element.WIND, Element.MAGIC};
+		int eRollMax = 0, n = -1;
+		
+		updateElementDroprate();
+		updateElementDroprateBracket();
+		// UPDATE eROLLMAX:
+		for (int i = 0; i < elementDroprate.length; i++) {
+			eRollMax += elementDroprate[i];
+		} 
+		
+		
+		n = rand.nextInt(((eRollMax - 1) + 1) + 1);
+		
+		// LOOK THROUGH BRACKET
+		for (int l = (elementDroprate.length - 1); l >= 0; l--) {
+		    if (n <= elementDroprateBracket[l]) {
+		    	e = eList[l];
+		   	}
+		}
+			
 		return e;
 	}
 	
@@ -1649,5 +1738,37 @@ public class Player extends Entity {
 
 		for (int i = 0; i < idsToClear; i++)
 			despawnLetter(idsToClear - i - 1, letterBar);		
+	}
+	
+	public int getElementalPower(int i) {
+		return elementalPower[i];
+	}
+	
+	public int getElementalPowerCap(int i) {
+		return elementalPowerCap[i];
+	}
+	
+	public void setElementalPower(int i, int value) {
+		elementalPower[i] = value;
+	}
+	
+	public void setElementalPowerCap(int i, int value) {
+		elementalPowerCap[i] = value;
+	}
+	
+	public void addElementalPower(int i, int value) {
+		elementalPower[i] += value;
+	}
+	
+	public void addElementalPower(int i) {
+		elementalPower[i]++;
+	}
+	
+	public void removeElementalPower(int i, int value) {
+		elementalPower[i] -= value;
+	}
+	
+	public void emptyElementalPower(int i) {
+		elementalPower[i] = 0;
 	}
 }

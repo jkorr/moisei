@@ -2,10 +2,29 @@ package com.daenils.moisei.graphics;
 
 import com.daenils.moisei.Game;
 
+import java.awt.Color;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.imageio.ImageIO;
+
 public class Screen {
 
 	private int width, height;
 	private int[] pixels;
+	private String path;
+	
+	// GUI WINDOW STUFF
+	protected static List<Window> windows = new ArrayList<Window>();
+	protected static Map<String, Integer> mapWindows = new HashMap<String, Integer>();
+	protected static boolean noWindows;
+	
+	// GUI ELEMENTS
+	// TODO: new letter inv art goes here probably
 	
 	public Screen(int width, int height) {
 		this.width = width;
@@ -13,18 +32,69 @@ public class Screen {
 		pixels = new int[width * height];
 	}
 	
-	public void render(Stage stage) {
-
-		if (Game.isGUIrendered()) {
-			renderStage(stage.getStage());
-//		renderGUI(GUI.screenSpellPos1, GUI.screenBottomElements+11, GUI.gui_spelldefQ);
-//		renderGUI(GUI.screenSpellPos2, GUI.screenBottomElements+11, GUI.gui_spelldefW);
-//		renderGUI(GUI.screenSpellPos3, GUI.screenBottomElements+11, GUI.gui_spelldefE);
-//		renderGUI(GUI.screenSpellPos4, GUI.screenBottomElements+11, GUI.gui_spelldefR);
-//		renderGUI(GUI.screenTurninfoPos, GUI.screenBottomElements-15, GUI.gui_turninfo);
-//		renderGUI(GUI.screenPlayerinfoPos, GUI.screenBottomElements-15, GUI.gui_playerinfo);
-//		renderGUI(0, GUI.screenBottomBack, GUI.gui_back);
+	public void update() {
+		// UPDATE NOWINDOWS
+		if (windows.size() > 0) noWindows = false;
+		else noWindows = true;
+				
+		// UPDATE WINDOWS
+		for (int i = 0; i < windows.size(); i++) {
+			windows.get(i).update();
 		}
+						
+		// LOOK FOR REMOVAL
+		for (int i = 0; i < windows.size(); i++) {
+		// System.out.println(windows.get(i).needsClosing);
+			if (windows.size() > 0 && windows.get(i).needsClosing)
+				removeWindow(windows.get(i));
+			}
+		}
+	
+	public void render() {
+		// render blue screen
+		for (int y = 0; y < height; y++)
+			for (int x = 0; x < width; x++) {
+				pixels[x + y * width] = 0xff0000ff;
+			}
+	}
+	
+	public void render(Stage stage) {
+			renderStage(stage);
+
+			// DISPLAY ALL WINDOWS THAT EXIST
+			for (int i = 0; i < windows.size(); i++) windows.get(i).render(this);
+	}
+	
+	public void render(int n) {
+		renderMenu(n);
+		
+		// DISPLAY ALL WINDOWS THAT EXIST
+		for (int i = 0; i < windows.size(); i++) windows.get(i).render(this);
+	}
+	
+	public void renderMenu(int menuId) { 
+		/* 0: main menu * 1: options * 2: spells * 3: equipment * 4: credits	 */
+		int col = 0;
+		switch(menuId) {
+			case 0: {
+				col = 0xff22221F;
+				break;
+			}
+			case 1: {
+				col = 0xff353630;
+				break;
+			}
+		default: {
+				col = 0xff1A4383;
+				System.out.println("ERROR: " + menuId);
+			}
+		}
+		
+		for (int y = 0; y < height; y++)
+			for (int x = 0; x < width; x++) {
+	/*			if ((x % 2 == 0 && y % 2 == 0))  pixels[x + y * width] = 0xff110033;
+				else */ pixels[x + y * width] = col;
+			}
 	}
 	
 	public void clear() {
@@ -39,19 +109,10 @@ public class Screen {
 	
 	public void renderStage(Stage stage) {
 		for (int y = 0; y < height; y++)
-			for (int x = 0; x < width; x++)
-				pixels[x + y * width] = stage.pixels[x + y * width];
-	}
-	
-	public void renderGUI(int xp, int yp, GUI gui) {
-		for (int y = 0; y < gui.height; y++) {
-			int ya = y + yp;
-			for (int x = 0; x < gui.width; x++) {
-				int xa = x + xp;
-				int col = 0xffff00ff;
-				if (gui.pixels[x + y * gui.width] != col) pixels[xa + ya * width] = gui.pixels[x + y * gui.width];
-				}
-		}
+			for (int x = 0; x < width; x++) {
+	/*			if ((x % 2 == 0 && y % 2 == 0))  pixels[x + y * width] = 0xff110033;
+				else */ pixels[x + y * width] = stage.background[x + y * width];
+			}
 	}
 	
 	public void renderSprite(int xp, int yp, Sprite sprite, int scale) {
@@ -67,8 +128,34 @@ public class Screen {
 		}
 	}
 	
+	public void renderSpriteAsColor(int xp, int yp, Sprite sprite, int scale, int c) {
+		// TODO: implement sprite scaling via int scale (100 default would be nice)
+		for (int y = 0; y < sprite.height; y++){
+			int ya = y + yp;
+			for (int x = 0; x < sprite.width; x++) {
+				int xa = x + xp;
+				int col = 0xffff00ff;
+				
+				if (sprite.pixels[x + y * sprite.width] != col) pixels[xa + ya * width] = c;
+			}
+		}
+	}
+	
 	public void renderPixel(int xp, int yp, int color) {
 		pixels[xp + yp* width] = color;
+	}
+	
+	public void renderBorder(int x, int y, int w, int h, int borderwidth, int color) {
+		for (int m = 0; m < borderwidth; m++) {
+			for (int i = 0; i < h-m; i++) { 
+				renderPixel(x+m, y+i, color);
+				renderPixel(x+w-m, y+i, color);
+				for (int k = 0; k < w+1-m; k++) {
+					renderPixel(x+k, y+m, color);
+					renderPixel(x+k, y+h-m, color);
+				}
+			}
+		}
 	}
 	
 	public void renderBgFill(int col) {
@@ -149,6 +236,74 @@ public class Screen {
 			}
 		}
 	}
+	
+	// CREATE A CLEAN WINDOW
+	// LEGACY CONSTRUCTOR (BEFORE ADDING isBorderless)
+	public void createWindow(int x, int y, int width, int height, int bgColor, String title) {
+		createWindow(x, y, width, height, bgColor, false, title);
+	}
+	
+	public static void createWindow(int x, int y, int width, int height, int bgColor, boolean isBorderless, String title) {
+		Window winnie = new Window(x, y, width, height, bgColor, isBorderless, title);
+	//	winnie.add(1, Window.BUTTON_CLOSE);
+	//	winnie.add(4, 1);
+		mapWindows.put(winnie.name, windows.size());
+		windows.add(winnie);
+	}
+	
+	// CREATE A WINDOW WITH DISPLAYTEXT
+	public void createWindow(int x, int y, int width, int height, int bgColor, String title, String displayText) {
+		Window winnie = new Window(x, y, width, height, bgColor, title);
+		winnie.add(displayText);
+		windows.add(winnie);
+	}
+	
+	// CREATE A WINDOW FOR LETTERS
+	public void createWindow(int x, int y, int width, int height, int bgColor, String title, int n) {
+		Window winnie = new Window(x, y, width, height, bgColor, title);
+		winnie.type = n;
+		windows.add(winnie);
+	}
+	
+	// WINDOW STUFF
+		public void addWindow(Window w) {
+			windows.add(w);
+		}
+		
+		public void removeWindow(Window w) {
+			System.out.print("\nWindow '" + w.name + "' is closed.");
+			windows.remove(w);
+		}
+		
+		public String newLnLeftPad(int n) {
+			String returnString = "\n";
+			for (int i = 0; i < n; i++) returnString = returnString.concat("\t");
+			return returnString;  
+		}
+		
+		public int getWindowCount() {
+			return windows.size();
+		}
+		
+		public Window getWindow(int n) {
+			return windows.get(n);
+		}
+		
+		public static Window getWindow(String name) {
+			if (windows.size() > 0)
+				return windows.get(mapWindows.get(name));
+			else return null;
+		}
+		
+		public static boolean getNoWindows() {
+			return noWindows;
+		}
+		
+	
+	public static void killAllWindows() {
+		for (int i = 0; i < windows.size(); i++) windows.remove(i);
+	}
+	
 	
 	public int getWidth() {
 		return width;

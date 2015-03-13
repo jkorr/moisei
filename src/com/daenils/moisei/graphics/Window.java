@@ -10,7 +10,6 @@ import com.daenils.moisei.entities.Letter;
 import com.daenils.moisei.entities.equipments.*;
 
 public class Window {
-	private Screen screen;
 	protected int x, y, width, height;
 	protected int bgColor;
 	protected String title;
@@ -48,9 +47,7 @@ public class Window {
 	public static final String BUTTON_NO = "[No]";
 	
 	
-	public Window(Screen screen, int x, int y, int width, int height, int bgColor, String title) {
-		this.screen = screen;
-		
+	public Window(int x, int y, int width, int height, int bgColor, String title) {
 		this.x = x;
 		this.y = y;
 		this.width = width;
@@ -62,8 +59,7 @@ public class Window {
 		font = new Text();
 	}
 	
-	public Window(Screen screen, int x, int y, int width, int height, int bgColor, boolean isBorderless, String title) {
-		this.screen = screen;
+	public Window(int x, int y, int width, int height, int bgColor, boolean isBorderless, String title) {
 		this.isBorderless = isBorderless;
 		
 		this.x = x;
@@ -78,9 +74,7 @@ public class Window {
 	}
 	
 	public void update() {
-	
-		
-		// CHECK CONTENTð
+		// CHECK CONTENT
 		if (contents.size() > 0) this.hasContent = true;
 		else this.hasContent = false;
 		
@@ -90,16 +84,14 @@ public class Window {
 		if (Mouse.getX() > 2 * (x + width - 10) && Mouse.getX() < 2 * (x + width)
 				&& Mouse.getY() > 2 * (y) && Mouse.getY() < 2 * (y + 10)
 				&& Mouse.getB() == 1) this.needsClosing = true;
-		
-		
 	}
 	
-	public void render() {
+	public void render(Screen screen) {
 		if (!this.isBorderless) {
 			screen.renderGUIWindow(x, y, width, height, bgColor);
 			screen.renderGUIWindow(x, y, width, height - (height - 17), bgColor / 2); 
 			screen.renderGUIWindowBorder(this, 2, 2, 0xffffffff, 0xffffffff);	
-			renderTitleTop();
+			renderTitleTop(screen);
 		}
 		
 		if (this.hasGrid) {
@@ -127,7 +119,7 @@ public class Window {
 						pos = 0;
 					}
 					screen.renderSprite(x + ITEM_POSITION1[0] + pos * ITEM_OFFSET, y + ITEM_POSITION1[1] + line * ITEM_OFFSET, contents.get(i).getIcon(), 0);
-					renderContentInfo(i, pos, line);
+					renderContentInfo(i, pos, line, screen);
 					pos++;
 				}
 			}
@@ -141,33 +133,43 @@ public class Window {
 						pos = 0;
 					}
 					// RENDER BORDER DEPENDING ON ELEMENT:
+					
 					for (int l = 0; l < letterContents.get(i).getIcon().height; l++) {
 						for (int k = 0; k < letterContents.get(i).getIcon().width; k++) {
 							screen.renderPixel(k + x + ITEM_POSITION1[0] + pos * ITEM_OFFSET, l + y + ITEM_POSITION1[1] + line * ITEM_OFFSET, letterContents.get(i).getFrame());
 						}
 					}
-
-					for (int l = 0; l < letterContents.get(i).getIcon().height; l++) {
-						for (int k = 0; k < letterContents.get(i).getIcon().width / 2; k++) {
-							if (letterContents.get(i).getIsSelectedInRadialMenu()) screen.renderPixel(k + x + ITEM_POSITION1[0] + pos * ITEM_OFFSET, l + y + ITEM_POSITION1[1] + line * ITEM_OFFSET, 0xffff00ff);
-							if (letterContents.get(i).getIsSelected()) screen.renderPixel(k + (x + (letterContents.get(i).getIcon().width / 2)) + ITEM_POSITION1[0] + pos * ITEM_OFFSET, l + y + ITEM_POSITION1[1] + line * ITEM_OFFSET, 0xffffff00);
-						}
-					}
 					
 					screen.renderSprite(x + ITEM_POSITION1[0] + pos * ITEM_OFFSET, y + ITEM_POSITION1[1] + line * ITEM_OFFSET, letterContents.get(i).getIcon(), 0);
-					updateLetterContent(i, pos, line);
+					
+					// SELECTION MARKERS
+					renderHollowBorder(line, pos, i, screen);
+					
+					refreshLetterContent(i, pos, line, screen);
 					pos++;
 				}
 			}
+		}
+		
+		
+		
+		if (displayText != null) renderDisplayText(screen);
+		if (dialogueOption != null) renderDialogueOption(screen);
+	}
+
+	private void renderHollowBorder(int line, int pos, int i, Screen screen) {
+		if (letterContents.get(i).getIsSelectedInRadialMenu()) screen.renderBorder(x + ITEM_POSITION1[0] + pos * ITEM_OFFSET, y + ITEM_POSITION1[1] + line * ITEM_OFFSET, 29, 29, 2, 0xffa800ff);
+		if (letterContents.get(i).getIsSelected()) screen.renderBorder(x + ITEM_POSITION1[0] + pos * ITEM_OFFSET, y + ITEM_POSITION1[1] + line * ITEM_OFFSET, 29, 29, 2, 0xffffffff);
+		
+	/*	for (int l = 0; l < 2; l++) {
+			for (int k = 0; k < letterContents.get(i).getIcon().width - 4; k++) {
+				if (letterContents.get(i).getIsSelectedInRadialMenu()) screen.renderPixel(k + (x+2) + ITEM_POSITION1[0] + pos * ITEM_OFFSET, l + (y+2) + ITEM_POSITION1[1] + line * ITEM_OFFSET, 0xffff00ff);
+				if (letterContents.get(i).getIsSelected()) screen.renderPixel(k + (x+2) + ITEM_POSITION1[0] + pos * ITEM_OFFSET, l + (y+2) + ITEM_POSITION1[1] + line * ITEM_OFFSET, 0xffffff00);
 			}
-		
-		
-		
-		if (displayText != null) renderDisplayText();
-		if (dialogueOption != null) renderDialogueOption();
+		} */
 	}
 	
-	private void renderContentInfo(int i, int pos, int line) {
+	private void renderContentInfo(int i, int pos, int line, Screen screen) {
 	//	System.out.print("\n" + contents.get(i).getShowTooltip());
 		if (Mouse.getX() > (x + ITEM_POSITION1[0] + pos * ITEM_OFFSET) * 2 && Mouse.getX() < (x + ITEM_POSITION1[0] + pos * ITEM_OFFSET) * 2 + 60
 				&& Mouse.getY() > (y + ITEM_POSITION1[1] + line * ITEM_OFFSET) * 2 && Mouse.getY() < (y + ITEM_POSITION1[1] + line * ITEM_OFFSET) * 2+ 60) {
@@ -179,7 +181,7 @@ public class Window {
 		else contents.get(i).setShowTooltip(false);
 	}
 	
-	private void updateLetterContent(int i, int pos, int line) {
+	private void refreshLetterContent(int i, int pos, int line, Screen screen) {
 		if (Mouse.getX() > (x + ITEM_POSITION1[0] + pos * ITEM_OFFSET) * 2 && Mouse.getX() < (x + ITEM_POSITION1[0] + pos * ITEM_OFFSET) * 2 + 60
 				&& Mouse.getY() > (y + ITEM_POSITION1[1] + line * ITEM_OFFSET) * 2 && Mouse.getY() < (y + ITEM_POSITION1[1] + line * ITEM_OFFSET) * 2+ 60) {
 			if (Mouse.getB() == -1) {
@@ -204,15 +206,15 @@ public class Window {
 		setRequestedItem(equipment);
 	}
 
-	private void renderTitleTop() {
+	private void renderTitleTop(Screen screen) {
 		font.render((x-6) + 5, y + 5, -8, 0xffffffff, Text.font_default, 1.0, title + " (" + name + ")", screen);
 	}
 	
-	private void renderDisplayText() {
+	private void renderDisplayText(Screen screen) {
 		font.render((x-6) + 5, y + 5 + 15, -8, 0xffffffff, Text.font_default, 1, displayText, screen);
 	}
 	
-	private void renderDialogueOption() {
+	private void renderDialogueOption(Screen screen) {
 		font.render(this.x, this.y + this.height - 10, -8, 0xffffffff, Text.font_default, 1, dialogueOption, screen);
 		
 		if(Mouse.getX() > this.x * 2

@@ -11,12 +11,10 @@ import java.util.List;
 import java.util.Scanner;
 
 import com.daenils.moisei.CombatLog;
-import com.daenils.moisei.entities.Gamestats;
+import com.daenils.moisei.Game;
+import com.daenils.moisei.entities.Gameplay;
 
 public class FileManager {
-	private String path;
-	private URL url;
-	
 	public static List<String> lines = new ArrayList<String>();
 	
 	public static InputStream inAbilities;
@@ -37,6 +35,9 @@ public class FileManager {
 
 	//CONSTRUCTOR
 	public FileManager() {
+	}
+	
+	public static void load() {
 		loadAbilities();
 		loadMonsters();
 		loadWeapons();
@@ -45,9 +46,9 @@ public class FileManager {
 	}
 	
 	//LOADERS
-	public void loadAbilities() {
-		this.path = "/data/abilities.txt";
-		this.url = FileManager.class.getResource(path);
+	public static void loadAbilities() {
+		String path = "/data/abilities.txt";
+		URL url = FileManager.class.getResource(path);
 		
 //		try {
 			inAbilities = FileManager.class.getResourceAsStream(path);
@@ -58,9 +59,9 @@ public class FileManager {
 		System.out.println("File (" + url + ") has loaded successfully.");
 	}
 	
-	public void loadMonsters() {
-		this.path = "/data/monsters.txt";
-		this.url = FileManager.class.getResource(path);
+	public static void loadMonsters() {
+		String path = "/data/monsters.txt";
+		URL url = FileManager.class.getResource(path);
 		
 //		try {
 			inMonsters = FileManager.class.getResourceAsStream(path);
@@ -72,9 +73,9 @@ public class FileManager {
 		System.out.println("File (" + url + ") has loaded successfully.");
 	}
 	
-	public void loadWeapons() {
-		this.path = "/data/weapons.txt";
-		this.url = FileManager.class.getResource(path);
+	public static void loadWeapons() {
+		String path = "/data/weapons.txt";
+		URL url = FileManager.class.getResource(path);
 		
 //		try {
 			inWeapons = FileManager.class.getResourceAsStream(path);
@@ -86,7 +87,7 @@ public class FileManager {
 		System.out.println("File (" + url + ") has loaded successfully.");
 	}
 	
-	public void loadLetters() {
+	public static void loadLetters() {
 		for (char i = 'A'; i < '['; i++) {
 			loadLetter(i + ".txt");
 		}
@@ -94,9 +95,9 @@ public class FileManager {
 		System.out.println("ALL letter files have been loaded successfully.");
 	}
 	
-	public void loadLetter(String filename) {
-		this.path = "/data/eowl/" + filename;
-		this.url = FileManager.class.getResource(path);
+	public static void loadLetter(String filename) {
+		String path = "/data/eowl/" + filename;
+		URL url = FileManager.class.getResource(path);
 
 		inLetters = FileManager.class.getResourceAsStream(path);
 		System.out.println("File (" + url + ") has been loaded successfully."); // TODO: This is a lie.
@@ -110,9 +111,9 @@ public class FileManager {
 		in.close();
 	}
 	
-	public void loadLetterDroptable() {
-		this.path = "/data/droptable_letters.txt";
-		this.url = FileManager.class.getResource(path);
+	public static void loadLetterDroptable() {
+		String path = "/data/droptable_letters.txt";
+		URL url = FileManager.class.getResource(path);
 		
 //		try {
 			inLetterDroptable = FileManager.class.getResourceAsStream(path);
@@ -128,7 +129,7 @@ public class FileManager {
 //		createStatisticsFile();
 			try {
 				java.io.PrintWriter out = new java.io.PrintWriter(FileManager.fileStatistics);
-				out.println(Gamestats.readGameStats());
+				out.println(Gameplay.readGameStats());
 				out.close();
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();

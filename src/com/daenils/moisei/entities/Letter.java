@@ -19,7 +19,7 @@ import com.daenils.moisei.graphics.Sprite;
 
 public class Letter {
 	public enum Element {
-		NEUTRAL, FIRE, WATER, EARTH, WIND;
+		NEUTRAL, FIRE, WATER, EARTH, WIND, MAGIC;
 	}
  	
 	private static int idCount;
@@ -48,6 +48,7 @@ public class Letter {
 		else if (letterElement == Element.WATER) this.frameColor = 0xff0000ff;
 		else if (letterElement == Element.EARTH) this.frameColor = 0xff00ff00;
 		else if (letterElement == Element.WIND) this.frameColor = 0xffbbbbbb;
+		else if (letterElement == Element.MAGIC) this.frameColor = 0xffaa00aa;
 		else this.frameColor = 0;
 	
 	}

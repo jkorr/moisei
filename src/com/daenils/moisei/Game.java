@@ -1,29 +1,22 @@
 package com.daenils.moisei;
 
 import java.awt.Canvas;
-import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
-import java.awt.Graphics;
-import java.util.concurrent.locks.Lock;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
 
 import com.daenils.moisei.entities.Gameplay;
-import com.daenils.moisei.entities.Gamestats;
-import com.daenils.moisei.entities.Monster;
-import com.daenils.moisei.entities.MonsterAI;
-import com.daenils.moisei.entities.Player;
-import com.daenils.moisei.entities.equipments.Ability;
 import com.daenils.moisei.files.FileManager;
-import com.daenils.moisei.graphics.Text;
-import com.daenils.moisei.graphics.GUI;
+import com.daenils.moisei.graphics.Notification;
 import com.daenils.moisei.graphics.Screen;
 import com.daenils.moisei.graphics.Stage; // probably it should be in its own package later (e.g. moisei.stage.stage)
+import com.daenils.moisei.graphics.Text;
 import com.daenils.moisei.input.Keyboard;
 import com.daenils.moisei.input.Mouse;
 
@@ -34,10 +27,11 @@ public class Game extends Canvas implements Runnable {
 	private static int width = 640;
 	private static int height = (width / 16 * 9);
 	private static String title = "      MOISEI";
-	private static String version = "0.4.2";
+	private static String version = "0.5.0";
 	private static String projectStage = "f&f alpha";
 	private static boolean fpsLock = true;
-	private static boolean renderGUI;
+	private static byte gameState = 0, newGameState = 0; // -1: Blank; 0: Main Menu; 1-4: reserved for menus; 5: game
+	
 
 	private Thread thread;
 	private JFrame frame;
@@ -48,16 +42,9 @@ public class Game extends Canvas implements Runnable {
 
 	// I'll see if this works out, but I currently don't have any other idea
 	// other than having this as static. I mean it only has ONE instance
-	// under any given circumstances, so I guess no harm's done, right?
+	// under any given circumstances, so I guess no harm's done, right? 
 	private static Gameplay gameplay;
-	private GUI gui;
-	private Gamestats gamestats;
-//	private FileManager filemanager;
 	private static Stage stage;
-
-	private Player player;
-	private MonsterAI monsterAI;
-	private Monster dummyMonster;
 
 	private boolean running = false;
 
@@ -65,6 +52,15 @@ public class Game extends Canvas implements Runnable {
 			BufferedImage.TYPE_INT_RGB);
 	private int[] pixels = ((DataBufferInt) image.getRaster().getDataBuffer())
 			.getData();
+	
+	// MENU STUFF
+	private List<Notification> notifications = new ArrayList<Notification>();
+	
+	private int menuOptionSelected = -1;
+	private boolean onCooldown = false;
+	private long cdStart, cdEnd, cdDuration;
+	private int stageSelected = 0;
+	private String selectionString = stageSelected + "";
 
 	public Game() {
 		Dimension size = new Dimension(width * scale, height * scale);
@@ -77,15 +73,8 @@ public class Game extends Canvas implements Runnable {
 		
 		key = new Keyboard();
 		mouse = new Mouse();
+
 		
-		new FileManager();
-		
-		// Create statistics file (once per launch)
-		FileManager.createStatisticsFile();
-		// Create combat log file (once per launch)
-		FileManager.createCombatLogFile();
-		
-		freshGame();
 		
 		addKeyListener(key);
 		addMouseListener(mouse);
@@ -93,24 +82,26 @@ public class Game extends Canvas implements Runnable {
 	}
 	
 	private void freshGame() {
-		freshGame(Stage.map0);
+	//	if (stage == null && gameState == 5) 
+		freshGame(0);
 	}
 	
-	private void freshGame(Stage s) {
-		CombatLog.println("A new game has started.");
-		stage = new Stage(s);
-		gui = new GUI(screen); // needed for windows
-		gameplay = new Gameplay(key, mouse, stage, this, gui);
-		System.out.println("Gameplay control is running.");
-		gamestats = new Gamestats(stage);
-		System.out.println("Statistics collection is running.");
-		monsterAI = new MonsterAI(stage);
-		
-//		Later you might want to load the abilities only once, so:
- //		Ability.load();
-
-		renderGUI = true;
-		gameplay.setFirst();
+	private void freshGame(int s) {
+		if (s >= 0 && s < Stage.MAX_STAGE) {
+			Screen.killAllWindows();
+			FileManager.load();
+			FileManager.createStatisticsFile();
+			FileManager.createCombatLogFile();
+			
+			CombatLog.println("A new game has started.");
+			stage = new Stage(key, mouse, s);
+			gameplay = new Gameplay(stage);
+			System.out.println("Gameplay control is running.");
+			System.out.println("Statistics collection is running.");
+			
+			gameplay.setFirst();
+		} else
+			System.err.println("Stage " + s + " does not exist.");
 	}
 
 	public synchronized void start() {
@@ -118,6 +109,9 @@ public class Game extends Canvas implements Runnable {
 		thread = new Thread(this, "Display");
 		thread.start();
 		requestFocus();
+		
+		Text.fillColorList();
+		launchMainMenu();
 	}
 
 	public synchronized void stop() {
@@ -130,7 +124,6 @@ public class Game extends Canvas implements Runnable {
 	}
 
 	public void run() {
-
 		long lastTime = System.nanoTime();
 		long timer = System.currentTimeMillis();
 		final double ns = 1000000000.0 / 60.0;
@@ -152,11 +145,10 @@ public class Game extends Canvas implements Runnable {
 			frames++;
 			
 			if (fpsLock) try{Thread.sleep((lastTime-System.nanoTime() + (long) ns) / 1000000);} catch(Exception e) {};
-			
 
 			if (System.currentTimeMillis() - timer > 1000) {
 				timer += 1000;
-				frame.setTitle(title + " " + version + " | " + updates + " ups, " + frames
+				frame.setTitle(title + " " + version + " [" + gameState +"] | " + updates + " ups, " + frames
 						+ " fps" );
 				updates = 0;
 				frames = 0;
@@ -166,29 +158,144 @@ public class Game extends Canvas implements Runnable {
 	}
 
 	public void update() {
-		// render GUI if the game is on
-		if (player != null) renderGUI = true;
+		// GLOBAL NOTIFS
+		for (int i = 0; i < notifications.size(); i++) {
+			notifications.get(i).update();
+		}
+		removeNotifications();
+		
+		// UPDATE MENU LOGIC
+		if (gameState == 0) updateMainMenu();
+		else if (gameState == 1) updateStageSelectionMenu();
+		
+		if (onCooldown && System.nanoTime() > cdEnd) onCooldown = false;
+		
+		// 0: MAIN MENU
+		if (newGameState == 0 && gameState != 0) {
+			if (stage != null) clearStage();
+			launchMainMenu();
+			gameState = 0;
+			System.out.println("0");
+		}
+		
+		// 1: STAGE SELECTION
+		if (newGameState == 1 && gameState != 1) {
+			launchStageSelectionMenu();
+			gameState = 1;
+		}
+		
+		// 5: NEW GAME
+		if (newGameState == 5 && gameState != 5) {
+			freshGame();
+			gameState = 5;
+			System.out.println("5");
+		}
+		
+		screen.update();
 		
 		// don't forget to drop the other objects' update() methods here
 		key.update();
+		
 		if (stage != null) stage.update();
-//		if (player != null) player.update();
-		if (monsterAI != null) monsterAI.update();
-		// dummyMonster.update();
-		if (gamestats != null) gamestats.update();
 		if (gameplay != null) gameplay.update();
-		if (gui != null) gui.update();
 		
 		
 		// KEY INPUT
-		if (key.debugForceNewWave && stage != null) clearStage();
-		if (key.debugAddMonster && stage == null) freshGame(Stage.st1a);
-
+//		if (key.debugForceNewWave) newGameState = 5;
+		if (key.debugAddMonster) newGameState = 0;
+	}
+	
+	private void updateMainMenu() {
+		handleOptionSelection(0);
 		
-		// temporarily here
-//		temp_turninfo = "playerturn: " + gameplay.getIsPlayerTurn()
-//				+ " | monsterturn: " + gameplay.getIsMonsterTurn();
+		if (menuOptionSelected == 0 && key.playerEndTurn && !onCooldown) {
+			newGameState = 5;
+		}
+		if (menuOptionSelected == 1 && key.playerEndTurn && !onCooldown) {
+			System.out.println("Stage selection will be added later on.");
+			newGameState = 1;
+			enableCooldown(300);
+		}
+		if (menuOptionSelected == 2 && key.playerEndTurn && !onCooldown) {
+			System.out.println("Settings will be added later on.");
+			enableCooldown(300);
+		}
+		if (menuOptionSelected == 3 && key.playerEndTurn && !onCooldown) {
+			System.exit(0);
+		}
+	}
+	
+	private void updateStageSelectionMenu() {
+		handleOptionSelection(1);
+		if (stageSelected < 10) selectionString = "0" + stageSelected;
+		else selectionString = stageSelected + "";
+		
+		if (key.playerEndTurn && !onCooldown) {
+			freshGame(stageSelected);
+		}
+	}
 
+	private void handleOptionSelection(int menu) {
+		switch(menu) {
+			case 0: {
+				if (key.radialChoice[2] && menuOptionSelected < 3 && !onCooldown) {
+					menuOptionSelected++;
+					enableCooldown(300);
+				} else if (key.radialChoice[0] && menuOptionSelected > 0 && !onCooldown) {
+					menuOptionSelected--;
+					enableCooldown(300);
+				}
+				break;
+			}
+			case 1: {
+				if (key.radialChoice[3] && stageSelected > 0 && !onCooldown) {
+					stageSelected--;
+					enableCooldown(300);
+				} else if (key.radialChoice[1] && stageSelected < 40 && !onCooldown) {
+					stageSelected++;
+					enableCooldown(300);
+				}
+				break;
+			}
+			default: System.err.println("ERROR");
+		}
+	}
+	
+	private void enableCooldown(int dur) {
+		// duration in ms
+		onCooldown = true;
+		cdDuration = dur * 1000000L;
+		cdStart = System.nanoTime();
+		cdEnd = cdStart + cdDuration;
+	//	System.out.println(cdStart + " " + cdDuration + " " +  cdEnd);
+	}
+
+	private void launchMainMenu() {
+		Screen.killAllWindows();
+		String[] menuOptionString = {"New Game", "Continue", "Select Stage", "Settings", "Exit Game"};
+		Screen.createWindow(280, 120, 200, 150, 0, true, "Main Menu");
+		Screen.getWindow("mainMenu").add("- MAIN MENU -"
+				+ "\n\n  " + menuOptionString[0]
+				+ "\n\n  " + menuOptionString[2]
+				+ "\n\n  " + menuOptionString[3]
+				+ "\n\n  " + menuOptionString[4]
+						);
+		
+		Notification welcome = new Notification("Welcome back, [playerName]!", 10, Text.font_default, 0xffffffff, true, 2, 346);
+		notifications.add(welcome);
+	}
+	
+	private void launchStageSelectionMenu() {
+		Screen.killAllWindows();
+		Screen.createWindow(280, 120, 200, 150, 0, true, "Select Stage");
+		Screen.getWindow("selectStage").add("- STAGE SEL -");
+	}
+	
+	public void renderSelectionMarker() {
+		int[] sel = {156, 172, 188, 204};
+		for (int i = 0; i < sel.length; i++) {
+			if (menuOptionSelected == i) new Text().render(283, sel[i], -8, 0xffffffff, Text.font_default, 1, ">", screen);
+		}
 	}
 
 	public void render() {
@@ -200,16 +307,29 @@ public class Game extends Canvas implements Runnable {
 		Graphics g = bs.getDrawGraphics();
 
 		screen.clear();
-		screen.render(stage);
-
-		if (stage != null) stage.render(screen);
+		
+		
+		if (stage != null)  {
+			screen.render(stage);
+			stage.render(screen);
+		} else {
+			screen.render(gameState);
+			// GLOBAL NOTIFS
+			for (int i = 0; i < notifications.size(); i++) {
+				notifications.get(i).render(screen);
+			}
+	
+			// TODO: fix this so you won't have to do this in order to render text
+			if (gameState == 0) {
+				renderSelectionMarker();
+			} else if (gameState == 1) {
+				new Text().render(261, 137, 10, 0xffffffff, Text.font_kubastaBig, 1, selectionString, screen);
+			}
+		}
+		
 		if (gameplay != null) gameplay.render(screen);
-		if (player != null) player.render(screen);
-		if (gui != null) gui.render();
-		// dummyMonster.render(screen);
 
-		
-		
+	
 
 		// don't forget to drop the other objects' render() methods here
 
@@ -258,10 +378,6 @@ public class Game extends Canvas implements Runnable {
 		return fpsLock;
 	}
 	
-	public static boolean isGUIrendered() {
-		return renderGUI;
-	}
-	
 	public static String isFpsLockedString() {
 		if(Game.isFpsLocked()) return "60FPS";
 		else return "FPS UNLOCKED";
@@ -279,13 +395,9 @@ public class Game extends Canvas implements Runnable {
 	
 	public void clearStage() {
 		CombatLog.println("Game ended by player.\n");
-		renderGUI = false;
 		
-		gamestats = null;
-		monsterAI = null;
-		gui = null;
 		gameplay = null;
-		stage.resetAll();
+
 		stage.killAll();
 		stage = null;
 	}
@@ -293,6 +405,15 @@ public class Game extends Canvas implements Runnable {
 	public void createStage() {
 		freshGame();
 	}
+	
+	private void removeNotifications() {
+		for (int i = 0; i < notifications.size(); i++) {
+			if (notifications.get(i).getNeedsRemoved()) {
+				notifications.remove(i);
+				System.out.println("Notification removed");
+			}
+		}
+}
 
 	public static void main(String[] args) {	
 		Game game = new Game();

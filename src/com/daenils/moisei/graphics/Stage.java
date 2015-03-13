@@ -12,55 +12,77 @@ import com.daenils.moisei.Game;
 import com.daenils.moisei.entities.Entity;
 import com.daenils.moisei.entities.Monster;
 import com.daenils.moisei.entities.Player;
+import com.daenils.moisei.input.Keyboard;
+import com.daenils.moisei.input.Mouse;
 
 public class Stage {
-	private Stage playStage;
+	public static final int MAX_STAGE = 40;
 	private Player player;
 	
-	private String path;
-	private int width, height;
+	// BACKGROUND
+	private String bgPath;
+	private int bgWidth, bgHeight;
+	protected int[] background;
+	
+	protected int id, world, worldOverride;
+	protected String title, description;
+	protected String scriptfile;
 	
 	private List<Entity> entities = new ArrayList<Entity>();
 	private List<Monster> monsters = new ArrayList<Monster>();
+	private boolean allDone;
 	
-//	private static int selector = (int) (Math.random() * 10);
-	
-	protected int[] pixels;
-	
-	// STAGES
-//	private static Stage st_demo = new Stage("/textures/stages/st_demo.png");
-//	private static Stage st_altdemo = new Stage("/textures/stages/st_altdemo.png");
-	public static Stage st1 = new Stage("/textures/stages/st1.png");
-	public static Stage st1a = new Stage("/textures/stages/st1a.png");
-	public static Stage st1b = new Stage("/textures/stages/st1b.png");
-	public static Stage st1c = new Stage("/textures/stages/st1c.png");
-	public static Stage stx = new Stage("/textures/stages/stx.png");
-	public static Stage map0 = new Stage("/textures/stages/map0a.png");
-	
-	public Stage(Stage stage) {
-		this.playStage = stage;
+	public Stage(Keyboard input, Mouse inputM, int id) {
+		// SETTING STAGE
+		this.id = id;
+		this.world = id / 10;
+		loadBackground("/textures/stages/map" + world + ".png");
+		// ADDING PLAYER
+		setPlayer(new Player(input, inputM, null, this));
 	}
 	
-	public Stage(String path) {
-		this.path = path;
-		this.width = Game.getRenderWidth();
-		this.height = Game.getRenderHeight();
-		load();
+	public void loadBackground(String path) {
+		System.out.println("\n@@@ STAGE: " + id + " | FILENAME: " + "map" + world + ".png @@@");
+		this.bgPath = path;
+		this.bgWidth = Game.getRenderWidth();
+		this.bgHeight = Game.getRenderHeight();
+		loadImage();
+	}
+	
+	public void loadImage() {
+		background = new int[bgWidth * bgHeight];
+		try {
+			BufferedImage image = ImageIO.read(Stage.class.getResource(bgPath));
+			int w = image.getWidth();
+			int h = image.getHeight();
+			image.getRGB(0, 0, w, h, background, 0, w);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		System.out.println("Stage (" + Stage.class.getResource(bgPath) + ") is loaded successfully.");
 	}
 
 	public void update() {
 		player.update();
 		
-		if (this.player == null && monsters.size() > 0) {
-			player = (Player) (monsters.get(0).getCurrentTarget());
-			System.out.print("\nPlayer has been added to stage.");
+		if (this.player.getCurrentTarget() == null && monsters.size() > 0) {
+			player.setDefaultTarget(monsters.get(0));
+			System.out.print("\nPlayer has targeted the monster.");
 		}
 		for (int i = 0; i < entities.size(); i++) {
 			entities.get(i).update();
 		}
 		
+		for (int i = 0; i < getMonsters().size(); i++) {
+			getMonsters().get(i).update();
+		}
+		
 	//	System.out.println(getMonsters().size());
 		remove();
+		
+		checkIfAllDone();
+		endTurnIfAllDone();
+		
 	}
 	
 	public void render(Screen screen) {
@@ -75,6 +97,31 @@ public class Stage {
 		}
 		for (int i = 0; i < monsters.size(); i++) {
 			monsters.get(i).render(screen);
+		}
+	}
+	
+	private void checkIfAllDone() {
+		if (Game.getGameplay().getIsMonsterTurn()) {
+			int n = 0;
+			for(int i = 0; i < getMonsters().size(); i++) {
+				if (getMonsters().get(i).getHealth() > 0 && getMonsters().get(i).getActionPoints() == 0) {
+					n++;
+				}
+			}
+	//		System.out.print("\n" + n);
+		//	System.out.println("\n " + Game.getGameplay().monstersAlive);
+			if (n == Game.getGameplay().getMonstersAlive()) allDone = true;
+		}
+		
+	}
+	
+	private void endTurnIfAllDone() {
+		if (allDone && Game.getGameplay().getMonstersAlive() > 0) {
+				Game.getGameplay().monsterEndTurn();				
+				allDone = false;
+		} else if (allDone && Game.getGameplay().getMonstersAlive() <= 0) {
+			Game.getGameplay().setPlayerTurn(true);
+			Game.getGameplay().setMonsterTurn(false);
 		}
 	}
 	
@@ -126,37 +173,9 @@ public class Stage {
 			return returnValue;
 	}
 	
-	public void load() {
-		pixels = new int[width * height];
-		try {
-			BufferedImage image = ImageIO.read(Stage.class.getResource(path));
-			int w = image.getWidth();
-			int h = image.getHeight();
-			image.getRGB(0, 0, w, h, pixels, 0, w);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		System.out.println("Stage (" + Stage.class.getResource(path) + ") is loaded successfully.");
-	}
-	
-	// METHOD to pass a stage to the Screen class
-	// Currently it already has a VERY BASIC "give me a random stage" feature, but its just for fun
-	public Stage getStage() {
-		 return playStage;
-			//	return st_1a;
-	}
-	
-	public void setRandomStage() {
-		int selector = (int) (Math.random() * 10);
-		System.out.println(selector);
-		if (selector > 5) playStage = st1c;
-		else playStage = st1a;
-//		if (selector > 1) return st_1;
-//		resetAll();
-	}
-	
 	public void setPlayer(Player p) {
 		player = p;
+		System.out.print("\nPlayer has been added to stage.");
 	}
 	
 	public void forceRemove(Entity e) {
@@ -164,13 +183,13 @@ public class Stage {
 		CombatLog.println("Monster removed");
 	}
 	
-	public void resetAll() {
-		playStage = null;
-	}
+
 
 	public void killAll() {
 		for (int i = 0; i < monsters.size(); i++)
 			monsters.remove(i);
+		
+		Screen.killAllWindows();
 	}
 	
 }

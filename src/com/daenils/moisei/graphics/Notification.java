@@ -1,5 +1,10 @@
 package com.daenils.moisei.graphics;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.swing.colorchooser.ColorSelectionModel;
+
 public class Notification {
     protected int x, y;
     protected int id;
@@ -13,11 +18,17 @@ public class Notification {
    
     private Text font = new Text();
     protected Sprite[] f;
-    protected int color;
+    protected int color, spacing;
+    protected boolean hasShadow;
+    
+  
 
-    public Notification(String text, int duration, Sprite[] f, int color, int x, int y) {
+    public Notification(String text, int duration, Sprite[] f, int color, boolean hasShadow, int x, int y) {
         nextId++;
         this.startTime = System.nanoTime();
+        
+        if (f == Text.font_kubastaBig) this.spacing = 4;
+        else this.spacing = -8;
         
         this.id = nextId;
         this.x = x;
@@ -26,6 +37,7 @@ public class Notification {
         this.duration = duration * 1000000000L;
         this.color = color;
         this.f = f;
+        this.hasShadow = hasShadow;
 
         this.endTime = startTime + this.duration;
      //   printInfo();
@@ -40,10 +52,20 @@ public class Notification {
     }
 
     public void render(Screen screen) {
-        if (System.nanoTime() < endTime)
-            font.render(x, y, -8, color, f, 1, text, screen);
+        if (System.nanoTime() < endTime) {
+        	
+        	if (color == -1) {
+        		if (this.hasShadow)
+        			font.renderColored(x, y+1, spacing, 0xff555555, f, 1, text, screen);
+        		
+        		font.renderColored((x), y, spacing, color, f, 1, text, screen);                     		
+        	}
+        	else {
+        		font.render(x, y, spacing, color, f, 1, text, screen);
+        	}
+        }
     }
-
+    
     public boolean getNeedsRemoved() {
     	return needsRemoval;
     }

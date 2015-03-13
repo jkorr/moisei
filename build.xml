@@ -7,7 +7,7 @@
 	                <attribute name="Main-Class" value="com.daenils.moisei.Game"/>
                 	<attribute name="Class-Path" value="."/>
             	</manifest>
-            	<fileset dir="D:/Dropbox/sandbox/eclipse-workspace/Moisei/res"/>
+            	<fileset dir="/home/daenil/Dropbox/sandbox/eclipse-workspace/Moisei/res"/>
 	</jar>
   </target>
 </project>

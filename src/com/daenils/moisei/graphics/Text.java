@@ -3,6 +3,8 @@ package com.daenils.moisei.graphics;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.daenils.moisei.Game;
 
@@ -17,14 +19,16 @@ public class Text {
 	public static Sprite[] font_kubastaBig = Sprite.split(font1);
 //	public static Sprite[] font_celticbit = Sprite.split(font2);
 	
+	private static Map<Integer, Integer> colorList = new HashMap<Integer, Integer>();
+	
 	private static String charIndex = "ABCDEFGHIJKLM" + //
 										"NOPQRSTUVWXYZ" +
 										"abcdefghijklm" + 
 										"nopqrstuvwxyz" +
 										"0123456789.,;" +
 										":?!'\"/\\%|()-+" +
-										"[]{}=&@$_#~§*" +
-										"<>°€£ß÷";
+										"[]{}=&@$_#~ï¿½*" +
+										"<>ï¿½ï¿½ï¿½ï¿½ï¿½";
 	public Text() {
 		
 	}
@@ -59,7 +63,7 @@ public class Text {
 	}
 	
 	// METHOD WITH FONT & SCALE SELECTION
-	public void render(int x, int y, int spacing, int color, Sprite[] font, double scale, String text, Screen screen) {
+	public  void render(int x, int y, int spacing, int color, Sprite[] font, double scale, String text, Screen screen) {
 		int line = 0;
 		int xOffset = 0, yOffset = 0;
 		for (int i = 0; i < text.length(); i++) {
@@ -71,5 +75,48 @@ public class Text {
 			screen.renderCharacter(x + xOffset, y + line * 8 + yOffset, font[index], scale, color);
 		}
 	}
+	
+	// METHOD WITH COLOR SUPPORT (NO DIGITS)
+		public void renderColored(int x, int y, int spacing, int color, Sprite[] font, double scale, String text, Screen screen) {
+			int col  = color;
+			int line = 0;
+			int xOffset = 0, yOffset = 0;
+			for (int i = 0; i < text.length(); i++) {
+				xOffset += 14 + spacing;
+				char currentChar = text.charAt(i);
+				int index = charIndex.indexOf(currentChar);
+				if (currentChar == '\n') {line++; xOffset = 0;}
+				if (currentChar == '0') { col = colorList.get(0); xOffset -= (14 + spacing); index = -1; }
+				if (currentChar == '1') { col = colorList.get(1); xOffset -= (14 + spacing); index = -1; }
+				if (currentChar == '2') { col = colorList.get(2); xOffset -= (14 + spacing); index = -1; }
+				if (currentChar == '3') { col = colorList.get(3); xOffset -= (14 + spacing); index = -1; }
+				if (currentChar == '4') { col = colorList.get(4); xOffset -= (14 + spacing); index = -1; }
+				if (currentChar == '5') { col = colorList.get(5); xOffset -= (14 + spacing); index = -1; }
+				if (index == -1) continue;
+				
+				if (color == -1) screen.renderCharacter(x + xOffset, y + line * 8 + yOffset, font[index], scale, col);
+				else screen.renderCharacter(x + xOffset, y + line * 8 + yOffset, font[index], scale, color);
+			}
+		}
 
+		public static void fillColorList() {
+	    	int[] colors = {
+	    		0xff000000,	// 0: BLACK
+	    		0xffffffff,		// 1: ELEMENT-WHITE
+	    		0xffff0000, 	// 2: ELEMENT-RED
+	    		0xff00ff00, 	// 3: ELEMENT-GREEEN
+	    		0xff0000ff,	// 4: ELEMENT-BLUE
+	    		0xffbbbbbb		// 5: ELEMENT-GREY
+	    						// 6: ?
+								// 7: ?
+								// 8: ?
+								// 9: ?
+	    	};
+	    	
+	    	for (int i = 0; i < colors.length; i++) {
+	    		colorList.put(i, colors[i]);
+	    	}    	
+	    }
+		
+		
 }
