@@ -38,8 +38,11 @@ public class Entity {
 	protected String description;
 	protected byte abilityCount;
 	protected byte weaponCount;
+	
 	protected boolean isAlive;
 	protected boolean needsRemove;
+	protected boolean hasSpawned = false;
+	
 	protected byte actionPoints, maxActionPoints;
 	protected byte lastActionPoints; // for "flagging" actions via comparison of these values
 	protected int spellPower;
@@ -606,6 +609,10 @@ public class Entity {
 	}
 	
 	// GETTERS
+	public String getName() {
+		return name;
+	}
+	
 	public Entity getEntity() {
 		return this;
 	}
@@ -682,6 +689,10 @@ public class Entity {
 		return actionPoints;
 	}
 	
+	public boolean getHasSpawned() {
+		return hasSpawned;
+	}
+	
 	// SETTERS
 	public void setXpNeeded() {
 		this.xpNeeded = Game.getGameplay().mapLevelRanges.get(this.level);
@@ -695,6 +706,14 @@ public class Entity {
 	
 	protected void setWait(Boolean b) {
 		isWaiting = b;
+	}
+	
+	public void setSpawned(boolean b) {
+		hasSpawned = b;
+	}
+	
+	public void setRemove(boolean b) {
+		needsRemove = b;
 	}
 	
 	protected void setTarget(Entity e) {

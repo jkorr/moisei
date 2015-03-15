@@ -23,6 +23,7 @@ public class Gameplay {
 	private List<Notification> notifications = new ArrayList<Notification>();
 	
 	private Stage stage;
+	private boolean askForQuit = false;
 	
 	private long turnCount;
 	private boolean isPlayerTurn;
@@ -502,9 +503,17 @@ public class Gameplay {
 }
 	
 	private void renderVersionInfo(Screen screen) {
-		font.render(525, 2, -8, 0xff000000, Text.font_default, 1, Game.getTitle() + " " + Game.getVersion()
-				+ newLnLeftPad((Game.getTitle().length() + Game.getVersion().length()) - Game.getProjectStage().length() + 1) + Game.getProjectStage().toUpperCase()
-				+ newLnLeftPad((Game.getTitle().length() + Game.getVersion().length()) - Game.isFpsLockedString().length() + 1) + Game.isFpsLockedString(), screen);
+	//	font.render(525, 2, -8, 0xff000000, Text.font_default, 1, Game.getTitle() + " " + Game.getVersion()
+	//			+ newLnLeftPad((Game.getTitle().length() + Game.getVersion().length()) - Game.getProjectStage().length() + 1) + Game.getProjectStage().toUpperCase()
+	//			+ newLnLeftPad((Game.getTitle().length() + Game.getVersion().length()) - Game.isFpsLockedString().length() + 1) + Game.isFpsLockedString(), screen);
+		
+		font.render(557, 2+7+7+1, -8, 0xff555555, Text.font_default, 1, newLnLeftPad((Game.getTitle().length() + Game.getVersion().length()) - Game.isFpsLockedString().length() + 1) + Game.isFpsLockedString(), screen);
+		font.render(557, 2+7+7, -8, 0xffffffff, Text.font_default, 1, newLnLeftPad((Game.getTitle().length() + Game.getVersion().length()) - Game.isFpsLockedString().length() + 1) + Game.isFpsLockedString(), screen);
+		
+		font.render(551, 2+7+9+7+1, -8, 0xff555555, Text.font_default, 1, newLnLeftPad((Game.getTitle().length() + Game.getVersion().length()) - stage.getTitle().length() + 1) + stage.getTitle(), screen);
+		font.render(551, 2+7+9+7, -8, 0xffffffff, Text.font_default, 1, newLnLeftPad((Game.getTitle().length() + Game.getVersion().length()) - stage.getTitle().length() + 1) + stage.getTitle(), screen);
+		
+		
 	}
 	
 	private void renderPlayerInfo(Screen screen) {
@@ -664,6 +673,28 @@ public class Gameplay {
 	}
 	
 	protected void renderDebugInfo(Screen screen) {
+		font.render(-4, 2, -8, 0xff00aa55, Text.font_default, 1, "DEBUG STUFF\n"
+				+ "\nMonsters on stage: " + stage.getMonstersTotal()
+				+ "\nMonsters alive: " + stage.getMonstersAlive()
+				+ "\nMonsters spawned: " + stage.getMonstersSpawned()
+				+ "\n"
+				+ "\nVwls: " + getStage().getPlayer().vowelCount
+				+ " Conss: " + getStage().getPlayer().consonantCount
+				+ " (T: " + getStage().getPlayer().letterInventory.size() +")"
+				+ "\n"
+				+ "\nTotal TurnCount: " + getTotalTurnCount()
+				+ "\nTotal RunTime: " + (int) (deltaTimeRunning / BILLION)
+				+ "\nTotal GameTime: " + (int) (deltaTimeStage / BILLION)
+				+ "\nMonster deathcount: " + Monster.getDeathCount()
+				+ "\n"
+				+ "\nGlobalCooldown: " + deltaGlobalCooldownTimeSec
+				+ "\nGlobalCooldown: " + onGlobalCooldown
+				+ "\nGame is paused: " + !continueGame
+				+ "\nPause forced: " + getForcedPause()
+				, screen);
+	}
+	
+	protected void renderDebugInfoOLD(Screen screen) {
 		font.render(-4, 2, -8, 0xffeeaa00, Text.font_default, 1, "DEBUG STUFF\n"
 				//			+ "\nRandom Wait: " + Gamestats.monsterRW
 							+ "\nMonsters spawned: " + stage.getMonsters().size()
@@ -759,10 +790,23 @@ public class Gameplay {
 			font.renderXCentered(60, 12, 0xff4d4d4d, Text.font_kubastaBig, 1.5, printWhosTurnTop(), screen);
 		}
 		
-		if (!continueGame) {
+		// PAUSE: PAUSED BY PLAYER
+		if (!continueGame && forcedPause) {
 			font.renderXCentered(-3, 20, 12, 0xff050505, Text.font_kubastaBig, 1.1, "GAME PAUSED", screen);
 			font.renderXCentered(20, 12, 0xff8d2d8d, Text.font_kubastaBig, 1.1, "GAME PAUSED", screen);
 		}
+		
+		// PAUSE: STAGE COMPLETED
+		if (!continueGame && !forcedPause && stage.getPlayer().isAlive) {
+			font.renderXCentered(-3, 20, 12, 0xff050505, Text.font_kubastaBig, 1.1, "STAGE COMPLETED", screen);
+			font.renderXCentered(20, 12, 0xff8d2d8d, Text.font_kubastaBig, 1.1, "STAGE COMPLETED", screen);
+		}
+		
+		// PAUSE: PLAYER DIED
+		if (stage.getPlayer().getHealth() <= 0) {
+			font.renderXCentered(-4, 80, 10, 0xff4d0d0d, Text.font_kubastaBig, 1, "YOU HAVE DIED", screen);
+			font.renderXCentered(80, 10, 0xffad0d0d, Text.font_kubastaBig, 1, "YOU HAVE DIED", screen);
+		}		
 		
 		if (notificationLevelUp) {
 			font.renderXCentered(2, 82, 12, 0xff050505, Text.font_kubastaBig, 1.1, "LEVEL UP!", screen);
@@ -778,10 +822,6 @@ public class Gameplay {
 			if (turnCount < 2 && deltaTimeTurnSeconds > 9 && deltaTimeTurnSeconds < 11 && waveCount < 2)
 				font.renderXCentered(60, 2, 0xff61118e, Text.font_kubastaBig, 2.5, "Press G to switch between weapons", screen);
 			
-			if (stage.getPlayer().getHealth() <= 0) {
-				font.renderXCentered(-4, 150, 10, 0xff4d0d0d, Text.font_kubastaBig, 1, "YOU HAVE DIED", screen);
-				font.renderXCentered(150, 10, 0xffad0d0d, Text.font_kubastaBig, 1, "YOU HAVE DIED", screen);
-			}
 			
 		//	if (Gamestats.monsterHP[5] < 1)
 		//		font.render(580 - 10, 160, -8, 0xffa30300, "Monster DIED", screen);
@@ -872,7 +912,7 @@ public class Gameplay {
 		for (int i = 0; i < getStage().getMonsters().get(0).currentWordLength; i++)
 			monsterWord += getStage().getMonsters().get(0).currentWord[i];
 
-		Notification currentWord = new Notification(monsterWord, 2, Text.font_default, 0xffffffff, true, 380, 116);
+		Notification currentWord = new Notification(monsterWord, 0, 2, Text.font_default, 0xffffffff, true, 380, 116, false);
 		notifications.add(currentWord);
 	}
 	
@@ -883,7 +923,7 @@ public class Gameplay {
 		
 		System.out.println(getStage().getPlayer().currentWord);
 
-		Notification currentWord = new Notification(playerWord, 2, Text.font_default, -1, true, 198, 116);
+		Notification currentWord = new Notification(playerWord, 0, 2, Text.font_default, -1, true, 198, 116, false);
 		notifications.add(currentWord);
 	}
 	
@@ -941,8 +981,8 @@ public class Gameplay {
 		}
 	}
 	
-	private void addMonster(int slot) {
-			Monster emma = new Monster(1, slot, stage.getPlayer(), stage); // TODO: replace 1 with r for random
+	private void addMonster(int slot, int id) {
+			Monster emma = new Monster(id, slot, stage.getPlayer(), stage); // TODO: replace 1 with r for random
 			stage.add(emma);
 			CombatLog.println("" + emma.name + " spawned.");
 			enableGlobalCooldown();			
@@ -953,7 +993,7 @@ public class Gameplay {
 	}
 	
 	protected void spawnMonster(int n) {
-		addMonster(1);
+		addMonster(1, 1);
 		enableGlobalCooldown();
 	}
 
@@ -976,7 +1016,7 @@ public class Gameplay {
 	}
 	
 	protected void testNotif() {
-	Notification test0 = new Notification("1NE 2FI 3EA 4WA 5WI", 5 , Text.font_default, -1, true, 150, 50);
+	Notification test0 = new Notification("1NE 2FI 3EA 4WA 5WI", 0, 5 , Text.font_default, -1, true, 150, 50, false);
 	notifications.add(test0);
 	}
 	
@@ -1230,8 +1270,19 @@ public class Gameplay {
 	}
 	
 	// GAMEFLOW CONTROL
-	public void gameFlow() {
-		// add player here : might be a duplicate, player is also added in the constructor !
+	public void gameFlow() {		
+		//	if (!stage.getPlayer().getIsAlive() && !continueGame && !forcedPause)
+		
+		// CONTINUE ON PLAYER DEATH (LOSE)
+		if (!continueGame && !forcedPause && stage.getInputPlayerEndTurn() && !stage.getPlayer().getIsAlive()) {
+			System.out.println();
+			setAskingForQuit(true, "LOSE");			
+		}
+		
+		// CONTINUE ON MONSTERS DEAD (WIN)
+		if (!continueGame && !forcedPause && stage.getInputPlayerEndTurn() && stage.getPlayer().getIsAlive() && !onGlobalCooldown) {
+			setAskingForQuit(true, "WIN");			
+		}
 		
 		// check for shop popup
 	//	if (waveCount %  3 == 0 && waveCount > 0 && turnCount == 1 && !shopHasOpened) {
@@ -1239,7 +1290,9 @@ public class Gameplay {
 	//	}
 
 		// game progression for the new stuff
-		if ((stage.getMonsters().size() < 1) && (continueGame || turnCount == 0)) newMonsterWave(1);
+//		if ((stage.getMonsters().size() < 1) && (continueGame || turnCount == 0)) newMonsterWave(1);
+		
+		
 		
 		/*
 		// earliest version of "game progession"
@@ -1292,7 +1345,7 @@ public class Gameplay {
 		int x = 160, y = 60;
 		if (isPlayer) x = 360;
 		
-		Notification n = new Notification("-"+value, 1, Text.font_kubastaBig, 0xffff0000, false, x, y);
+		Notification n = new Notification("-"+value, 0, 1, Text.font_kubastaBig, 0xffff0000, false, x, y, false);
 		addNotification(n);
 	}
 	
@@ -1300,8 +1353,17 @@ public class Gameplay {
 		int x = 360, y = 60;
 		if (isPlayer) x = 160;
 		
-		Notification n = new Notification("+ "+value+"", 1, Text.font_kubastaBig, 0xff00ff00, false, x, y);
+		Notification n = new Notification("+ "+value+"", 0, 1, Text.font_kubastaBig, 0xff00ff00, false, x, y, false);
 		addNotification(n);
+	}
+	
+	public boolean isAskingForQuit() {
+		return askForQuit;
+	}
+	
+	public void setAskingForQuit(boolean b, String condition) {
+		askForQuit = b;
+		CombatLog.println("REQUESTING MAIN MENU. CONDITION: " + condition);
 	}
 	
 }

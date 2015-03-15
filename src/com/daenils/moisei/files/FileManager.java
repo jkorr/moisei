@@ -22,12 +22,8 @@ public class FileManager {
 	public static InputStream inWeapons;
 	public static InputStream inLetters;
 	public static InputStream inLetterDroptable;
+	public static InputStream inStages;
 	
-	public static File fileAbilities = null;
-	public static File fileMonsters = null;
-	public static File fileWeapons = null;
-	public static File fileLetters = null;
-	public static File fileLetterDroptable = null;
 	
 	private static File dirLogs = new File("logs");
 	private static File fileStatistics = null;
@@ -38,11 +34,18 @@ public class FileManager {
 	}
 	
 	public static void load() {
+		// TODO: try to unify at least some of this mess. is it really necessary to have
+		//	all these different InputStreams not to mention all these loader methods?!
+		
+		// TODO: also, why do you have the try-catch blocks commented out and why
+		// aren't the readers closed?
+		
 		loadAbilities();
 		loadMonsters();
 		loadWeapons();
 		loadLetters();
 		loadLetterDroptable();
+	//	loadStages(); // Commented out because for now this one is called separately
 	}
 	
 	//LOADERS
@@ -122,6 +125,18 @@ public class FileManager {
 //			e.printStackTrace();
 //		}
 		
+		System.out.println("File (" + url + ") has loaded successfully.");
+	}
+	
+	public static void loadStages() {
+		String path = "/data/stages.txt";
+		URL url = FileManager.class.getResource(path);
+
+//		try {
+			inStages = FileManager.class.getResourceAsStream(path);
+//		} catch (URISyntaxException e) {
+//			e.printStackTrace();
+//		}
 		System.out.println("File (" + url + ") has loaded successfully.");
 	}
 	

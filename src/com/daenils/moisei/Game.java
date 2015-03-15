@@ -26,12 +26,12 @@ public class Game extends Canvas implements Runnable {
 	private static int scale = 2;
 	private static int width = 640;
 	private static int height = (width / 16 * 9);
-	private static String title = "      MOISEI";
+	private static String title = "MOISEI";
 	private static String version = "0.5.0";
 	private static String projectStage = "f&f alpha";
 	private static boolean fpsLock = true;
 	private static byte gameState = 0, newGameState = 0; // -1: Blank; 0: Main Menu; 1-4: reserved for menus; 5: game
-	
+	private static String[] gameStateString = {"mainmenu", "stageselect", "settings", "spells", "credits", "ingame"};
 
 	private Thread thread;
 	private JFrame frame;
@@ -61,7 +61,10 @@ public class Game extends Canvas implements Runnable {
 	private long cdStart, cdEnd, cdDuration;
 	private int stageSelected = 0;
 	private String selectionString = stageSelected + "";
-
+	private final int[] TOPLEFT = {2, 6};
+	private final int[] BOTTOMLEFT = {2, 346};
+	private final int[][] TOPRIGHT = { {521, 4}, {521+54, 4+10}} ;
+	
 	public Game() {
 		Dimension size = new Dimension(width * scale, height * scale);
 		setPreferredSize(size);
@@ -74,7 +77,9 @@ public class Game extends Canvas implements Runnable {
 		key = new Keyboard();
 		mouse = new Mouse();
 
-		
+		// LOADING STAGE FROM FILE
+		FileManager.loadStages();
+		Stage.load();
 		
 		addKeyListener(key);
 		addMouseListener(mouse);
@@ -87,7 +92,7 @@ public class Game extends Canvas implements Runnable {
 	}
 	
 	private void freshGame(int s) {
-		if (s >= 0 && s < Stage.MAX_STAGE) {
+		if (s >= 0 && s <= Stage.getMaxStage()) {
 			Screen.killAllWindows();
 			FileManager.load();
 			FileManager.createStatisticsFile();
@@ -109,9 +114,12 @@ public class Game extends Canvas implements Runnable {
 		thread = new Thread(this, "Display");
 		thread.start();
 		requestFocus();
-		
+				
 		Text.fillColorList();
 		launchMainMenu();
+		versionInfo();
+		// PROFILE: "technical" string here (no profile found or xy loaded), display for 2-3 seconds only
+		showMessage("No profile found, a new one will be created.", 0, 3, TOPLEFT);
 	}
 
 	public synchronized void stop() {
@@ -148,7 +156,7 @@ public class Game extends Canvas implements Runnable {
 
 			if (System.currentTimeMillis() - timer > 1000) {
 				timer += 1000;
-				frame.setTitle(title + " " + version + " [" + gameState +"] | " + updates + " ups, " + frames
+				frame.setTitle(title + " " + version + " [" + gameStateString[gameState] +"] | " + updates + " ups, " + frames
 						+ " fps" );
 				updates = 0;
 				frames = 0;
@@ -186,10 +194,15 @@ public class Game extends Canvas implements Runnable {
 		
 		// 5: NEW GAME
 		if (newGameState == 5 && gameState != 5) {
-			freshGame();
+			if (stage == null) freshGame();
 			gameState = 5;
 			System.out.println("5");
 		}
+		
+		// CATCH 'RETURN-TO-MENU' REQUEST FROM INGAME
+		// TODO: careful with saving [differentiate between win and loss!] when impementing profile code!
+		if (gameplay != null)
+			if (gameplay.isAskingForQuit()) newGameState = 0;
 		
 		screen.update();
 		
@@ -202,7 +215,11 @@ public class Game extends Canvas implements Runnable {
 		
 		// KEY INPUT
 //		if (key.debugForceNewWave) newGameState = 5;
-		if (key.debugAddMonster) newGameState = 0;
+		if (key.debugAddMonster) {
+		//	Screen.createWindow(150, 150, 250, 150, 0xffffffff, false, "ExitConfirm");
+		//	Screen.getWindow("exitconfirm").add("Are you sure you want to quit this game?");
+			newGameState = 0;
+		}
 	}
 	
 	private void updateMainMenu() {
@@ -210,14 +227,15 @@ public class Game extends Canvas implements Runnable {
 		
 		if (menuOptionSelected == 0 && key.playerEndTurn && !onCooldown) {
 			newGameState = 5;
+			showMessage("Loading game... ", 0, 2, TOPLEFT, true);
 		}
 		if (menuOptionSelected == 1 && key.playerEndTurn && !onCooldown) {
-			System.out.println("Stage selection will be added later on.");
+			showMessage("WARNING: Stage selection is not available in the current build.", 0, 1, TOPLEFT);
 			newGameState = 1;
 			enableCooldown(300);
 		}
 		if (menuOptionSelected == 2 && key.playerEndTurn && !onCooldown) {
-			System.out.println("Settings will be added later on.");
+			showMessage("WARNING: Settings is not available in the current build.", 0, 1, TOPLEFT);
 			enableCooldown(300);
 		}
 		if (menuOptionSelected == 3 && key.playerEndTurn && !onCooldown) {
@@ -232,12 +250,14 @@ public class Game extends Canvas implements Runnable {
 		
 		if (key.playerEndTurn && !onCooldown) {
 			freshGame(stageSelected);
+			newGameState = 5;
 		}
 	}
 
 	private void handleOptionSelection(int menu) {
 		switch(menu) {
 			case 0: {
+				// DOWN AND UP
 				if (key.radialChoice[2] && menuOptionSelected < 3 && !onCooldown) {
 					menuOptionSelected++;
 					enableCooldown(300);
@@ -245,14 +265,33 @@ public class Game extends Canvas implements Runnable {
 					menuOptionSelected--;
 					enableCooldown(300);
 				}
+				
+				// TOP AND BOTTOM
+				if (key.radialChoice[0] && menuOptionSelected == 0 && !onCooldown) {
+					menuOptionSelected = 3;
+					enableCooldown(300);
+				} else if (key.radialChoice[2] && menuOptionSelected == 3 && !onCooldown) {
+					menuOptionSelected = 0;
+					enableCooldown(300);
+				}
 				break;
 			}
 			case 1: {
+				// LEFT AND RIGHT
 				if (key.radialChoice[3] && stageSelected > 0 && !onCooldown) {
 					stageSelected--;
 					enableCooldown(300);
-				} else if (key.radialChoice[1] && stageSelected < 40 && !onCooldown) {
+				} else if (key.radialChoice[1] && stageSelected < Stage.getMaxStage() && !onCooldown) {
 					stageSelected++;
+					enableCooldown(300);
+				}
+				
+				// MIN AND MAX
+				if (key.radialChoice[3] && stageSelected == 0 && !onCooldown) {
+					stageSelected = Stage.getMaxStage();
+					enableCooldown(300);
+				} else if (key.radialChoice[1] && stageSelected == Stage.getMaxStage() && !onCooldown) {
+					stageSelected = 0;
 					enableCooldown(300);
 				}
 				break;
@@ -271,6 +310,7 @@ public class Game extends Canvas implements Runnable {
 	}
 
 	private void launchMainMenu() {
+		enableCooldown(300);
 		Screen.killAllWindows();
 		String[] menuOptionString = {"New Game", "Continue", "Select Stage", "Settings", "Exit Game"};
 		Screen.createWindow(280, 120, 200, 150, 0, true, "Main Menu");
@@ -281,11 +321,12 @@ public class Game extends Canvas implements Runnable {
 				+ "\n\n  " + menuOptionString[4]
 						);
 		
-		Notification welcome = new Notification("Welcome back, [playerName]!", 10, Text.font_default, 0xffffffff, true, 2, 346);
-		notifications.add(welcome);
+		// "greeting" (non-technical) profile notification here: Welcome back, XY or Welcome!
+		showMessage("Welcome!", 2, 10, BOTTOMLEFT, true);
 	}
 	
 	private void launchStageSelectionMenu() {
+		enableCooldown(300);
 		Screen.killAllWindows();
 		Screen.createWindow(280, 120, 200, 150, 0, true, "Select Stage");
 		Screen.getWindow("selectStage").add("- STAGE SEL -");
@@ -312,12 +353,14 @@ public class Game extends Canvas implements Runnable {
 		if (stage != null)  {
 			screen.render(stage);
 			stage.render(screen);
+			screen.renderWindows(stage);
 		} else {
 			screen.render(gameState);
+		}
+			
 			// GLOBAL NOTIFS
 			for (int i = 0; i < notifications.size(); i++) {
 				notifications.get(i).render(screen);
-			}
 	
 			// TODO: fix this so you won't have to do this in order to render text
 			if (gameState == 0) {
@@ -328,8 +371,6 @@ public class Game extends Canvas implements Runnable {
 		}
 		
 		if (gameplay != null) gameplay.render(screen);
-
-	
 
 		// don't forget to drop the other objects' render() methods here
 
@@ -395,6 +436,7 @@ public class Game extends Canvas implements Runnable {
 	
 	public void clearStage() {
 		CombatLog.println("Game ended by player.\n");
+		showMessage("Game ended by player.", 0, 2, TOPLEFT, false);
 		
 		gameplay = null;
 
@@ -413,8 +455,30 @@ public class Game extends Canvas implements Runnable {
 				System.out.println("Notification removed");
 			}
 		}
-}
+	}
+	
+	private void versionInfo() {
+		showMessage("      " + title + " " + version, 0, -1, TOPRIGHT[0], false);
+		showMessage("" + projectStage.toUpperCase(), 0, -1, TOPRIGHT[1], false);
+	}
+	
+	private void showMessage(String msg, int del, int dur, int[] pos) {
+		showMessage(msg, del, dur, pos, false);
+	}
+	
+	private void showMessage(String msg, int del, int dur, int[] pos, boolean hideInGame) {
+		// remove the previous notification on that specific spot
+		for (int i = 0; i < notifications.size(); i++)
+			if (notifications.get(i).getPos()[0] == pos[0] &&
+					notifications.get(i).getPos()[1] == pos[1]) notifications.get(i).setToRemove();
+		
+		notifications.add(new Notification(msg, del, dur, Text.font_default, 0xfffffff, true, pos[0], pos[1], hideInGame));
+	}
 
+	public static byte getGameState() {
+		return gameState;
+	}
+	
 	public static void main(String[] args) {	
 		Game game = new Game();
 		game.frame.setResizable(false);

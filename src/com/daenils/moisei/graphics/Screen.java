@@ -60,9 +60,11 @@ public class Screen {
 	
 	public void render(Stage stage) {
 			renderStage(stage);
-
-			// DISPLAY ALL WINDOWS THAT EXIST
-			for (int i = 0; i < windows.size(); i++) windows.get(i).render(this);
+	}
+	
+	public void renderWindows(Stage stage) {		
+		// DISPLAY ALL WINDOWS THAT EXIST
+		for (int i = 0; i < windows.size(); i++) windows.get(i).render(this);
 	}
 	
 	public void render(int n) {

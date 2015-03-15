@@ -118,7 +118,7 @@ public class Player extends Entity {
 	//	initAbilities();
 	//	initWeapons();
 		
-		this.baseHealth = 100;
+		this.baseHealth = 50;
 		this.baseMana = 25;
 		this.maxActionPoints = 1;
 		this.spellPower = 1;
@@ -155,6 +155,8 @@ public class Player extends Entity {
 		
 		// TODO: TEST LINE, PLS REMOVE
 		initLetters();
+		
+		this.setSpawned(true);
 		
 /*		spawnLetter('C', Element.NEUTRAL);
 		spawnLetter('K', Element.FIRE);
@@ -309,7 +311,7 @@ public class Player extends Entity {
 		// END TURN
 		if (input.playerEndTurn && !Game.getGameplay().onGlobalCooldown && Game.getGameplay().getIsPlayerTurn() && !Game.getGameplay().getForcedPause()) {
 			// System.out.println("!!!");
-			if (Game.getGameplay().monstersAlive > 0) {
+			if (Game.getGameplay().monstersAlive > 0 && this.isAlive) {
 				this.resetCurrentWord();
 				submitWord();
 			//	Game.getGameplay().endTurn(this);
@@ -1681,6 +1683,10 @@ public class Player extends Entity {
 
 	public int getGoldAmount() {
 		return goldAmount;
+	}
+	
+	public boolean getInputPlayerEndTurn() {
+		return input.playerEndTurn;
 	}
 	
 	public List<Letter> getLetterInventory() {

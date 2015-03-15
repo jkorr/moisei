@@ -48,7 +48,6 @@ public class Monster extends Entity {
 	public static int monstersLoaded;
 	public static boolean monstersCounted;
 	
-	
 		
 	public Monster(int id, int spawnSlot, Entity defaultTarget, Stage stage) {
 		this.stage = stage;
