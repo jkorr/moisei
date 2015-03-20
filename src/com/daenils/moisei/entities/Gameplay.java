@@ -8,6 +8,7 @@ import java.util.Random;
 
 import com.daenils.moisei.CombatLog;
 import com.daenils.moisei.Game;
+import com.daenils.moisei.Stage;
 import com.daenils.moisei.input.Keyboard;
 import com.daenils.moisei.input.Mouse;
 import com.daenils.moisei.entities.equipments.*;
@@ -15,10 +16,14 @@ import com.daenils.moisei.files.FileManager;
 import com.daenils.moisei.graphics.Notification;
 import com.daenils.moisei.graphics.Text;
 import com.daenils.moisei.graphics.Screen;
-import com.daenils.moisei.graphics.Stage;
 
 public class Gameplay {
+	public final static String QUIT_BY_PLAYER = "QUIT_BY_PLAYER";
+	public final static String QUIT_BY_VICTORY = "QUIT_BY_VICTORY";
+	public final static String QUIT_BY_DEFEAT = "QUIT_BY_DEFEAT";
+	
 	private final int BILLION = 1000000000;
+	public static final int DEBUG_VIEWS = 4;
 	
 	private List<Notification> notifications = new ArrayList<Notification>();
 	
@@ -58,15 +63,14 @@ public class Gameplay {
 	private boolean forcedPause;
 	
 	// SWITCH BETWEEN DIFFERENT UI VIEWS / TOGGLE UI STUFF
-	private boolean debugView = false;
-	
+	private int debugView = 1;
 
 	private Text font;
 	
 	protected boolean playerOverride;
 	
 	// LEVEL-XPNEEDED MAP
-	protected Map<Byte,Integer> mapLevelRanges = new HashMap<Byte,Integer>();
+	protected static Map<Byte,Integer> mapLevelRanges = new HashMap<Byte,Integer>();
 	
 	// NOTIFS
 	int notificationStartTime;
@@ -90,6 +94,11 @@ public class Gameplay {
 	public static int savedPlayerMaxAP;
 	
 	public static int monsterDeathCount;
+	
+	// REQUEST QUIT
+	private long requestDuration;
+	private long requestStartTime;
+	private boolean isQuitAlreadyRequested;
 	
 	// SAVED STUFF -- BUT NOT YET IMPLEMENTED
 	public static int savedMonsterCount;
@@ -120,26 +129,24 @@ public class Gameplay {
 		this.waveCount = 0;
 		
 		font = new Text();
-		
-		// initialize mapLevels:
-		initLevelRanges();
+
 		
 		// just so that file is initialized as well, probably a temporary measure
 	//	Gamestats.submitStats_endWave();
 	//	FileManager.saveStatisticsFile();
 	}
 	
-	private void initLevelRanges() {
-		mapLevelRanges.put((byte) 1, 10); // FUCKING WHY?!
-		mapLevelRanges.put((byte) 2, 30);
-		mapLevelRanges.put((byte) 3, 80);
-		mapLevelRanges.put((byte) 4, 150);
-		mapLevelRanges.put((byte) 5, 350);
-		mapLevelRanges.put((byte) 6, 900);
-		mapLevelRanges.put((byte) 7, 2200);
-		mapLevelRanges.put((byte) 8, 5000);
-		mapLevelRanges.put((byte) 9, 12500);
-		mapLevelRanges.put((byte) 10, 100000); // placeholder, reaching it is not intended
+	public static void initLevelRanges() {
+		mapLevelRanges.put((byte) 1, 10);
+		mapLevelRanges.put((byte) 2, 40);
+		mapLevelRanges.put((byte) 3, 100);
+		mapLevelRanges.put((byte) 4, 300);
+		mapLevelRanges.put((byte) 5, 400);
+		mapLevelRanges.put((byte) 6, 600);
+		mapLevelRanges.put((byte) 7, 100);
+		mapLevelRanges.put((byte) 8, 2000);
+		mapLevelRanges.put((byte) 9, 3250);
+		mapLevelRanges.put((byte) 10, 749925); // placeholder, reaching it is not intended
 	}
 
 	public void update() {
@@ -308,7 +315,12 @@ public class Gameplay {
 				
 		// CURRENT VERSION
 		renderVersionInfo(screen);
-		if (!debugView) renderDebugInfoLetterDroptable(screen);
+		
+		// RENDER DEBUG VIEW
+		if (debugView == 1) renderDebugInfoLetterDroptable(screen);
+		if (debugView == 2) renderDebugInfoElementalDroptable(screen);
+		if (debugView == 3) renderDebugInfo(screen);
+		if (debugView == 4) renderDebugPlayerInfo(screen);
 		
 		// TURN INFO BOX
 //		if (percentageView) renderTurnInfoBoxPercentages(screen, timeString);
@@ -362,9 +374,6 @@ public class Gameplay {
 		
 		// TEMP: GAMESTATS
 	//	font.render(1110, 420, -4, 0xffffff00, Font.font_default, 1, Gamestats.readGameStats(), screen);
-		
-		// STRICTLY DEBUG
-		if (debugView) renderDebugInfo(screen);
 		
 		
 		//	font.renderXCentered(-1, 199, 12, 0xff444444, Font.font_kubastaBig,1, "Sample String", screen);
@@ -694,6 +703,17 @@ public class Gameplay {
 				, screen);
 	}
 	
+	protected void renderDebugPlayerInfo(Screen screen) {
+		font.render(-4, 2, -8, 0xff0055aa, Text.font_default, 1, "PLAYER DEBUG\n"
+				+ "\nlevel: " + stage.getPlayer().level
+				+ "\nXP: " + stage.getPlayer().getXp() + "(" + stage.getPlayer().pXP + ")"
+				+ "\nHP: " + stage.getPlayer().getHealth() + "(" + stage.getPlayer().pHealth + ")"
+				+ "\nMP: " + stage.getPlayer().getMana()+ "(" + stage.getPlayer().pMana + ")"
+				+ "\n"
+				+ "\nGold: " + stage.getPlayer().getGoldAmount()
+				, screen);
+	}	
+	
 	protected void renderDebugInfoOLD(Screen screen) {
 		font.render(-4, 2, -8, 0xffeeaa00, Text.font_default, 1, "DEBUG STUFF\n"
 				//			+ "\nRandom Wait: " + Gamestats.monsterRW
@@ -738,6 +758,19 @@ public class Gameplay {
 		font.render(-4, 2, -8, 0xffaa0055, Text.font_default, 1, "DEBUG STUFF" + " [" + getStage().getPlayer().letterCountString + "]" + "\n"
 				+ droptable
 				+ "\nTOTAL: " + getStage().getPlayer().rollMax
+				, screen);
+		
+	}
+	
+	protected void renderDebugInfoElementalDroptable(Screen screen) {
+		String droptable = "E-DROPTABLE:" + "[" + getStage().getPlayer().vowelCount + ":" + getStage().getPlayer().consonantCount + "]";
+		for (int i = 0; i < 5; i++) {
+			droptable += "\n" + Player.ELEMENTS_ORDERED[i].toUpperCase().substring(0, 2) + ":" + getStage().getPlayer().elementDroprate[i] + " | " + getStage().getPlayer().elementDroprateBracket[i];
+		}
+		
+		font.render(-4, 2, -8, 0xffaa0055, Text.font_default, 1, "DEBUG STUFF" + " [" + getStage().getPlayer().letterCountString + "]" + "\n"
+				+ droptable
+				+ "\nTOTAL: " + getStage().getPlayer().eRollMax
 				, screen);
 		
 	}
@@ -828,6 +861,9 @@ public class Gameplay {
 	}
 	
 	protected void newTurn() {
+		submitStats_endWave();
+		FileManager.saveStatisticsFile();
+		
 		startTimeTurn = nowTime;
 		endTimeTurn = 0;
 		// delta = null?
@@ -1135,7 +1171,7 @@ public class Gameplay {
 		return continueGame;
 	}
 	
-	public boolean getDebugView() {
+	public int getDebugView() {
 		return debugView;
 	}
 	
@@ -1193,8 +1229,12 @@ public class Gameplay {
 		continueGame = b;
 	}
 	
-	public void setDebugView(boolean b) {
-		debugView = b;
+	public void setDebugView(int i) {
+		debugView = i;
+	}
+	
+	public void incrementDebugView() {
+		debugView++;
 	}
 	
 	public void setForcedPause(boolean b) {
@@ -1203,7 +1243,7 @@ public class Gameplay {
 	
 	// GAMESTATS
 	public void submitStats_endWave() {
-		savedTurnCount += turnCount;
+		savedTurnCount = turnCount;
 		savedWaveCount = waveCount;
 		savedDeltaGameTime = getDeltaTimeStage() / BILLION;
 		savedMonsterDeathCount = monsterDeathCount;
@@ -1271,17 +1311,42 @@ public class Gameplay {
 	
 	// GAMEFLOW CONTROL
 	public void gameFlow() {		
-		//	if (!stage.getPlayer().getIsAlive() && !continueGame && !forcedPause)
-		
+		// TODO: maybe invoke DIE/WIN notifications from here (when they are converted to notifs)
 		// CONTINUE ON PLAYER DEATH (LOSE)
 		if (!continueGame && !forcedPause && stage.getInputPlayerEndTurn() && !stage.getPlayer().getIsAlive()) {
-			System.out.println();
-			setAskingForQuit(true, "LOSE");			
+			setAskingForQuit(true, QUIT_BY_DEFEAT);			
+			Game.showMessage("Game ended on condition = " + QUIT_BY_DEFEAT +".", 0, 2, Game.TOPLEFT, false);
 		}
 		
 		// CONTINUE ON MONSTERS DEAD (WIN)
 		if (!continueGame && !forcedPause && stage.getInputPlayerEndTurn() && stage.getPlayer().getIsAlive() && !onGlobalCooldown) {
-			setAskingForQuit(true, "WIN");			
+			savePlayerToProfile();
+			setAskingForQuit(true, QUIT_BY_VICTORY);
+			Game.showMessage("Game ended on condition = " + QUIT_BY_VICTORY +".", 0, 2, Game.TOPLEFT, false);
+		}
+		
+		// SET FLAG FOR QUIT ALREADY REQUESTED
+		if (requestStartTime > 0 || requestDuration > 0)
+			if (System.nanoTime() >= (requestStartTime + (requestDuration * 1000000000L))) {
+				isQuitAlreadyRequested = false;
+				requestDuration = 0;
+				requestStartTime = 0;
+				System.out.println("REQUEST-EXIT VALUES HAS BEEN RESET.");
+			}
+		
+		// REQUEST MENU
+		if (stage.getInputPlayerExitToMenu() && !onGlobalCooldown && !isQuitAlreadyRequested) {
+			enableGlobalCooldown();
+			requestDuration = 2;
+			requestStartTime = System.nanoTime();
+			isQuitAlreadyRequested = true;
+			Game.showMessage("Press 'ESC' again to confirm exit.", 0, (int) requestDuration, Game.TOPLEFT, false);
+		}
+		
+		// CONFIRMED QUIT
+		if (!onGlobalCooldown && isQuitAlreadyRequested && stage.getInputPlayerExitToMenu() && (System.nanoTime() <= (requestStartTime + (requestDuration * 1000000000L)))) {
+			setAskingForQuit(true, QUIT_BY_PLAYER);
+			Game.showMessage("Game ended on condition = " + QUIT_BY_PLAYER +".", 0, 2, Game.TOPLEFT, false);
 		}
 		
 		// check for shop popup
@@ -1306,6 +1371,23 @@ public class Gameplay {
 	
 	public boolean isBetween(int comparedNum, int min, int max) {
 		return (comparedNum >= min && comparedNum < max);
+	}
+	
+	public void savePlayerToProfile() {
+		FileManager.setProfileData("level", stage.getPlayer().level, false);
+		FileManager.setProfileData("xp", stage.getPlayer().getXp(), false);
+		FileManager.setProfileData("gold", stage.getPlayer().getGoldAmount(), false);
+		if ((stage.getId() + 1) <= Stage.getMaxStage()) {
+			// unlock next level
+			FileManager.setProfileData("stagesunlocked", true, stage.getId() + 1);
+			Game.updateUnlockedStages();
+			
+			// set continuestage if first completion
+			if (FileManager.getProfileDataAsInt("continuestage") < (stage.getId() + 1))
+				FileManager.setProfileData("continuestage", (stage.getId() + 1)+"");
+		}
+		// mark current as completed
+		FileManager.setProfileData("stagescompleted", true, stage.getId());
 	}
 
 	// GAMESTATS REFUGEES

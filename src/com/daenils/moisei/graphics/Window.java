@@ -36,6 +36,11 @@ public class Window {
 	protected boolean hasContent;
 	protected boolean hasLetterContent;
 	protected boolean mouseOverItem;
+	protected boolean textInputEnabled;
+	
+//	protected List<Character> listToRender; 
+	protected List<Character> inputField = new ArrayList<Character>();
+	protected String inputFieldString;
 	
 	// finals
 	public static final int[] ITEM_POSITION1 = {6, 21};
@@ -149,8 +154,16 @@ public class Window {
 					pos++;
 				}
 			}
+			
 		}
 		
+		if (this.inputField.size() > 0) {
+			String listString = "";
+			for (int i = 0; i < inputField.size(); i++)
+				listString += inputField.get(i);
+			
+			font.render(x + 11, y + 31, -8, 0xffffffff, Text.font_default, 1, listString, screen);
+		}
 		
 		
 		if (displayText != null) renderDisplayText(screen);
@@ -257,6 +270,22 @@ public class Window {
 			this.letterContents.add(l);
 		}
 		
+	// ADD TEXT INPUT
+		public void add(int entryLength) {
+			Game.setTextInputEnabled(true);
+		}
+		
+	// CLOSE TEXT INPUT
+		public void closeTextInput() {
+			Game.setTextInputEnabled(false);
+		}
+		
+	// ADD ARRAYLIST CONTAINER (Char)
+	//	public void add(List<Character> list) {
+	//		listToRender = list;
+	//	}
+		
+		
 	// CLEAN CONTENTS (REMOVE ALL)
 		public void clean() {
 			for (int i = 0; i < this.letterContents.size(); i++)	this.letterContents.remove(i);
@@ -304,6 +333,10 @@ public class Window {
 	
 	public void setLetterContents(List<Letter> list) {
 		letterContents = list;
+	}
+	
+	public void askForRemoval() {
+		this.needsClosing = true;
 	}
 	
 	// GETTERS
@@ -366,6 +399,22 @@ public class Window {
 
 	public boolean getClickedDialogueOption() {
 		return clickedDialogueOption;
+	}
+	
+	public List<Character> getInputField() {
+		return inputField;
+	}
+	
+	public String getInputFieldString() {
+		return inputFieldString;
+	}
+	
+	public void setInputFieldString(String s) {
+		inputFieldString = s;
+	}
+	
+	public void addToInputFieldString(String s) {
+		if (inputFieldString.length() > 0) inputFieldString.concat(s);
 	}
 
 	public void setClickedDialogueOption(boolean clickedDialogueOption) {

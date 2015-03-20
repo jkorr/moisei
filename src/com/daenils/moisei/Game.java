@@ -7,6 +7,7 @@ import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.swing.JFrame;
@@ -15,8 +16,8 @@ import com.daenils.moisei.entities.Gameplay;
 import com.daenils.moisei.files.FileManager;
 import com.daenils.moisei.graphics.Notification;
 import com.daenils.moisei.graphics.Screen;
-import com.daenils.moisei.graphics.Stage; // probably it should be in its own package later (e.g. moisei.stage.stage)
 import com.daenils.moisei.graphics.Text;
+import com.daenils.moisei.graphics.Window;
 import com.daenils.moisei.input.Keyboard;
 import com.daenils.moisei.input.Mouse;
 
@@ -30,9 +31,12 @@ public class Game extends Canvas implements Runnable {
 	private static String version = "0.5.0";
 	private static String projectStage = "f&f alpha";
 	private static boolean fpsLock = true;
+	private static boolean devMode = false;
 	private static byte gameState = 0, newGameState = 0; // -1: Blank; 0: Main Menu; 1-4: reserved for menus; 5: game
 	private static String[] gameStateString = {"mainmenu", "stageselect", "settings", "spells", "credits", "ingame"};
-
+	private static final String[] MAIN_MENU_STRINGS = {"New Game", "Continue", "Select Stage", "Settings", "Exit Game"};
+	private static final String[] LIST_OF_BANNED_NAMES = {"default"};
+	
 	private Thread thread;
 	private JFrame frame;
 
@@ -54,16 +58,22 @@ public class Game extends Canvas implements Runnable {
 			.getData();
 	
 	// MENU STUFF
-	private List<Notification> notifications = new ArrayList<Notification>();
+	private static List<Notification> notifications = new ArrayList<Notification>();
 	
 	private int menuOptionSelected = -1;
 	private boolean onCooldown = false;
+	private static boolean textInputEnabled;
 	private long cdStart, cdEnd, cdDuration;
 	private int stageSelected = 0;
 	private String selectionString = stageSelected + "";
-	private final int[] TOPLEFT = {2, 6};
-	private final int[] BOTTOMLEFT = {2, 346};
-	private final int[][] TOPRIGHT = { {521, 4}, {521+54, 4+10}} ;
+	public static final int[] TOPLEFT = {2, 6};
+	public static final int[] BOTTOMLEFT = {2, 346};
+	private static final int[][] TOPRIGHT = { {521, 4}, {521+54, 4+10}} ;
+	private static final int[] BOTTOMRIGHT = {521, 346}; 
+	
+	// PROFILE STUFF
+	private String profileName;
+//	private List<Character> profileNameFromInput = new ArrayList<Character>();
 	
 	public Game() {
 		Dimension size = new Dimension(width * scale, height * scale);
@@ -74,12 +84,19 @@ public class Game extends Canvas implements Runnable {
 				+ (width * scale) + "x" + (height * scale) + ".");
 		frame = new JFrame();
 		
+		// LOADING STAGE FROM FILE
+		FileManager.loadStages();
+		Stage.load(); // loads the stages and sets the stageCount value
+
 		key = new Keyboard();
 		mouse = new Mouse();
 
-		// LOADING STAGE FROM FILE
-		FileManager.loadStages();
-		Stage.load();
+		// LOOKING FOR EXISTING PROFILE
+		FileManager.profileHandler();
+		// SET DEVMODE
+		if (FileManager.profileContains("set_devmode"))
+			if (FileManager.getProfileDataAsInt("set_devmode") == 1)
+				this.devMode = true;
 		
 		addKeyListener(key);
 		addMouseListener(mouse);
@@ -94,19 +111,25 @@ public class Game extends Canvas implements Runnable {
 	private void freshGame(int s) {
 		if (s >= 0 && s <= Stage.getMaxStage()) {
 			Screen.killAllWindows();
+			newGameState = 5;
 			FileManager.load();
 			FileManager.createStatisticsFile();
 			FileManager.createCombatLogFile();
 			
-			CombatLog.println("A new game has started.");
+			CombatLog.init();
+			// initialize mapLevels:
+			Gameplay.initLevelRanges();
 			stage = new Stage(key, mouse, s);
 			gameplay = new Gameplay(stage);
 			System.out.println("Gameplay control is running.");
 			System.out.println("Statistics collection is running.");
 			
 			gameplay.setFirst();
-		} else
-			System.err.println("Stage " + s + " does not exist.");
+		} else {
+			System.err.println("ERROR: Stage " + s + " does not exist. Your profile might be corrupted or outdated.");
+			showMessage("Stage #" + s + " does not exist.", 0, 2, TOPLEFT, false);
+		}
+			
 	}
 
 	public synchronized void start() {
@@ -115,12 +138,38 @@ public class Game extends Canvas implements Runnable {
 		thread.start();
 		requestFocus();
 				
+			// EXISTING PROFILE
+		if (FileManager.getProfileExists() && !FileManager.getProfileData("name").equals("default")) {
+			showMessage("Profile data found: " + FileManager.mapProfile.get("name"), 0, 3, TOPLEFT);
+			FileManager.setProfileData("lastseen", FileManager.formatDate(new Date()));
+			
+			// initializers
+			FileManager.errorChecking();
+			initializeProfileName();
+			updateStageSelectionMenu();
+
+			// NEW PROFILE
+		} else if (FileManager.getProfileExists() && FileManager.getProfileData("name").equals("default")) {
+			showMessage("No profile found, a new one will be created.", 0, 3, TOPLEFT);
+			// ERROR HANDLING
+		} else {
+			System.err.println("ERROR: profile error.");
+		}
+		
+		
+		
+		// SET STAGE.UNLOCKEDSTAGECOUNT BASED ON PROFILE
+		updateUnlockedStages();
+		
+		
+		
 		Text.fillColorList();
 		launchMainMenu();
 		versionInfo();
 		// PROFILE: "technical" string here (no profile found or xy loaded), display for 2-3 seconds only
-		showMessage("No profile found, a new one will be created.", 0, 3, TOPLEFT);
+		
 	}
+
 
 	public synchronized void stop() {
 		running = false;
@@ -183,7 +232,6 @@ public class Game extends Canvas implements Runnable {
 			if (stage != null) clearStage();
 			launchMainMenu();
 			gameState = 0;
-			System.out.println("0");
 		}
 		
 		// 1: STAGE SELECTION
@@ -196,13 +244,16 @@ public class Game extends Canvas implements Runnable {
 		if (newGameState == 5 && gameState != 5) {
 			if (stage == null) freshGame();
 			gameState = 5;
-			System.out.println("5");
 		}
 		
 		// CATCH 'RETURN-TO-MENU' REQUEST FROM INGAME
 		// TODO: careful with saving [differentiate between win and loss!] when impementing profile code!
 		if (gameplay != null)
 			if (gameplay.isAskingForQuit()) newGameState = 0;
+		
+		// TEXT INPUT UPDATE FOR PROFILENAME
+		if (Screen.windowExists("yourName"))
+			updateTextInputForProfileNaming("yourName", Screen.getWindow("yourName").getInputField(), Screen.getWindow("yourName").getInputFieldString());
 		
 		screen.update();
 		
@@ -212,7 +263,6 @@ public class Game extends Canvas implements Runnable {
 		if (stage != null) stage.update();
 		if (gameplay != null) gameplay.update();
 		
-		
 		// KEY INPUT
 //		if (key.debugForceNewWave) newGameState = 5;
 		if (key.debugAddMonster) {
@@ -221,13 +271,51 @@ public class Game extends Canvas implements Runnable {
 			newGameState = 0;
 		}
 	}
-	
+
+	private void updateTextInputForProfileNaming(String windowName, List<Character> inputField, String inputFieldStr) {
+		if (textInputEnabled && Screen.windowExists(windowName)) {
+			for (int i = 0; i < 26; i++) {
+				if (key.alphabet[i] && !onCooldown && inputField.size() < 10) {
+					inputField.add((char) (i + 65));
+					enableCooldown(125);
+				} else if (key.removeLast && !onCooldown && inputField.size() > 0) {
+					inputField.remove(inputField.size() - 1);
+					enableCooldown(125);
+				} else if (key.playerEndTurn && !onCooldown) {
+					inputFieldStr = "";
+					for (int k = 0; i < inputField.size(); i++)
+						inputFieldStr += inputField.get(i);
+					
+					enableCooldown(300);
+					
+					boolean isValidName = true;
+					if (inputFieldStr.length() < 2) isValidName = false;
+					for (int k = 0; k < LIST_OF_BANNED_NAMES.length; k++) {
+						if (inputFieldStr.toLowerCase().equals(LIST_OF_BANNED_NAMES[k])) isValidName = false;
+					}
+					
+					if (isValidName) {
+						System.out.println("Entry \"" + inputFieldStr.toLowerCase() + "\" submitted.");
+						Screen.getWindow(windowName).closeTextInput();
+						Screen.getWindow(windowName).askForRemoval();
+						
+						FileManager.setProfileData("name", inputFieldStr.toLowerCase());
+						initializeProfileName();
+						launchMainMenu();						
+					} else {
+						showMessage("ERROR: invalid name!", 0, 2, TOPLEFT, false);
+					}
+				}
+			}
+		}
+	}
+
 	private void updateMainMenu() {
 		handleOptionSelection(0);
 		
 		if (menuOptionSelected == 0 && key.playerEndTurn && !onCooldown) {
-			newGameState = 5;
-			showMessage("Loading game... ", 0, 2, TOPLEFT, true);
+			freshGame(FileManager.getProfileDataAsInt("continuestage"));
+			showMessage("Loading stage... ", 0, 2, TOPLEFT, true);
 		}
 		if (menuOptionSelected == 1 && key.playerEndTurn && !onCooldown) {
 			showMessage("WARNING: Stage selection is not available in the current build.", 0, 1, TOPLEFT);
@@ -250,7 +338,7 @@ public class Game extends Canvas implements Runnable {
 		
 		if (key.playerEndTurn && !onCooldown) {
 			freshGame(stageSelected);
-			newGameState = 5;
+			enableCooldown(300);
 		}
 	}
 
@@ -276,24 +364,38 @@ public class Game extends Canvas implements Runnable {
 				}
 				break;
 			}
+			
+			
 			case 1: {
+				// TODO: 	stage unlock is now strictly linear, so if you set an unlock pattern "1001" the
+				//				two zeroes will be unlocked as well, as it only checks for the last one!
+				
+				int localMax;
+				if (devMode) localMax = Stage.getMaxStage();
+				else localMax = Stage.getUnlockedStageCount() - 1;
+				
 				// LEFT AND RIGHT
 				if (key.radialChoice[3] && stageSelected > 0 && !onCooldown) {
 					stageSelected--;
 					enableCooldown(300);
-				} else if (key.radialChoice[1] && stageSelected < Stage.getMaxStage() && !onCooldown) {
+				} else if (key.radialChoice[1] && stageSelected < localMax && !onCooldown) {
 					stageSelected++;
 					enableCooldown(300);
 				}
 				
 				// MIN AND MAX
 				if (key.radialChoice[3] && stageSelected == 0 && !onCooldown) {
-					stageSelected = Stage.getMaxStage();
+					stageSelected = localMax;
 					enableCooldown(300);
-				} else if (key.radialChoice[1] && stageSelected == Stage.getMaxStage() && !onCooldown) {
+				} else if (key.radialChoice[1] && stageSelected == localMax && !onCooldown) {
 					stageSelected = 0;
 					enableCooldown(300);
 				}
+				
+				// BACK
+				if (key.playerExitToMenu && !onCooldown)
+					newGameState = 0;
+				
 				break;
 			}
 			default: System.err.println("ERROR");
@@ -310,19 +412,40 @@ public class Game extends Canvas implements Runnable {
 	}
 
 	private void launchMainMenu() {
-		enableCooldown(300);
-		Screen.killAllWindows();
-		String[] menuOptionString = {"New Game", "Continue", "Select Stage", "Settings", "Exit Game"};
-		Screen.createWindow(280, 120, 200, 150, 0, true, "Main Menu");
-		Screen.getWindow("mainMenu").add("- MAIN MENU -"
-				+ "\n\n  " + menuOptionString[0]
-				+ "\n\n  " + menuOptionString[2]
-				+ "\n\n  " + menuOptionString[3]
-				+ "\n\n  " + menuOptionString[4]
-						);
+		// NEW GAME || CONTINUE GAME?
+		String firstItemStr;
+		if (FileManager.getProfileExists() && FileManager.getProfileDataAsBooleanArray("stagescompleted")[0])
+			firstItemStr = MAIN_MENU_STRINGS[1];
+		else firstItemStr = MAIN_MENU_STRINGS[0];
 		
-		// "greeting" (non-technical) profile notification here: Welcome back, XY or Welcome!
-		showMessage("Welcome!", 2, 10, BOTTOMLEFT, true);
+		if (FileManager.getProfileExists() && FileManager.mapProfile.get("name").equals("default")) {
+			Screen.killAllWindows();
+			Screen.createWindow(280, 120, 200, 150, 0, true, "Your Name");
+			Screen.getWindow("yourName").add("  YOUR NAME: ");
+			Screen.getWindow("yourName").add(10);
+		} else if (FileManager.getProfileExists()){
+			enableCooldown(300);
+			Screen.killAllWindows();
+			Screen.createWindow(280, 120, 200, 150, 0, true, "Main Menu");
+			Screen.getWindow("mainMenu").add("- MAIN MENU -"
+					+ "\n\n  " + firstItemStr
+							+ "\n\n  " + MAIN_MENU_STRINGS[2]
+									+ "\n\n  " + MAIN_MENU_STRINGS[3]
+											+ "\n\n  " + MAIN_MENU_STRINGS[4]
+					);
+			
+			// "greeting" (non-technical) profile notification here: Welcome back, XY or Welcome!
+			showMessage("Welcome, " + profileName + "!", 2, 10, BOTTOMLEFT, true);			
+		} else {
+			boolean localCheck = false;
+			do {
+				System.out.println("Waiting for profile...");
+				if (FileManager.getProfileExists()) localCheck = true;				
+			} while (!localCheck);
+			
+			if (localCheck) launchMainMenu();
+		}
+		
 	}
 	
 	private void launchStageSelectionMenu() {
@@ -419,6 +542,14 @@ public class Game extends Canvas implements Runnable {
 		return fpsLock;
 	}
 	
+	public static boolean isTextInputEnabled() {
+		return textInputEnabled;
+	}
+	
+	public static void setTextInputEnabled(boolean b) {
+		textInputEnabled = b;
+	}
+	
 	public static String isFpsLockedString() {
 		if(Game.isFpsLocked()) return "60FPS";
 		else return "FPS UNLOCKED";
@@ -436,7 +567,7 @@ public class Game extends Canvas implements Runnable {
 	
 	public void clearStage() {
 		CombatLog.println("Game ended by player.\n");
-		showMessage("Game ended by player.", 0, 2, TOPLEFT, false);
+//		showMessage("Game ended by player.", 0, 2, TOPLEFT, false);
 		
 		gameplay = null;
 
@@ -446,6 +577,18 @@ public class Game extends Canvas implements Runnable {
 	
 	public void createStage() {
 		freshGame();
+	}
+
+	public static void updateUnlockedStages() {
+		boolean[] stagesUnlocked = FileManager.getProfileDataAsBooleanArray("stagesunlocked");
+		if (!stagesUnlocked[0]) {
+			FileManager.setProfileData("stagesunlocked", true, 0);
+		}
+		for (int i = 0; i < stagesUnlocked.length; i++)
+			if (stagesUnlocked[i]) Stage.setUnlockedStageCount(i+1);
+		System.out.println("HIGHEST AVAILABLE STAGE: " + Stage.getUnlockedStageCount());
+		
+		// also update completed here (TODO: move it? make an universal one?)
 	}
 	
 	private void removeNotifications() {
@@ -460,13 +603,14 @@ public class Game extends Canvas implements Runnable {
 	private void versionInfo() {
 		showMessage("      " + title + " " + version, 0, -1, TOPRIGHT[0], false);
 		showMessage("" + projectStage.toUpperCase(), 0, -1, TOPRIGHT[1], false);
+		if (devMode) showMessage("    DEVELOPER MODE", 0, -1, BOTTOMRIGHT, false);
 	}
 	
 	private void showMessage(String msg, int del, int dur, int[] pos) {
 		showMessage(msg, del, dur, pos, false);
 	}
 	
-	private void showMessage(String msg, int del, int dur, int[] pos, boolean hideInGame) {
+	public static void showMessage(String msg, int del, int dur, int[] pos, boolean hideInGame) {
 		// remove the previous notification on that specific spot
 		for (int i = 0; i < notifications.size(); i++)
 			if (notifications.get(i).getPos()[0] == pos[0] &&
@@ -477,6 +621,11 @@ public class Game extends Canvas implements Runnable {
 
 	public static byte getGameState() {
 		return gameState;
+	}
+	
+	// INITIALIZERS (PROFILE VALUES)
+	private void initializeProfileName() {
+		profileName = ((char) (FileManager.mapProfile.get("name").toLowerCase().charAt(0) - 32)) + FileManager.mapProfile.get("name").substring(1, FileManager.mapProfile.get("name").length());
 	}
 	
 	public static void main(String[] args) {	

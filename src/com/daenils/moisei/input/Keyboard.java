@@ -24,6 +24,7 @@ public class Keyboard implements KeyListener {
 	// gui control
 	public boolean playerSwitchGUIView;
 	public boolean playerPauseGame;
+	public boolean playerExitToMenu;
 
 	// debug stuff
 	public boolean debugLockAbility, debugUnlockAbility;
@@ -77,6 +78,7 @@ public class Keyboard implements KeyListener {
 		playerBasicAttack = keys[KeyEvent.VK_SPACE];
 		playerEndTurn = keys[KeyEvent.VK_ENTER];
 		playerSwitchWeapon = keys[KeyEvent.VK_G];
+		playerExitToMenu = keys[KeyEvent.VK_ESCAPE];
 		
 		playerCycleTargets = keys[KeyEvent.VK_0];
 		playerTarget[0] = keys[KeyEvent.VK_1];

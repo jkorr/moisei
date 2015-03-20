@@ -1,4 +1,4 @@
-package com.daenils.moisei.graphics;
+package com.daenils.moisei;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -10,17 +10,16 @@ import java.util.Scanner;
 
 import javax.imageio.ImageIO;
 
-import com.daenils.moisei.CombatLog;
-import com.daenils.moisei.Game;
 import com.daenils.moisei.entities.Entity;
 import com.daenils.moisei.entities.Monster;
 import com.daenils.moisei.entities.Player;
 import com.daenils.moisei.files.FileManager;
+import com.daenils.moisei.graphics.Screen;
 import com.daenils.moisei.input.Keyboard;
 import com.daenils.moisei.input.Mouse;
 
 public class Stage {
-	private static int stageCount = -1;
+	private static int stageCount = -1, unlockedStageCount = -1;
 	
 	private static Map<Integer, String> mapStages = new HashMap<Integer, String>();
 	
@@ -44,6 +43,7 @@ public class Stage {
 	
 	public Stage(Keyboard input, Mouse inputM, int id) {
 		
+		this.id = id;
 		String[] tempString = mapStages.get(id).split(",");
 		
 		this.worldOverride = Integer.parseInt(tempString[0]);
@@ -293,7 +293,7 @@ public class Stage {
 	}
 
 	public int getId() {
-		return id;
+		return this.id;
 	}
 
 	public int getWorld() {
@@ -320,7 +320,24 @@ public class Stage {
 		return key.playerEndTurn;
 	}
 	
+	public boolean getInputPlayerExitToMenu() {
+		return key.playerExitToMenu;
+	}
+	
 	public static int getMaxStage() {
 		return stageCount;
+	}
+	
+	public int[] getBackground() {
+		return background;
+	}
+
+
+	public static int getUnlockedStageCount() {
+		return unlockedStageCount;
+	}
+
+	public static void setUnlockedStageCount(int n) {
+		unlockedStageCount = n;
 	}
 }

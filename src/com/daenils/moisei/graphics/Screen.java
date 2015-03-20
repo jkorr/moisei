@@ -1,6 +1,7 @@
 package com.daenils.moisei.graphics;
 
 import com.daenils.moisei.Game;
+import com.daenils.moisei.Stage;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -113,7 +114,7 @@ public class Screen {
 		for (int y = 0; y < height; y++)
 			for (int x = 0; x < width; x++) {
 	/*			if ((x % 2 == 0 && y % 2 == 0))  pixels[x + y * width] = 0xff110033;
-				else */ pixels[x + y * width] = stage.background[x + y * width];
+				else */ pixels[x + y * width] = stage.getBackground()[x + y * width];
 			}
 	}
 	
@@ -292,7 +293,8 @@ public class Screen {
 		}
 		
 		public static Window getWindow(String name) {
-			if (windows.size() > 0)
+			if (windows.size() > 0
+					&& mapWindows.containsKey(name))
 				return windows.get(mapWindows.get(name));
 			else return null;
 		}
@@ -301,6 +303,10 @@ public class Screen {
 			return noWindows;
 		}
 		
+		public static boolean windowExists(String name) {
+			if (mapWindows.containsKey(name)) return true;
+			else return false;
+		}
 	
 	public static void killAllWindows() {
 		for (int i = 0; i < windows.size(); i++) windows.remove(i);

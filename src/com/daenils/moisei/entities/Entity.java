@@ -8,13 +8,13 @@ import java.util.Random;
 
 import com.daenils.moisei.CombatLog;
 import com.daenils.moisei.Game;
+import com.daenils.moisei.Stage;
 import com.daenils.moisei.entities.equipments.Ability;
 import com.daenils.moisei.entities.equipments.Equipment;
 import com.daenils.moisei.entities.equipments.Weapon;
 import com.daenils.moisei.files.FileManager;
 import com.daenils.moisei.graphics.Screen;
 import com.daenils.moisei.graphics.Sprite;
-import com.daenils.moisei.graphics.Stage;
 
 public class Entity {
 	protected String name;
@@ -700,8 +700,11 @@ public class Entity {
 	}
 	
 	public void setXpGained() {
-		xpGained += Math.pow(2, this.level - 1);
-//		System.out.println(xpGained);
+		this.xpGained = (int) (Math.floor((((this.level * 10.0) / 2.0) + Math.pow((this.level / 2.0), 2.0)) / 5.0) * 5.0);
+		System.out.println("XPGAIN" + xpGained);
+		for (int i = 1; i < 12; i++) {
+	//		System.out.println(i + ":" + Math.floor((((i * 10.0) / 2.0) + Math.pow((i / 2.0), 2.0)) / 5.0) * 5.0);
+		}
 	}
 	
 	protected void setWait(Boolean b) {

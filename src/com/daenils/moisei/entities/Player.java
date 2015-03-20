@@ -6,12 +6,12 @@ import java.util.Random;
 
 import com.daenils.moisei.CombatLog;
 import com.daenils.moisei.Game;
+import com.daenils.moisei.Stage;
 import com.daenils.moisei.entities.Letter.Element;
 import com.daenils.moisei.files.FileManager;
 import com.daenils.moisei.graphics.Notification;
 import com.daenils.moisei.graphics.Screen;
 import com.daenils.moisei.graphics.Sprite;
-import com.daenils.moisei.graphics.Stage;
 import com.daenils.moisei.graphics.Text;
 import com.daenils.moisei.graphics.Window;
 import com.daenils.moisei.input.Keyboard;
@@ -74,15 +74,17 @@ public class Player extends Entity {
 	
 	private int selectedInRadialMenuCount = 0;
 	
+	public static final String[] ELEMENTS_ORDERED = {"Neutral", "Fire", "Water", "Earth", "Wind"};
 	private int[] elementBaseDroprate = {	25,			// NEUTRAL 
 												100, 		// FIRE
 												100, 		// WATER
 												100, 		// EARTH
-												75,};		// WIND
+												100,};		// WIND
 													
 	
 	protected int[] elementDroprate = new int[5];
 	protected int[] elementDroprateBracket = new int[5];
+	protected int eRollMax;
 	
 	// NEW GAMEPLAY STUFF (ELEMENTAL POWER)
 	protected int[] elementalPower = new int[4]; // fi wa ea wi
@@ -125,9 +127,9 @@ public class Player extends Entity {
 		this.baseDamage = new int[] {4, 7};
 		this.shield = 0;
 		this.isAlive = true;
-		this.xp = 0;
-		this.level = 1;
-		this.setGoldAmount(0);
+		this.xp = Integer.parseInt(FileManager.getProfileData("xp"));
+		this.level = Byte.parseByte(FileManager.getProfileData("level"));
+		this.setGoldAmount(Integer.parseInt(FileManager.getProfileData("gold")));
 		
 		this.maxHealth = baseHealth;
 		this.maxMana = baseMana;
@@ -137,14 +139,8 @@ public class Player extends Entity {
 		this.damageDbl[0] = baseDamage[0];
 		this.damageDbl[1] = baseDamage[1];
 		
-		this.levelUp((byte) 1);
-		if (this.level < 2) {
-			this.xpGained = 10; // initialized here for now
-			this.xpNeeded = 10; // initialized here for now
-		} else {
 			setXpGained();
 			setXpNeeded();
-		}
 		
 		this.actionPoints = maxActionPoints;
 		this.health = maxHealth;
@@ -381,11 +377,11 @@ public class Player extends Entity {
 		
 		// DEBUG: SHOW DEBUG INFO
 		if (input.debugShowDebugInfo && !Game.getGameplay().onGlobalCooldown) {
-			if (!Game.getGameplay().getDebugView()) Game.getGameplay().setDebugView(true);
-			else if (Game.getGameplay().getDebugView()) Game.getGameplay().setDebugView(false);
+			if (Game.getGameplay().getDebugView() < Gameplay.DEBUG_VIEWS)
+				Game.getGameplay().incrementDebugView();
+			else Game.getGameplay().setDebugView(0);
 			Game.getGameplay().enableGlobalCooldown();
 		}
-		
 
 		inputTargeting();
 		if (Screen.getNoWindows()) mouseInput();
@@ -1635,7 +1631,8 @@ public class Player extends Entity {
 	private Element getRandomElement() {
 		Element e = Element.NEUTRAL;
 		Element[] eList = {Element.NEUTRAL, Element.FIRE, Element.WATER, Element.EARTH, Element.WIND, Element.MAGIC};
-		int eRollMax = 0, n = -1;
+		int n = -1;
+		eRollMax = 0;
 		
 		updateElementDroprate();
 		updateElementDroprateBracket();
@@ -1653,7 +1650,7 @@ public class Player extends Entity {
 		    	e = eList[l];
 		   	}
 		}
-			
+		
 		return e;
 	}
 	
@@ -1671,6 +1668,10 @@ public class Player extends Entity {
 	public boolean isConsonant(char c) {
 		if (c == 'A' || c == 'E' || c == 'I' || c == 'O' || c == 'U') return false;
 		else return true;
+	}
+	
+	public void resetInputPlayerEndTurn() {
+		input.playerEndTurn = false;
 	}
 	
 	public Player getPlayer() {

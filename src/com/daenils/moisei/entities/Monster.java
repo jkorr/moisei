@@ -10,12 +10,12 @@ import java.util.Scanner;
 
 import com.daenils.moisei.CombatLog;
 import com.daenils.moisei.Game;
+import com.daenils.moisei.Stage;
 import com.daenils.moisei.entities.equipments.Ability;
 import com.daenils.moisei.entities.equipments.Weapon;
 import com.daenils.moisei.files.FileManager;
 import com.daenils.moisei.graphics.Screen;
 import com.daenils.moisei.graphics.Sprite;
-import com.daenils.moisei.graphics.Stage;
 
 public class Monster extends Entity {
 	Random randomPick = new Random();
