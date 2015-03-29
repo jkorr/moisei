@@ -2,6 +2,7 @@ package com.daenils.moisei.graphics;
 
 import com.daenils.moisei.Game;
 import com.daenils.moisei.Stage;
+import com.daenils.moisei.entities.Letter.Element;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -18,6 +19,10 @@ public class Screen {
 	private int width, height;
 	private int[] pixels;
 	private String path;
+	
+	public static final int[] PALETTE_LIGHT = {0xffE5554C, 0xff4C70E5, 0xff82E54C, 0xffE5E5E5, 0xffffffff};
+	public  static final int[] PALETTE_BASE = {0xffBF1B11, 0xff113ABF, 0xff4EBF11, 0xffBFBFBF, 0xffffffff};
+	public  static final int[] PALETTE_DARK = {0xff592320, 0xff202D59, 0xff345920, 0xff595959, 0xffffffff};
 	
 	// GUI WINDOW STUFF
 	protected static List<Window> windows = new ArrayList<Window>();
@@ -124,9 +129,33 @@ public class Screen {
 			int ya = y + yp;
 			for (int x = 0; x < sprite.width; x++) {
 				int xa = x + xp;
-				int col = 0xffff00ff;
+				int col = 0xffff00ff, col2 = 0xffffff55;
 				
-				if (sprite.pixels[x + y * sprite.width] != col) pixels[xa + ya * width] = sprite.pixels[x + y * sprite.width];
+				if (sprite.pixels[x + y * sprite.width] != col 
+						&& sprite.pixels[x + y * sprite.width] != col2) pixels[xa + ya * width] = sprite.pixels[x + y * sprite.width];
+			}
+		}
+	}
+	
+	public void renderElementalCircle(int xp, int yp, Element e, int phase) {
+		int col = 0;
+		Sprite sprite = Sprite.elementalCircle[phase];
+		switch (e) {
+		case FIRE: { col = 0xffE5554C; break;	 }
+		case WATER: { col = 0xff4C70E5; break;	 }
+		case EARTH: { col = 0xff82E54C; break;	 }
+		case WIND: { col = 0xffE5E5E5; break;	 }
+		}
+		
+		for (int y = 0; y < sprite.height; y++){
+			int ya = y + yp;
+			for (int x = 0; x < sprite.width; x++) {
+				int xa = x + xp;
+				int c = 0xffff00ff, c2 = 0xffffff55;
+				
+				if (sprite.pixels[x + y * sprite.width] != c 
+						&& sprite.pixels[x + y * sprite.width] != c2) pixels[xa + ya * width] = sprite.pixels[x + y * sprite.width];
+				if (sprite.pixels[x + y * sprite.width] == 0xffff55ff) pixels[xa + ya * width] = col;
 			}
 		}
 	}
@@ -143,7 +172,7 @@ public class Screen {
 			}
 		}
 	}
-	
+
 	public void renderPixel(int xp, int yp, int color) {
 		pixels[xp + yp* width] = color;
 	}

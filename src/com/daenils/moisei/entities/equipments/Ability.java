@@ -18,7 +18,26 @@ public class Ability extends Equipment {
 	private static int abilityCount;
 	
 	private static Map<Integer, String> mapAbilities = new HashMap<Integer, String>();
-	private int abilityType;
+	protected int abilityCategory; // 0: i 1: b 2: d
+	protected int abilityType; // e.g. debuff.dmg, buff.wordheal, etc. 
+
+	/*
+	 * 0 - debuff.dmg
+	 * 1 - buff.mitigation
+	 * 2 - buff.heal
+	 * 3 - buff.fixElement
+	 * 4 - buff.worddmg
+	 * 5 - buff.wordheal
+	 * 6 - buff.wordmitigation
+	 * 7 - buff.extraEP
+	 * 8 - instant.dmg
+	 * 9 - instant.heal
+	 * 10 - instant.shield(n)
+	 * 11 - instant.replaceLetters(n)
+	 * 12 - buff.fireball
+	 * 13 - buff.reflectiveMitigation
+	 * 14 - instant.replaceElements(n)
+	 */
 
 	private static boolean abilitiesCounted;
 	
@@ -27,14 +46,6 @@ public class Ability extends Equipment {
 	
 	public boolean showTooltip;
 	
-	/*
-	 * 0 - heal 
-	 * 1 - damage
-	 * 2 - utility
-	 * 3 - nc-buff 
-	 * 4 - nc-debuff
-	 * (nc means non-castable)
-	 */
 
 	
 	// CONSTRUCTORS
@@ -47,28 +58,34 @@ public class Ability extends Equipment {
 		
 		String[] tempString = mapAbilities.get(id).split(",");
 
-		this.abilityType = Byte.parseByte(tempString[0]);
-		this.name = tempString[1];
-		this.description = tempString[2];
-		this.icon = Sprite.parseSprite(tempString[3]);
-		this.APcost = Integer.parseInt(tempString[4]);
-		this.MPcost = Integer.parseInt(tempString[5]);
-		this.cooldown = Integer.parseInt(tempString[6]);
-		this.healValue = Integer.parseInt(tempString[7]);
-		this.damageValue = Integer.parseInt(tempString[8]);
-		this.utilityValue = Integer.parseInt(tempString[9]);
-		this.isOT = Boolean.parseBoolean(tempString[10]);
-		this.hotValue = Integer.parseInt(tempString[11]);
-		this.dotValue = Integer.parseInt(tempString[12]);
-		this.motValue = Integer.parseInt(tempString[13]);
-		this.turnCount = Integer.parseInt(tempString[14]);
-		this.targetType = Byte.parseByte(tempString[15]);
-		this.isStun = Boolean.parseBoolean(tempString[16]);
-		this.isDrainMP = Boolean.parseBoolean(tempString[17]);
-		this.isShield = Boolean.parseBoolean(tempString[18]);
+		this.abilityCategory = Integer.parseInt(tempString[0]);
+		this.abilityType = Integer.parseInt(tempString[1]);
+		this.element = parseElementType(Integer.parseInt(tempString[2])); 
+		this.name = tempString[3];
+		this.description = tempString[4];
+		this.icon = Sprite.parseSprite(tempString[5]);
+		this.EPcost = Integer.parseInt(tempString[6]);
+		this.cooldown = Integer.parseInt(tempString[7]);
+		this.valueType = parseValueType(tempString[8]);
+		
+		this.healValue = Integer.parseInt(tempString[9]);
+		this.damageValue = Integer.parseInt(tempString[10]);
+		this.utilityValue = Integer.parseInt(tempString[11]);
+		
+		this.isOT = Boolean.parseBoolean(tempString[12]);
+		this.turnCount = Integer.parseInt(tempString[13]);
+		
+		this.isStun = Boolean.parseBoolean(tempString[14]);
+		this.isReduction = Boolean.parseBoolean(tempString[15]);
+		this.isElemChoice = Boolean.parseBoolean(tempString[16]);
+		this.isShield = Boolean.parseBoolean(tempString[17]);
 	}
 	
 	// GETTERS
+	public int getAbilityCat() {
+		return abilityCategory;
+	}
+	
 	public int getAbilityType() {
 		return abilityType;
 	}
@@ -110,6 +127,20 @@ public class Ability extends Equipment {
 	public String isOnCooldownText() {
 		if (onCooldown) return "CD!";
 		else return "";
+	}
+	
+	public String getTypeString() {
+		switch (this.abilityCategory) {
+		case 0: { return "Instant"; }
+		case 1: { return "Buff"; }
+		case 2: { return "Debuff"; }
+		default: return "N/A";		
+		}
+	}
+	
+	public int getValueType() {
+		// 0: raw | 1: per | 2: cal
+		return valueType;
 	}
 	
 	// SETTERS

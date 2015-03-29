@@ -235,6 +235,13 @@ public class Monster extends Entity {
 	//	aiBehaviorUseShield();	
 		aiBehaviorUseDamageSpells();
 		
+		// BUFFS
+		for (int i = 0; i < buffs.size(); i++)
+			buffs.get(i).update();
+			
+			
+		remove();
+		
 		// basic attack
 		if (checkCanUseSkills() && currentTarget.isAlive) {
 			monsterWait(3);
@@ -262,7 +269,7 @@ public class Monster extends Entity {
 //		System.out.println("Attempting to cast fireball...");
 			monsterWait(3);
 			if (!isWaiting) {
-				useAbility(this, abilities.get(i));
+				useAbilityOLD(this, abilities.get(i));
 			}
 	}
 
@@ -271,7 +278,7 @@ public class Monster extends Entity {
 		if (checkCanUseSkills() && (currentTarget.getMana() < 20 && !currentTarget.isStunned) && currentTarget.isAlive) {
 			monsterWait(3);
 			if (!isWaiting) {
-				useAbility(this, abilities.get(1));
+				useAbilityOLD(this, abilities.get(1));
 			}
 		}
 	}
@@ -280,7 +287,7 @@ public class Monster extends Entity {
 		if (checkCanUseSkills() && this.health < 20) {
 			monsterWait(3);
 			if (!isWaiting) {
-				useAbility(this, abilities.get(0));
+				useAbilityOLD(this, abilities.get(0));
 			}
 		}
 	}
@@ -289,7 +296,7 @@ public class Monster extends Entity {
 		if (checkCanUseSkills() && currentTarget.health < 150) {
 			monsterWait(3);
 			if (!isWaiting) {
-				useAbility(this, abilities.get(1));
+				useAbilityOLD(this, abilities.get(1));
 			}
 		}
 	}
@@ -298,7 +305,7 @@ public class Monster extends Entity {
 		if (checkCanUseSkills()) {
 			monsterWait(3);
 			if (!isWaiting) {
-				useAbility(this, abilities.get(3));
+				useAbilityOLD(this, abilities.get(3));
 			}
 		}
 	}
@@ -389,7 +396,7 @@ public class Monster extends Entity {
 		Game.getGameplay().setIsWaitingOn(false);
 	}
 	
-	protected static void resetMonstersAttacked() {
+	public static void resetMonstersAttacked() {
 		monstersAttacked = 0;
 	}
 
@@ -403,6 +410,10 @@ public class Monster extends Entity {
 	
 	public static int getDeathCount() {
 		return deathCount;
+	}
+	
+	public boolean getForceRemoved() {
+		return forceRemoved;
 	}
 	
 	public void forceRemove(Entity e1, int n) {

@@ -103,10 +103,10 @@ public class Text {
 	    	int[] colors = {
 	    		0xff000000,	// 0: BLACK
 	    		0xffffffff,		// 1: ELEMENT-WHITE
-	    		0xffff0000, 	// 2: ELEMENT-RED
-	    		0xff00ff00, 	// 3: ELEMENT-GREEEN
-	    		0xff0000ff,	// 4: ELEMENT-BLUE
-	    		0xffbbbbbb		// 5: ELEMENT-GREY
+	    		Screen.PALETTE_LIGHT[0], 	// 2: ELEMENT-RED
+	    		Screen.PALETTE_LIGHT[2], 	// 3: ELEMENT-GREEEN
+	    		Screen.PALETTE_LIGHT[1],	// 4: ELEMENT-BLUE
+	    		Screen.PALETTE_LIGHT[3] 	// 5: ELEMENT-GREY
 	    						// 6: ?
 								// 7: ?
 								// 8: ?

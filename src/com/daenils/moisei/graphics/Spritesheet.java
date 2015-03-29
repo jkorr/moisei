@@ -20,6 +20,7 @@ public class Spritesheet {
 	// lettersheet:
 	
 	public static Spritesheet lettersheet = new Spritesheet("/textures/letters/letter-grid.png", 180, 180, 30, 30);
+	public static Spritesheet circlesheet = new Spritesheet("/textures/gui/circle-final.png", 20, 100, 20, 20);
 	
 	public Spritesheet(String path, int w, int h, int sw, int sh) {
 		this.path = path;
@@ -46,6 +47,10 @@ public class Spritesheet {
 	
 	public Sprite[] getSprites() {
 		return sprites;
+	}
+	
+	public Sprite getSprite(int i) {
+		return sprites[i];
 	}
 	
 	public int getWidth() {

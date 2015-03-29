@@ -15,6 +15,7 @@ import java.util.TreeMap;
 
 import com.daenils.moisei.Game;
 import com.daenils.moisei.files.FileManager;
+import com.daenils.moisei.graphics.Screen;
 import com.daenils.moisei.graphics.Sprite;
 
 public class Letter {
@@ -44,10 +45,10 @@ public class Letter {
 		this.icon = Sprite.letter[(int) value - 65];
 		
 		if (letterElement == Element.NEUTRAL) this.frameColor = 0xffffffff;
-		else if (letterElement == Element.FIRE) this.frameColor = 0xffff0000;
-		else if (letterElement == Element.WATER) this.frameColor = 0xff0000ff;
-		else if (letterElement == Element.EARTH) this.frameColor = 0xff00ff00;
-		else if (letterElement == Element.WIND) this.frameColor = 0xffbbbbbb;
+		else if (letterElement == Element.FIRE) this.frameColor = Screen.PALETTE_LIGHT[0];
+		else if (letterElement == Element.WATER) this.frameColor = Screen.PALETTE_LIGHT[1];
+		else if (letterElement == Element.EARTH) this.frameColor = Screen.PALETTE_LIGHT[2];
+		else if (letterElement == Element.WIND) this.frameColor = Screen.PALETTE_LIGHT[3];
 		else if (letterElement == Element.MAGIC) this.frameColor = 0xffaa00aa;
 		else this.frameColor = 0;
 	

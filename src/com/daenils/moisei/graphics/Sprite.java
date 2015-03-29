@@ -62,6 +62,7 @@ public class Sprite {
 	 */
 	
 	public static Sprite[] letter = Sprite.split(Spritesheet.lettersheet);
+	public static Sprite[] elementalCircle = Sprite.split(Spritesheet.circlesheet);
 	
 	public Sprite(String path, int w, int h) {
 		this.width = w;
@@ -74,6 +75,16 @@ public class Sprite {
 
 		
 		load();
+	}
+	
+	public Sprite(Sprite spr) {
+		this.width = spr.getWidth();
+		this.height = spr.getHeight();
+		this.pixels = new int[spr.pixels.length];
+		
+		for (int i = 0; i < spr.pixels.length; i++) {
+			this.pixels[i] = spr.pixels[i];
+		}
 	}
 
 	public Sprite(int[] pixels, int spriteWidth, int spriteHeight) {
@@ -127,6 +138,10 @@ public class Sprite {
 		
 		return sprites;
 		 
+	}
+	
+	public void renderPixel(int xp, int yp, int color) {
+		if (pixels[xp + yp* width] == 0xffffff55) pixels[xp + yp* width] = color;
 	}
 
 	public int getWidth() {

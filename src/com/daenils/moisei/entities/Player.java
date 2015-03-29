@@ -1,11 +1,14 @@
 package com.daenils.moisei.entities;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import com.daenils.moisei.CombatLog;
 import com.daenils.moisei.Game;
+import com.daenils.moisei.Gameplay;
 import com.daenils.moisei.Stage;
 import com.daenils.moisei.entities.Letter.Element;
 import com.daenils.moisei.files.FileManager;
@@ -31,6 +34,9 @@ public class Player extends Entity {
 	
 	protected int goldAmount;
 	
+	// LEVEL-XPNEEDED MAP
+		protected static Map<Byte,Integer> mapLevelRanges = new HashMap<Byte,Integer>();
+	
 	// LETTER INVENTORY STUFF
 	protected boolean letterWindowHasOpened;
 	
@@ -38,12 +44,23 @@ public class Player extends Entity {
 	protected List<Letter> letterInventory = new ArrayList<Letter>();
 	protected List<Letter> letterBar = new ArrayList<Letter>();
 	protected List<Letter> radialMenu = new ArrayList<Letter>();
+	protected List<String> submittedWords = new ArrayList<String>();
 	protected int letterAmount, maxLetterAmount;
 	
 	protected int initialLetterSpawn = 2 * 8;
 	protected int[] letterCount = new int[26];
 	protected String letterCountString = "";
 	protected int vowelCount, consonantCount;
+	
+	protected double wordDamageModifier = 0;
+	protected int wordHeal = 0;
+	protected int wordDamageReduction = 0;
+	protected boolean awardWordExtraEP = false;
+	
+	// BUFF.FIXELEMENT
+	protected int fixElement = -1;
+	protected boolean elementRadialMenuRequested;
+	protected boolean isRadialMenuEleUp;
 	
 	// LETTER GEN STUFF
 	private List<Character> letterlistValue;
@@ -95,6 +112,8 @@ public class Player extends Entity {
 		// FILL TEST CAPS
 		fillBaseElementalPowerCaps();
 		
+		initLevelRanges();
+		
 		this.name = "Player";
 		this.type = "player";
 		this.id = -1;
@@ -117,8 +136,9 @@ public class Player extends Entity {
 //		this.playerAbility[2] = new Ability(3, this);
 //		this.playerAbility[3] = new Ability(1, this);
 		
-	//	initAbilities();
+		initAbilities();
 	//	initWeapons();
+		this.addEP(0, 25);
 		
 		this.baseHealth = 50;
 		this.baseMana = 25;
@@ -165,6 +185,7 @@ public class Player extends Entity {
 	}
 
 	private void fillBaseElementalPowerCaps() {
+		// 3, 6, 9, 12
 		for (int i = 0; i < elementalPowerCap.length; i++) 	{
 			elementalPowerCap[i] = (i+1) * 3;
 			elementalPowerCapSum += elementalPowerCap[i];
@@ -180,10 +201,8 @@ public class Player extends Entity {
 	}
 
 	public void initAbilities() {
-//		unlockAbility(this, 1);
-//		unlockAbility(this, 2);
-//		unlockAbility(this, 3);
-//		unlockAbility(this, 0);
+		for (int i = 1; i <= 16; i++)
+			unlockAbility(this, i);
 	}
 	
 	public void initWeapons() {
@@ -191,6 +210,19 @@ public class Player extends Entity {
 //		unlockWeapon(this, 2);
 //		unlockWeapon(this, 4);
 		if (this.weapons.size() > 0) this.weapon = weapons.get(0);
+	}
+	
+	public static void initLevelRanges() {
+		mapLevelRanges.put((byte) 1, 10);
+		mapLevelRanges.put((byte) 2, 40);
+		mapLevelRanges.put((byte) 3, 100);
+		mapLevelRanges.put((byte) 4, 300);
+		mapLevelRanges.put((byte) 5, 400);
+		mapLevelRanges.put((byte) 6, 600);
+		mapLevelRanges.put((byte) 7, 100);
+		mapLevelRanges.put((byte) 8, 2000);
+		mapLevelRanges.put((byte) 9, 3250);
+		mapLevelRanges.put((byte) 10, 749925); // placeholder, reaching it is not intended
 	}
 	
 	public void update() {
@@ -224,15 +256,15 @@ public class Player extends Entity {
 //		System.out.println("A3 CD: " + abilities.get(3).isOnCooldown());
 		
 		// set a default target
-		if (currentTarget == null && Game.getGameplay().monstersAlive > 0) {
+		if (currentTarget == null && Game.getGameplay().getMonstersAlive() > 0) {
 	//		System.out.println("new target...");
 			newCycledTarget();
 		}
 		
-
+	//	System.out.println(currentWord);
 		
 		// Check if it's the player turn and no cooldown and alive:
-		if (Game.getGameplay().getIsPlayerTurn() && !Game.getGameplay().onGlobalCooldown && actionPoints > 0 && isAlive == true && Game.getGameplay().getContinueGame())
+		if (Game.getGameplay().getIsPlayerTurn() && !Game.getGameplay().isOnGlobalCooldown() && actionPoints > 0 && isAlive == true && Game.getGameplay().getContinueGame())
 			canUseSkills = true;
 		else canUseSkills = false;
 		
@@ -273,41 +305,45 @@ public class Player extends Entity {
 				}
 		}
 		
+		// ELE RADIAL
+		for (int i = 0; i < 4; i++) {
+			if (input.radialChoice[i] && canUseSkills && isRadialMenuEleUp) {
+				setFixElement(i);
+				isRadialMenuEleUp = false;
+				}
+		}
+		
 //		System.out.println(radialMenuSize);
 		
-		// Q ABILITY
-	//	if (input.playerQ && canUseSkills && (abilities.size() > 0)) {
+		// FIRE SPELLS
 		if (input.playerQ && canUseSkills) {
-		//	useAbility(this, abilities.get(0));
-		//	getUnstuck();
-			Game.getGameplay().testNotif();
-		//	Game.getGameplay().endTurn(this);
+			useAbility(this, abilities.get(0));	
 			Game.getGameplay().enableGlobalCooldown();
 		}
 		
-		// W ABILITY
-		if (input.playerW && canUseSkills && (abilities.size() > 1)) {
-		//	useAbility(this, abilities.get(1));
-			spawnLettersNEW(1);
+		// WATER SPELLS
+		if (input.playerW && canUseSkills) {
+			useAbility(this, abilities.get(1));
+			
 			Game.getGameplay().enableGlobalCooldown();
 		}
 		
-		// E ABILITY
-		if (input.playerE && canUseSkills && (abilities.size() > 2)) {
-		//	useAbility(this, abilities.get(2));
+		// EARTH SPELLS
+		if (input.playerE && canUseSkills) {
+			useAbility(this, abilities.get(2));
 			Game.getGameplay().enableGlobalCooldown();
 		}
 		
-		// R ABILITY
-		if (input.playerR && canUseSkills && (abilities.size() > 3)) {
+		// WIND SPELLS
+		if (input.playerR && canUseSkills) {
 			useAbility(this, abilities.get(3));
 			Game.getGameplay().enableGlobalCooldown();
 		}
 		
 		// END TURN
-		if (input.playerEndTurn && !Game.getGameplay().onGlobalCooldown && Game.getGameplay().getIsPlayerTurn() && !Game.getGameplay().getForcedPause()) {
+		if (input.playerEndTurn && !Game.getGameplay().isOnGlobalCooldown() && Game.getGameplay().getIsPlayerTurn() && !Game.getGameplay().getForcedPause()) {
 			// System.out.println("!!!");
-			if (Game.getGameplay().monstersAlive > 0 && this.isAlive) {
+			if (Game.getGameplay().getMonstersAlive() > 0 && this.isAlive) {
 				this.resetCurrentWord();
 				submitWord();
 			//	Game.getGameplay().endTurn(this);
@@ -321,7 +357,7 @@ public class Player extends Entity {
 		}
 		
 		// SWITCH WEAPONS
-/*		if (input.playerSwitchWeapon && !Game.getGameplay().onGlobalCooldown && Game.getGameplay().getIsPlayerTurn()) {
+/*		if (input.playerSwitchWeapon && !Game.getGameplay().isOnGlobalCooldown() && Game.getGameplay().getIsPlayerTurn()) {
 			if (this.weapons.size() > 0) {
 				if (weaponSwitcher == weapons.size() - 1) {
 					this.weapon = null;
@@ -340,7 +376,7 @@ public class Player extends Entity {
 		*/
 		
 		// PAUSE GAME
-		if (input.playerPauseGame && !Game.getGameplay().onGlobalCooldown) {
+		if (input.playerPauseGame && !Game.getGameplay().isOnGlobalCooldown()) {
 			if (Game.getGameplay().getContinueGame()) {
 				Game.getGameplay().setContinueGame(false);
 				Game.getGameplay().setForcedPause(true);
@@ -353,22 +389,22 @@ public class Player extends Entity {
 		}
 		
 		// DEBUG: ADD MONSTER
-	//	if (input.debugAddMonster && !Game.getGameplay().onGlobalCooldown) {
-	//		if (Game.getGameplay().monstersAlive > 0) Game.getGameplay().spawnMonster();
+		if (input.debugAddMonster && !Game.getGameplay().isOnGlobalCooldown()) {
+			Game.getGameplay().endTurn(this);
+			Game.getGameplay().enableGlobalCooldown();
+		}
+	//		if (Game.getGameplay().getMonstersAlive() > 0) Game.getGameplay().spawnMonster();
 	//		else Game.getGameplay().newMonsterWave();
 	//	}
 		
 		// DEBUG: FORCE NEW WAVE
-		if (input.debugForceNewWave && !Game.getGameplay().onGlobalCooldown) {
-		//	Game.getGameplay().newMonsterWave();
-		//	((Monster) currentTarget).isAlive = false;
-		//	Game.getGameplay().playerOverride = true;
-		//	stage.setRandomStage();
+		if (input.debugForceNewWave && !Game.getGameplay().isOnGlobalCooldown()) {
+		
 	//		Game.getGameplay().enableGlobalCooldown(); 
 		}
 		
 		// DEBUG: TOGGLE FPS LOCK
-		if (input.debugToggleFpsLock && !Game.getGameplay().onGlobalCooldown) {
+		if (input.debugToggleFpsLock && !Game.getGameplay().isOnGlobalCooldown()) {
 			// DEBUG FUNCTION TO TOGGLE FPS LOCK ON/OFF
 				Game.toggleFpsLock();
 				System.err.print("\n" + Game.isFpsLockedString());
@@ -376,7 +412,7 @@ public class Player extends Entity {
 		}
 		
 		// DEBUG: SHOW DEBUG INFO
-		if (input.debugShowDebugInfo && !Game.getGameplay().onGlobalCooldown) {
+		if (input.debugShowDebugInfo && !Game.getGameplay().isOnGlobalCooldown()) {
 			if (Game.getGameplay().getDebugView() < Gameplay.DEBUG_VIEWS)
 				Game.getGameplay().incrementDebugView();
 			else Game.getGameplay().setDebugView(0);
@@ -401,6 +437,13 @@ public class Player extends Entity {
 	//	System.out.println(vowelCount + consonantCount);
 		
 		cleanRadialMenu();
+		
+		// BUFFS:
+		for (int i = 0; i < buffs.size(); i++)
+				buffs.get(i).update();
+				
+				
+		remove();
 		
 	}
 	
@@ -431,7 +474,7 @@ public class Player extends Entity {
 	private void inputTargeting() {
 			// OLD
 			for (int i = 0; i < stage.getMonsters().size(); i++) {
-				if (input.playerTarget[i] && !Game.getGameplay().onGlobalCooldown) {
+				if (input.playerTarget[i] && !Game.getGameplay().isOnGlobalCooldown()) {
 					setTarget(stage.getMonsters().get(i));
 					targetCycled = i + 1;
 					Game.getGameplay().enableGlobalCooldown();
@@ -442,7 +485,7 @@ public class Player extends Entity {
 			// NEW
 			if (targetCycled >= stage.getMonsters().size()) targetCycled = 0;
 //			System.out.println(targetCycled);
-			if (input.playerCycleTargets && !Game.getGameplay().onGlobalCooldown) {
+			if (input.playerCycleTargets && !Game.getGameplay().isOnGlobalCooldown()) {
 				newCycledTarget();
 				Game.getGameplay().enableGlobalCooldown();
 			}
@@ -471,7 +514,7 @@ public class Player extends Entity {
 		
 		// BASIC ATTACK
 				for (int i = 0; i < stage.getMonsters().size(); i++) {
-					if (Mouse.getB() == 1 && canUseSkills && this.currentTarget == stage.getMonsters().get(i) && !Game.getGameplay().onGlobalCooldown
+					if (Mouse.getB() == 1 && canUseSkills && this.currentTarget == stage.getMonsters().get(i) && !Game.getGameplay().isOnGlobalCooldown()
 							&& Mouse.getX() > stage.getMonsters().get(i).x * Game.getScale()
 							&& Mouse.getX() < (stage.getMonsters().get(i).x + stage.getMonsters().get(i).width) * Game.getScale()
 							&& Mouse.getY() > stage.getMonsters().get(i).y * Game.getScale()
@@ -483,7 +526,7 @@ public class Player extends Entity {
 		
 		// TARGETING
 		for (int i = 0; i < stage.getMonsters().size(); i++) {
-			if (Mouse.getB() == 1 && stage.getMonsters().size() > i && !Game.getGameplay().onGlobalCooldown
+			if (Mouse.getB() == 1 && stage.getMonsters().size() > i && !Game.getGameplay().isOnGlobalCooldown()
 					&& Mouse.getX() > stage.getMonsters().get(i).x * Game.getScale()
 					&& Mouse.getX() < (stage.getMonsters().get(i).x + stage.getMonsters().get(i).width) * Game.getScale()
 					&& Mouse.getY() > stage.getMonsters().get(i).y * Game.getScale()
@@ -507,12 +550,12 @@ public class Player extends Entity {
 		}
 		
 		// END TURN
-		if (Mouse.getB() == 1 && !Game.getGameplay().onGlobalCooldown && Game.getGameplay().getIsPlayerTurn() && !Game.getGameplay().getForcedPause()
+		if (Mouse.getB() == 1 && !Game.getGameplay().isOnGlobalCooldown() && Game.getGameplay().getIsPlayerTurn() && !Game.getGameplay().getForcedPause()
 				&& Mouse.getX() > 395
 				&& Mouse.getX() < 512
 				&& Mouse.getY() > 609
 				&& Mouse.getY() < 623) {
-			if (Game.getGameplay().monstersAlive > 0) Game.getGameplay().endTurn(this);
+			if (Game.getGameplay().getMonstersAlive() > 0) Game.getGameplay().endTurn(this);
 			else {
 				Game.getGameplay().setContinueGame(true);
 			}
@@ -525,28 +568,32 @@ public class Player extends Entity {
 	}
 	
 	public void render(Screen screen) {
+
+		
 		// RENDER SELF
 		if (this.isGettingDamage) screen.renderSpriteAsColor(x, y, sprite, 1, 0xffffffff);
 		else screen.renderSprite(x, y, sprite, 1);
-		
+
+		int[] frameColors = {Screen.PALETTE_LIGHT[0], Screen.PALETTE_LIGHT[3], Screen.PALETTE_LIGHT[1], Screen.PALETTE_LIGHT[2], Screen.PALETTE_LIGHT[4]};
 		// RENDER RADIAL MENU
-		int[] frameColors = {0xffff0000, 0xffbbbbbb, 0xff0000ff, 0xff00ff00, 0xffffffff};
-		
+
 		// render empty
 		if (isRadialMenuUp) {
-			for (int i = 0; i < 5; i++) {
-				screen.renderSprite( radialMenuIcon[0][0], radialMenuIcon[0][1], Sprite.letter[27+5], 1);
-				screen.renderSprite( radialMenuIcon[1][0], radialMenuIcon[1][1], Sprite.letter[30+5], 1);
-				screen.renderSprite( radialMenuIcon[2][0], radialMenuIcon[2][1], Sprite.letter[28+5], 1);
-				screen.renderSprite( radialMenuIcon[3][0], radialMenuIcon[3][1], Sprite.letter[29+5], 1);
+				screen.renderSprite( radialMenuIcon[0][0], radialMenuIcon[0][1], Sprite.letter[27+5], 1); // F
+				screen.renderSprite( radialMenuIcon[1][0], radialMenuIcon[1][1], Sprite.letter[30+5], 1); // WI
+				screen.renderSprite( radialMenuIcon[2][0], radialMenuIcon[2][1], Sprite.letter[28+5], 1); // WA
+				screen.renderSprite( radialMenuIcon[3][0], radialMenuIcon[3][1], Sprite.letter[29+5], 1); // EA
 				screen.renderSprite( radialMenuIcon[4][0], radialMenuIcon[4][1], Sprite.letter[26+5], 1);
-				
-				/*	for (int l = 0; l < 30; l++) {
-					for (int k = 0; k < 30; k++) {
-						screen.renderPixel(k + radialMenuIcon[i][0], l + radialMenuIcon[i][1], frameColors[i]);
-					}
-				} */	
-			}
+			
+
+		}
+		
+		if (isRadialMenuEleUp) {
+			screen.renderSprite( radialMenuIcon[0][0], radialMenuIcon[0][1], Sprite.letter[27], 1); // F
+			screen.renderSprite( radialMenuIcon[1][0], radialMenuIcon[1][1], Sprite.letter[30], 1); // WI
+			screen.renderSprite( radialMenuIcon[2][0], radialMenuIcon[2][1], Sprite.letter[28], 1); // WA
+			screen.renderSprite( radialMenuIcon[3][0], radialMenuIcon[3][1], Sprite.letter[29], 1); // EA
+			//		screen.renderSprite( radialMenuIcon[4][0], radialMenuIcon[4][1], Sprite.letter[26+5], 1);
 		}
 		
 		for (int i = 0; i < letterInventory.size(); i++) {
@@ -615,7 +662,7 @@ public class Player extends Entity {
 				//	&& gui.getWindow("inventory").getRequestedLetterNum() > 0
 					&& Screen.getWindow("inventory").getRequestedLetter() != null
 					&& Screen.getWindow("inventory").getRequestedLetter().getIsHoveredOver()
-					&& !Game.getGameplay().onGlobalCooldown) {
+					&& !Game.getGameplay().isOnGlobalCooldown()) {
 		//		this.selectLetterById(Screen.getWindow("inventory").getRequestedLetter().getId());
 				Game.getGameplay().enableGlobalCooldown();
 			}
@@ -625,7 +672,7 @@ public class Player extends Entity {
 					&& Screen.getWindow("inventory").getRequestedLetterNum() > 0
 					&& Screen.getWindow("inventory").getRequestedLetter() != null
 					&& Screen.getWindow("inventory").getRequestedLetter().getIsHoveredOver()
-					&& !Game.getGameplay().onGlobalCooldown) {
+					&& !Game.getGameplay().isOnGlobalCooldown()) {
 		//		this.despawnLetter(gui.getWindow("inventory").getRequestedLetterNum(), l);
 				Game.getGameplay().enableGlobalCooldown();
 			}
@@ -642,13 +689,13 @@ public class Player extends Entity {
 				//	&& gui.getWindow("letterbar").getRequestedLetterNum() > -1
 					&& Screen.getWindow("letterbar").getRequestedLetter() != null
 					&& Screen.getWindow("letterbar").getRequestedLetter().getIsHoveredOver()
-					&& !Game.getGameplay().onGlobalCooldown) {
+					&& !Game.getGameplay().isOnGlobalCooldown()) {
 				this.deselectLetterById(Screen.getWindow("letterbar").getRequestedLetter().getId());
 				Game.getGameplay().enableGlobalCooldown();
 			}
 			
 			if (Screen.getWindow("letterbar").getClickedDialogueOption()
-					&& !Game.getGameplay().onGlobalCooldown) {
+					&& !Game.getGameplay().isOnGlobalCooldown()) {
 				submitWord();
 				Game.getGameplay().enableGlobalCooldown();
 			}
@@ -697,9 +744,20 @@ public class Player extends Entity {
 			}
 		}
 		
+		public void createRadialMenuFixElement() {
+			isRadialMenuEleUp = true;
+			setElementRadialRequested(true);
+		}
+		
 		
 		private void submitWord() {
 			String word = getWordFromBar();
+			
+			CombatLog.println("Word submitted: " + word);
+			checkWord(word);
+		}
+
+		private void setCurrentWordValue(String word) {
 			//CURRENTWORD STUFF
 			int i = 0, k = 0;
 			
@@ -715,16 +773,28 @@ public class Player extends Entity {
 			}
 			
 			this.currentWordLength = word.length() * 2;
-			
-			
-			CombatLog.println("Word submitted: " + word);
-			checkWord(word);
 		}
 		
 		private void checkWord(String word) {
 			int playerDamage;
 			int[] dominantElement;
 			if (lookupWord(word.toLowerCase())) {
+				setCurrentWordValue(word);
+				submittedWords.add(word);
+				if (wordHeal > 0) {
+					wordHeal *= word.length();
+					doHealing(this, this, null, wordHeal);
+				}
+				
+				if (wordDamageReduction > 0) {
+					wordDamageReduction *= word.length();
+					setDamageReduction(wordDamageReduction);
+				}
+				
+				if (awardWordExtraEP) {
+					addEP(0, word.length() / 2);
+				}
+				
 				CombatLog.println("Yay! Such a nice word: " + word.toLowerCase() + "!");
 				dominantElement = identifyDominantElement(letterBar);
 				playerDamage = getWordDamage(letterBar.size(), dominantElement);
@@ -736,6 +806,7 @@ public class Player extends Entity {
 				Game.getGameplay().endTurn(this);
 			} else
 				CombatLog.println("Sorry, not a word.");
+				
 		}
 		
 
@@ -752,10 +823,10 @@ public class Player extends Entity {
 				word += (this.getLetterBar().get(i).getValue());
 				switch (this.getLetterBar().get(i).getFrame()) {
 				case 0xffffffff: currentWordColors[i] = 1; break;			// N
-				case 0xffff0000: currentWordColors[i] = 2; break;		// FIRE
-				case 0xff0000ff: currentWordColors[i] = 4; break; 		// WATER
-				case 0xff00ff00: currentWordColors[i] = 3; break;		// EARTH
-				case 0xffbbbbbb: currentWordColors[i] = 5; break;		// WIND
+				case 0xffE5554C: currentWordColors[i] = 2; break;		// FIRE
+				case 0xff4C70E5: currentWordColors[i] = 4; break; 		// WATER
+				case 0xff82E54C: currentWordColors[i] = 3; break;		// EARTH
+				case 0xffE5E5E5: currentWordColors[i] = 5; break;		// WIND
 				default: currentWordColors[i] = 0; break;
 				}
 			}
@@ -793,7 +864,7 @@ public class Player extends Entity {
 					break;
 				default:	
 					// NOTHING
-					System.out.println("ERR? Nothing happens.");
+				//	System.out.println("ERR? Nothing happens.");
 					break;
 				}
 			}
@@ -862,8 +933,12 @@ public class Player extends Entity {
 		}
 		
 		private int getWordDamage(int wordLength, int[] dominantElement) {
+			// TO RE-ENABLE THE OLD DIRECT LETTER ELEMENTAL EFFECTS BASED ON DOMINANCY RULES
+			// JUST REMOVE THE 3x // before temp, baseDamage and healing values below
+			
 			double baseDamage = 0;
 			double eDamage = 0;
+			
 			int healing = 0; // percent (of player hp)
 			double[] temp;
 			// BASIC DAMAGE CODE HERE
@@ -874,27 +949,27 @@ public class Player extends Entity {
  				// DOMINANT ELEMENT-RELATED CODE HERE
  				letterDominantEffect(this);
  				CombatLog.println("The dominant element is " + dominantElement[0]);
- 				temp = lookUpWordEffect(dominantElement[0], baseDamage, healing);
- 				baseDamage = temp[0];
- 				healing = (int) temp[1];
+ 		//		temp = lookUpWordEffect(dominantElement[0], baseDamage, healing);
+ 		//		baseDamage = temp[0];
+ 		//		healing = (int) temp[1];
  			} else
  				CombatLog.println("No dominant element.");
  			
  			if (dominantElement[1] > 0) {
  				CombatLog.println("The minor dominant element 1 is " + dominantElement[1]);
- 				temp = lookUpWordEffect(dominantElement[1], baseDamage, healing);
- 				baseDamage = temp[0];
- 				healing = (int) temp[1];
+ 		//		temp = lookUpWordEffect(dominantElement[1], baseDamage, healing);
+ 		//		baseDamage = temp[0];
+ 		//		healing = (int) temp[1];
  			}
  			if (dominantElement[2] > 0) {
  				CombatLog.println("The minor dominant element 2 is " + dominantElement[2]);
- 				temp = lookUpWordEffect(dominantElement[2], baseDamage, healing);
- 				baseDamage = temp[0];
- 				healing = (int) temp[1];
+ 		//		temp = lookUpWordEffect(dominantElement[2], baseDamage, healing);
+ 		//		baseDamage = temp[0];
+ 		//		healing = (int) temp[1];
  			}
  			
  			// RETURN
-			return (int) (baseDamage + eDamage);
+			return (int) ((baseDamage + eDamage) * ((100.0 + wordDamageModifier) / 100.0));
 		}
 		
 		private double[] lookUpWordEffect(int n, double baseDamage, int healing) {
@@ -1168,7 +1243,7 @@ public class Player extends Entity {
 			
 	
 			
-			protected void spawnLettersNEW(int amount) {
+			public void spawnLettersNEW(int amount) {
 				// data
 				// TODO: make it into a nice hashmap like the other stuff and read it from file
 					
@@ -1212,7 +1287,17 @@ public class Player extends Entity {
 							 for (int i = 0; i < amount; i++) {
 								value = randomCharacters[i];
 								lastLetter = value;
-								randomElement = getRandomElement();
+								
+								switch(fixElement) {
+									case -1: { randomElement = getRandomElement(); break; }
+									case 0: { randomElement = Element.FIRE; break; }
+									case 1: { randomElement = Element.WIND; break; }
+									case 2: { randomElement = Element.WATER; break; }
+									case 3: { randomElement = Element.EARTH; break; }
+									default: randomElement = getRandomElement();
+								}
+								
+								
 								Letter letter = new Letter(value, randomElement);
 								updateVowelCount();
 								this.addLetter(letter);
@@ -1328,8 +1413,8 @@ public class Player extends Entity {
 	
 	// 2. REMOVE LETTER FROM PLAYER INVENTORY (FOR GOOD)
 	protected void despawnLetter(int n, List<Letter> l) {
-		CombatLog.println("Letter " + letterBar.get(n).getValue() + " removed.");
-		this.letterCount[letterBar.get(n).getValue() - 65]--;
+		CombatLog.println("Letter " + l.get(n).getValue() + " removed.");
+		this.letterCount[l.get(n).getValue() - 65]--;
 		removeLetter(n, l);
 	}
 	
@@ -1337,7 +1422,7 @@ public class Player extends Entity {
 		CombatLog.println("Letter " + list.get(n).getValue() + " removed (by id).");
 		for (int i = 0; i < list.size(); i++) {			
 			if (list.get(i).getId() == n) {
-				this.letterCount[letterBar.get(n).getValue() - 65]--;
+				this.letterCount[list.get(n).getValue() - 65]--;
 				removeLetter(i, list);				
 			}
 		}
@@ -1538,6 +1623,70 @@ public class Player extends Entity {
 		removeLetter(n, radialMenu);
 	}
 	
+	protected void replaceLetters(int amount) {
+		// REMOVING RANDOM LETTERS
+		if (letterInventory.size() >= amount) {
+
+			// INIT ARRAY
+			// -1ing is neccessary to avoid conflict with the isItPicked(int[], int) method
+			int[] toReplace = new int[amount];
+			for (int i = 0; i < amount; i++)
+				toReplace[i] = -1;
+			
+			int newRnd;
+			
+			int ic = 0;
+			while (ic < amount) {
+				newRnd = rand.nextInt((((letterInventory.size() - 1) - 0) + 1) + 0);
+				if (!isItPicked(toReplace, newRnd)) {
+					toReplace[ic] = newRnd;
+					System.out.println(ic + ", " + toReplace[ic]);
+					ic++;
+				}
+			}
+			
+			System.out.println();
+			insSort(toReplace);
+			for (int i = 0; i < amount; i++) {
+				System.out.print(" " + toReplace[i]);			
+			}
+			
+	
+			for (int i = 0; i < toReplace.length; i++) 
+				despawnLetter(toReplace[i]-i, letterInventory);
+				
+
+			updateVowelCount();
+			genVowelCount = vowelCount;
+			
+		}
+		
+		// SPAWNING NEW ONES
+		if (letterInventory.size() < getInitialLetterSpawn()) {
+			spawnLettersNEW(getInitialLetterSpawn() - letterInventory.size());
+		}
+		
+	}
+	
+	private void insSort(int[] arrayIn) {
+		for (int i = 1; i < arrayIn.length; i++) {
+			int temp = arrayIn[i];
+			int j;
+			for (j = i - 1; j >= 0 && temp < arrayIn[j]; j--)
+				arrayIn[j + 1] = arrayIn[j];
+			arrayIn[j + 1] = temp;
+		}
+	}
+	
+	private boolean isItPicked(int[] a, int c) {
+		int ic = 0;
+		for (int i = 0; i < a.length; i++) {
+			if (c != a[i]) ic++;			
+		}
+		if (ic == a.length) return false;
+		else return true;
+	}
+	
 	// RANDOMS
 	private char getRandomCharacter() {
 		int n;
@@ -1729,6 +1878,27 @@ public class Player extends Entity {
 			genVowelCount = vowelCount;
 	}
 	
+	protected void removeArrayLetters(int[] array) {
+		int ic = 0;
+		
+		//	System.out.println(ic);
+			do {
+				ic = 0;
+				for (int i = 0; i < letterInventory.size(); i++) {
+					for (int k = 0; k < array.length; k++)
+						if (i == array[k]) ic++;
+				}
+				
+				for (int i = 0; i < letterInventory.size(); i++) {
+					for (int k = 0; k < array.length; k++)
+						if (i == array[k]) letterInventory.remove(i);
+				}
+			} while (ic > 0);
+			
+			updateVowelCount();
+			genVowelCount = vowelCount;
+	}
+	
 	protected void clearLetterBar() {
 	//	int[] idsToClear = new int[letterBar.size()]; 
 	//	for (int i = 0; i < letterBar.size(); i++) {
@@ -1764,11 +1934,16 @@ public class Player extends Entity {
 	}
 	
 	public void addElementalPower(int i, int value) {
-		elementalPower[i] += value;
+		if (elementalPower[i] + value <= elementalPowerCapSum) {
+			elementalPower[i] += value;			
+		} else {
+			elementalPower[i] += (elementalPowerCapSum - elementalPower[i]);
+		}
 	}
 	
 	public void addElementalPower(int i) {
-		elementalPower[i]++;
+		if (elementalPower[i] < elementalPowerCapSum)
+			elementalPower[i]++;
 	}
 	
 	public void removeElementalPower(int i, int value) {
@@ -1778,4 +1953,179 @@ public class Player extends Entity {
 	public void emptyElementalPower(int i) {
 		elementalPower[i] = 0;
 	}
+	
+	public int getVowelCount() {
+		return vowelCount;
+	}
+	
+	public int getConsonantCount() {
+		return consonantCount;
+	}
+	
+	public int getElementalPowerCapSum() {
+		return elementalPowerCapSum;
+	}
+	
+	public int getElementDroprate(int i) {
+		return elementDroprate[i];
+	}
+	
+	public Letter getLetterBar(int i) {
+		return letterBar.get(i);
+	}
+	
+	public int getLetterBarSize() {
+		return letterBar.size();
+	}
+	
+	public int getLetterInventorySize() {
+		return letterInventory.size();
+	}
+	
+	public int getLetterDroprate(int i) {
+		return letterDroprate[i];
+	}
+	
+	public int getLetterDroprateBracket(int i) {
+		return letterDroprateBracket[i];
+	}
+	
+	public int getElementDroprateBracket(int i) {
+		return elementDroprateBracket[i];
+	}
+	
+	public String getLetterCountString() {
+		return letterCountString;
+	}
+	
+	public int getRollMax() {
+		return rollMax;
+	}
+	
+	public int getERollMax() {
+		return eRollMax;
+	}
+	
+	public int getInitialLetterSpawn() {
+		return initialLetterSpawn;
+	}
+	
+	public int getMapLevelRanges(byte i) {
+		return mapLevelRanges.get(i);
+	}
+	
+	public void setXpNeeded() {
+		this.xpNeeded = getMapLevelRanges(this.level);
+//		System.out.println(this.xpNeeded);
+	}
+	
+	public void setXpGained() {
+		this.xpGained = (int) (Math.floor((((this.level * 10.0) / 2.0) + Math.pow((this.level / 2.0), 2.0)) / 5.0) * 5.0);
+		System.out.println("XPGAIN" + xpGained);
+		for (int i = 1; i < 12; i++) {
+	//		System.out.println(i + ":" + Math.floor((((i * 10.0) / 2.0) + Math.pow((i / 2.0), 2.0)) / 5.0) * 5.0);
+		}
+	}
+	
+	public void checkLevelUp() {
+		if (this.xp >= this.xpNeeded) {
+			this.levelUp();
+			this.setXpNeeded();
+			this.setXpGained();
+			this.resetXp();
+		}
+	}
+	
+	private void resetXp() {
+		this.xp -= getXpNeededForLevel((byte) (level-1));
+	}
+
+	private int getXpNeededForLevel(byte b) {
+		// TODO Auto-generated method stub
+		return mapLevelRanges.get(b);
+	}
+	
+	public boolean isElementRadialRequested() {
+		return elementRadialMenuRequested;
+	}
+	
+	public void setElementRadialRequested(boolean b) {
+		elementRadialMenuRequested = b;
+	}
+	
+	public void setFixElement(int i) {
+		fixElement = i;
+		isRadialMenuEleUp = false;
+		CombatLog.println("New fixate element: " + i);
+	}
+	
+	public int getFixElement() {
+		return fixElement;
+	}
+
+	public int getWordDamageModifier() {
+		return (int) wordDamageModifier;
+	}
+	
+	public void setWordDamageModifier(int n) {
+		wordDamageModifier = n;
+		CombatLog.println("Word dmg mod = " + getWordDamageModifier());
+	}
+	
+	public void resetWordDamageModifier() {
+		wordDamageModifier = 0;
+	}
+	
+	public int getWordHeal() {
+		return (int) wordHeal;
+	}
+	
+	public void setWordHeal(int n) {
+		wordHeal = n;
+		CombatLog.println("Word heal = " + getWordHeal());
+	}
+	
+	public void resetWordHeal() {
+		wordHeal = 0;
+	}
+	
+	public int getSubmittedWordCount() {
+		return submittedWords.size();
+	}
+	
+	public void setWordDamageReduction(int n) {
+		wordDamageReduction = n;
+		CombatLog.println("Word dmg reduction = " + getWordDamageReduction());
+	}
+	
+	public void resetWordDamageReduction() {
+		wordDamageReduction = 0;
+	}
+	
+	public int getWordDamageReduction() {
+		return (int) wordDamageReduction;
+	}
+	
+	public void addEP(int n, int value) {
+		switch(n) {
+		case 0: {
+			for (int i = 0; i < 4; i++)
+				addElementalPower(i, value);
+			break; }
+		case 1: { addElementalPower(0, value); break; }
+		case 2: { addElementalPower(1, value); break; }
+		case 3: { addElementalPower(2, value); break; }
+		case 4: { addElementalPower(3, value); break; }
+		default: {}
+		}
+	}
+	
+	public boolean awardWordExtraEP() {
+		return awardWordExtraEP;
+	}
+	
+	public void setAwardWordExtraEP(boolean b) {
+		awardWordExtraEP = b;
+	}
+
 }

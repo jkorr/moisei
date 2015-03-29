@@ -10,6 +10,7 @@ import com.daenils.moisei.CombatLog;
 import com.daenils.moisei.Game;
 import com.daenils.moisei.Stage;
 import com.daenils.moisei.entities.equipments.Ability;
+import com.daenils.moisei.entities.equipments.Buff;
 import com.daenils.moisei.entities.equipments.Equipment;
 import com.daenils.moisei.entities.equipments.Weapon;
 import com.daenils.moisei.files.FileManager;
@@ -25,6 +26,8 @@ public class Entity {
 	protected int width, height;
 	protected Sprite sprite;
 	protected Stage stage;
+	
+	protected List<Buff> buffs = new ArrayList<Buff>();
 	
 	protected int tick = 0;
 	
@@ -93,7 +96,13 @@ public class Entity {
 	protected int currentWordLength = 0;
 	
 	
+	// monitor for removal of buffs
 	public void update() {
+		for (int i = 0; i < buffs.size(); i++)
+			buffs.get(i).update();
+			
+			
+		remove();
 	}
 	
 	public void render(Screen screen) {
@@ -163,7 +172,7 @@ public class Entity {
 	}
 	
 	// METHOD FOR ABILITIES (with Ability as 3rd argument and unmuted by default)
-	protected void dealDamage(Entity e1, Entity e2, Equipment a, int d) {
+	public void dealDamage(Entity e1, Entity e2, Equipment a, int d) {
 		dealDamage(e1, e2, a, d, false);
 	}
 	
@@ -177,28 +186,24 @@ public class Entity {
 		}
 		
 		else {
-			// spellpower:
-			d *= e1.spellPower;
 			decreaseHealth(e1, e2, d);
 			stillAlive(e2, e1);
 			if (!mute) CombatLog.println("" + e1.name + " hits " + e2.name + " with " + a.getName() + " (" + d + " damage)");
 		}
 	}
 	
-	protected boolean affordToUseAbility(Entity e1, Ability a) {
-		return a.getAPcost() <= e1.actionPoints && (a.getMPcost() * e1.spellPower) <= e1.mana;
-	}
+//	protected boolean affordToUseAbility(Entity e1, Ability a) {
+//		return a.getAPcost() <= e1.actionPoints && (a.getMPcost() * e1.spellPower) <= e1.mana;
+//	}
 	
-	protected void doHealing(Entity e1, Entity e2, Equipment a, int h) {
+	public void doHealing(Entity e1, Entity e2, Equipment a, int h) {
 		// it has targeting because in the future it would be nice to have monster heal other monster
-		// spellpower:
-		h *= e1.spellPower;
 		increaseHealth(e1, e2, h);
 	}
 	
 	protected void doUtility(Entity e1, Entity e2, Equipment a) {
 			if (a.getIsStun()) abilityStun(e1, e2, a);
-			if (a.getIsDrainMP()) abilityDrainMP(e1, e2, a);
+//			if (a.getIsDrainMP()) abilityDrainMP(e1, e2, a);
 			if (a.getIsShield()) abilityShield(e1, e1, a); // e1 twice = currently self-target only
 	}
 
@@ -220,11 +225,6 @@ public class Entity {
 		this.hasDominantEffect = true;
 	}
 	
-	private void abilityDrainMP(Entity e1, Entity e2, Equipment a) {
-		decreaseMana(e1, e2, a.getUtilityValue());
-		increaseMana(e1, e1, a.getUtilityValue());
-	}
-	
 	private void abilityShield(Entity e1, Entity e2, Equipment a) {
 		increaseShield(e1, e2, a.getUtilityValue());
 	}
@@ -240,7 +240,7 @@ public class Entity {
 		else e2.mana = e2.maxMana;
 		}
 	
-	protected void decreaseHealth(Entity e1, Entity e2, int d) {
+	public void decreaseHealth(Entity e1, Entity e2, int d) {
 		if (e2.shield > 0 && d < e2.shield)
 			e2.shield -= d;
 		else if (e2.shield > 0 && d >= e2.shield) {
@@ -258,6 +258,8 @@ public class Entity {
 			e2.lastAttacker = e1.name;
 		}
 	}
+	
+
 	
 	protected void increaseHealth(Entity e1, Entity e2, int h) {
 		increaseHealth(e1, e2, h, false);
@@ -296,10 +298,16 @@ public class Entity {
 	protected void compensateForCosts(Entity e1, Entity e2, Equipment a) {
 		int n = 0;
 		if (a == null) n = 1;
-		else n = a.getAPcost();
+//		else n = a.getAPcost();
 
 		e1.lastActionPoints = e1.actionPoints;
 		e1.actionPoints -= n;
+		
+		if (e1 instanceof Player) {
+			if (a != null && a.getEPcost() > 0) {
+				((Player) e1).removeElementalPower(a.getElementType(), a.getEPcost()); 
+			} 
+		}
 
 		if (a != null && a.getMPcost() > 0)	e1.mana -= a.getMPcost() * e1.spellPower;
 		if (a != null && (a instanceof Weapon) && ((Weapon) a).getWeaponCharges() > 0) {
@@ -337,10 +345,81 @@ public class Entity {
 	}
 	
 	protected void useAbility(Entity e1, Ability a) {
-		useAbility(e1, a, false);
+		if (affordToUseAbility(e1, a)) {
+			
+			// BUFFS-DEBUFFS
+			if (a.getAbilityCat() == 1 || a.getAbilityCat() == 2) {
+			//	System.out.println("BUFF / DEBUFF");
+				Buff b = new Buff(a, e1, e1.currentTarget, 0);
+				if (a.getAbilityCat() == 1) e1.add(b);
+				else e1.currentTarget.add(b);
+				compensateForCosts(e1, e1.currentTarget, a);
+			}
+			
+			// INSTANTS
+			else if (a.getAbilityCat() == 0) {
+				// adv.fire
+				if (a.getAbilityType() == 8) {
+					dealDamage(this, this.getCurrentTarget(), a, calculateDamage(this, this.getCurrentTarget(), a));
+					compensateForCosts(e1, e1.currentTarget, a);
+				}
+				
+				// adv.water && ult.water
+				if (a.getAbilityType() == 9) {
+					if (a.getValueType() == 2) doHealing(this, this, a, calculateDamage(this, this, a));
+					if (a.getValueType() == 1) // TODO: finish it
+					compensateForCosts(e1, e1.currentTarget, a);
+				}
+				
+				// adv.earth
+				if (a.getAbilityType() == 10) {
+					abilityShield(this, this, a);
+					compensateForCosts(e1, e1.currentTarget, a);
+				}
+				
+				// adv.wind
+				if (a.getAbilityType() == 11) {
+					if (this instanceof Player) {
+						((Player) this).replaceLetters(6);
+						compensateForCosts(e1, e1, a);
+					}
+					else System.err.println("Player only spell casted by NPC.");
+					
+				}		
+				
+				// ult.wind 
+				if (a.getAbilityType() == 14) {
+					
+				}
+			}
+			
+			
+		}
+	}
+
+	private int calculateDamage(Entity e1, Entity e2, Ability a) {
+		// e1: caster | e2: target
+		if (a.getAbilityType() == 8) {
+			return (e1.getLevel() - e2.getLevel()) + (e1.getLevel() * a.getDamageValue());
+		}
+		else if (a.getAbilityType() == 9) {
+			return (int) Math.ceil( Math.pow((e1.getLevel() + a.getHealValue()), 1.33));
+		}
+		else return -1;
 	}
 	
-	protected void useAbility(Entity e1, Ability a, boolean isFree) {
+	private boolean affordToUseAbility(Entity e1, Ability a) {
+		if (((Player) e1).getElementalPower(a.getElementType()) >= a.getEPcost())
+			return true;
+		else 
+			return false;
+	}
+	
+	protected void useAbilityOLD(Entity e1, Ability a) {
+		useAbilityOLD(e1, a, false);
+	}
+	
+	protected void useAbilityOLD(Entity e1, Ability a, boolean isFree) {
 		/* 
 		 * consider calling this regardless the type: just execute EVERYTHING, since a heal will have
 		 * damageValue 0 anyways
@@ -351,7 +430,7 @@ public class Entity {
 		 * */
 		a.setTarget(e1.currentTarget);
 		// the last condition (only use healing spell if its 
-		if (affordToUseAbility(e1, a) && !a.isOnCooldown()) {
+		if (/* affordToUseAbility(e1, a) && */ !a.isOnCooldown()) {
 			
 			// special requirements for casting a certain type of spell goes here (use ||):
 			if (
@@ -470,7 +549,7 @@ public class Entity {
 		else return false;
 	}
 	
-	protected void resetActionPoints(Entity e) {
+	public void resetActionPoints(Entity e) {
 		e.actionPoints = maxActionPoints;
 	}
 	
@@ -478,7 +557,7 @@ public class Entity {
 	
 	}
 	
-	protected void resetCooldowns(Entity e) {
+	public void resetCooldowns(Entity e) {
 		for (int i = 0; i < e.abilities.size(); i++) {
 			e.abilities.get(i).setLastUsed(0);
 			e.abilities.get(i).setOnCooldown(false);
@@ -562,14 +641,7 @@ public class Entity {
 		}
 	}	
 	
-	public void checkLevelUp() {
-		if (this.xp >= this.xpNeeded) {
-			this.levelUp();
-			this.setXpNeeded();
-			this.setXpGained();
-			this.resetXp();
-		}
-	}
+
 	
 	public void levelUp() {
 		this.level++;
@@ -599,10 +671,7 @@ public class Entity {
 		this.spellPower = (int) Math.ceil(this.level * 0.3);
 	}
 	
-	private void resetXp() {
-		this.xp -= getXpNeeded((byte) (level-1));
-	}
-	
+
 	public boolean hasWeaponID(int id) {
 		if (mapWeapons.get(id) != null) return true;
 		else return false;
@@ -640,10 +709,7 @@ public class Entity {
 	public int getXpNeeded() {
 		return xpNeeded;
 	}
-	
-	public int getXpNeeded(byte n) {
-		return Game.getGameplay().mapLevelRanges.get(n);
-	}
+
 	
 	public int getXpGained() {
 		return xpGained;
@@ -689,23 +755,87 @@ public class Entity {
 		return actionPoints;
 	}
 	
+	public int getMaxActionPoints() {
+		return maxActionPoints;
+	}
+	
+	public int getLevel() {
+		return level;
+	}
+	
+	public int getPHealth() {
+		return pHealth;
+	}
+	
+	public int getPMana() {
+		return pMana;
+	}
+	
+	public int getPXP() {
+		return pXP;
+	}
+	
 	public boolean getHasSpawned() {
 		return hasSpawned;
 	}
 	
-	// SETTERS
-	public void setXpNeeded() {
-		this.xpNeeded = Game.getGameplay().mapLevelRanges.get(this.level);
-//		System.out.println(this.xpNeeded);
+	public boolean isWaiting() {
+		return isWaiting;
+	}
+
+	public int getDamage(int i) {
+		return damage[i];
 	}
 	
-	public void setXpGained() {
-		this.xpGained = (int) (Math.floor((((this.level * 10.0) / 2.0) + Math.pow((this.level / 2.0), 2.0)) / 5.0) * 5.0);
-		System.out.println("XPGAIN" + xpGained);
-		for (int i = 1; i < 12; i++) {
-	//		System.out.println(i + ":" + Math.floor((((i * 10.0) / 2.0) + Math.pow((i / 2.0), 2.0)) / 5.0) * 5.0);
-		}
+	public int getHitDamage() {
+		return hitDamage;
 	}
+	
+	public Ability getAbility(int i) {
+		return abilities.get(i);
+	}
+
+	public int getMaxHealth() {
+		return maxHealth;
+	}
+	
+	public int getMaxMana() {
+		return maxMana;
+	}
+	
+	public int getAbilitiesSize() {
+		return abilities.size();
+	}
+	
+	public char getCurrentWord(int i) {
+		return currentWord[i];
+	}
+	
+	public char[] getCurrentWord() {
+		return currentWord;
+	}
+	
+	public int getCurrentWordLength() {
+		return currentWordLength;
+	}
+	
+	public int getDamageReduction() {
+		return damageReduction;
+	}
+	
+	public int getSpellPower() {
+		return spellPower;
+	}
+	
+	public boolean isStunned() {
+		return isStunned;
+	}
+	
+	public int getTick() {
+		return tick;
+	}
+	
+	// SETTERS
 	
 	protected void setWait(Boolean b) {
 		isWaiting = b;
@@ -719,11 +849,42 @@ public class Entity {
 		needsRemove = b;
 	}
 	
-	protected void setTarget(Entity e) {
-		if (e.getTarget().isAlive) {
-			this.currentTarget = e.getTarget();
-			CombatLog.println("Targeted " + e.name);
-		}
+	public void setTick(int n) {
+		tick = n;
+	}
+	
+	public void setDamageReduction(int n) {
+		damageReduction = n;
+	}
+	
+	public void resetDamageReduction() {
+		damageReduction = 0;
+	}
+	
+	public void setHealth(int n) {
+		health = n;
+	}
+	
+	public void setMana(int n) {
+		mana= n;
+	}
+	
+	public void setIsStunned(boolean b) {
+		isStunned = b;
+	}
+	
+	public int getBuffsSize() {
+		return buffs.size();
+	}
+	
+	public void setTarget(Entity e) {
+		if (e != null) {
+			if (e.getTarget().isAlive) {
+				this.currentTarget = e.getTarget();
+				CombatLog.println("Targeted " + e.name);
+			}			
+		} else
+			this.currentTarget = null;
 	}
 	
 	protected void cycleTarget(Entity e) {
@@ -775,5 +936,31 @@ public class Entity {
 	
 	public void addMaxActionPoints(int n) {
 		this.maxActionPoints += n;
+	}
+	
+	// BUFFS
+	public void add(Buff b) {
+		buffs.add(b);
+	}
+	
+	protected void remove() {
+		for (int i = 0; i < buffs.size(); i++)
+			if (buffs.get(i).isNeedsRemoval()) buffs.remove(i);
+	}
+	
+	public Buff getBuff(int i) {
+			return buffs.get(i);
+	}
+	
+	public String getBuffName(int i) {
+		if (buffs.size() > i)
+			return buffs.get(i).getName();
+		else return "";
+	}
+	
+	public int getBuffTicksLeft(int i) {
+		if (buffs.size() > i)
+			return buffs.get(i).getTicksLeft();
+		else return 0;
 	}
 }

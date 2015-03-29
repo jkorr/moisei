@@ -1,6 +1,5 @@
 package com.daenils.moisei.graphics;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import javax.swing.colorchooser.ColorSelectionModel;

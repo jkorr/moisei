@@ -16,8 +16,8 @@ import java.util.Scanner;
 
 import com.daenils.moisei.CombatLog;
 import com.daenils.moisei.Game;
+import com.daenils.moisei.Gameplay;
 import com.daenils.moisei.Stage;
-import com.daenils.moisei.entities.Gameplay;
 
 public class FileManager {
 	public static Map<String, String> mapProfile = new HashMap<String, String>();

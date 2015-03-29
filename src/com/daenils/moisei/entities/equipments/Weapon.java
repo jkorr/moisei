@@ -56,7 +56,7 @@ public class Weapon extends Equipment {
 		this.icon = Sprite.parseSprite(tempString[4]);
 		this.vendorPrice = Integer.parseInt(tempString[5]);
 		this.isUnique = Boolean.parseBoolean(tempString[6]);
-		this.APcost = Integer.parseInt(tempString[7]);
+//		this.APcost = Integer.parseInt(tempString[7]);
 		this.minDamage = Integer.parseInt(tempString[8]);
 		this.maxDamage = Integer.parseInt(tempString[9]);
 		this.hitChance = Integer.parseInt(tempString[10]);
@@ -71,7 +71,7 @@ public class Weapon extends Equipment {
 		this.motValue = Integer.parseInt(tempString[18]);
 		this.turnCount = Integer.parseInt(tempString[19]);
 		this.isStun = Boolean.parseBoolean(tempString[20]);
-		this.isDrainMP = Boolean.parseBoolean(tempString[21]);
+	//	this.isDrainMP = Boolean.parseBoolean(tempString[21]);
 		this.isShield = Boolean.parseBoolean(tempString[22]);
 	}
 	

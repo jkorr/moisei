@@ -1,6 +1,7 @@
 package com.daenils.moisei.entities.equipments;
 
 import com.daenils.moisei.entities.Entity;
+import com.daenils.moisei.entities.Letter.Element;
 import com.daenils.moisei.graphics.Sprite;
 
 public class Equipment {
@@ -22,9 +23,12 @@ public class Equipment {
 	protected String description;
 	protected int vendorPrice;
 	protected boolean isUnique;
-	protected int APcost; 
+	protected int EPcost; 
 	protected int MPcost;
 	protected int cooldown;
+	
+	protected int valueType;
+	protected Element element;
 	
 	protected int healValue;
 	protected int damageValue;
@@ -35,8 +39,7 @@ public class Equipment {
 	
 	protected byte targetType; // 0:self, 1:single, 2:dual, 3:aoe-3, 5:aoe-5
 	
-	protected boolean isStun, isDrainMP, isShield, isResurrect, isNecro, isAttackBuff, isHealthBuff, isManaBuff, isAPBuff;
-
+	protected boolean isStun, isShield, isReduction, isElemChoice;
 
 	// OVER-TURN EFFECT HANDLING
 	protected long lastUsed; // turn count
@@ -56,8 +59,8 @@ public class Equipment {
 		return icon;
 	}
 	
-	public int getAPcost() {
-		return APcost;
+	public int getEPcost() {
+		return EPcost;
 	}
 	
 	public int getMPcost() {
@@ -106,10 +109,6 @@ public class Equipment {
 	
 	public boolean getIsStun() {
 		return isStun;
-	}
-	
-	public boolean getIsDrainMP() {
-		return isDrainMP;
 	}
 	
 	public boolean getIsShield() {
@@ -189,6 +188,53 @@ public class Equipment {
 	
 	public void setUser(Entity e) {
 		user = e;
+	}
+	
+	public int parseValueType(String str) {
+		if (str.equals("raw")) return 0;
+		if (str.equals("per")) return 1;
+		if (str.equals("cal")) return 2;
+		else return -1;
+	}
+	
+	public Element parseElementType(int i) {
+		switch (i) {
+		case 0: { return Element.FIRE; }
+		case 1: { return Element.WATER; }
+		case 2: { return Element.EARTH; }
+		case 3: { return Element.WIND; }
+		default: { return Element.NEUTRAL; }
+		}
+	}
+	
+	public Element getElement() {
+		return element;
+	}
+	
+	public int getElementType() {
+		switch(element) {
+		case FIRE: { return 0; }
+		case WATER: { return 1; }
+		case EARTH: { return 2; }
+		case WIND: { return 3; }
+		default: return -1;
+		}
+	}
+
+	public boolean isReduction() {
+		return isReduction;
+	}
+
+	public void setReduction(boolean isReduction) {
+		this.isReduction = isReduction;
+	}
+
+	public boolean isElemChoice() {
+		return isElemChoice;
+	}
+
+	public void setElemChoice(boolean isElemChoice) {
+		this.isElemChoice = isElemChoice;
 	}
 	
 }

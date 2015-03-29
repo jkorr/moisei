@@ -12,7 +12,6 @@ import java.util.List;
 
 import javax.swing.JFrame;
 
-import com.daenils.moisei.entities.Gameplay;
 import com.daenils.moisei.files.FileManager;
 import com.daenils.moisei.graphics.Notification;
 import com.daenils.moisei.graphics.Screen;
@@ -117,8 +116,7 @@ public class Game extends Canvas implements Runnable {
 			FileManager.createCombatLogFile();
 			
 			CombatLog.init();
-			// initialize mapLevels:
-			Gameplay.initLevelRanges();
+
 			stage = new Stage(key, mouse, s);
 			gameplay = new Gameplay(stage);
 			System.out.println("Gameplay control is running.");
@@ -268,7 +266,7 @@ public class Game extends Canvas implements Runnable {
 		if (key.debugAddMonster) {
 		//	Screen.createWindow(150, 150, 250, 150, 0xffffffff, false, "ExitConfirm");
 		//	Screen.getWindow("exitconfirm").add("Are you sure you want to quit this game?");
-			newGameState = 0;
+	//		newGameState = 0;
 		}
 	}
 
