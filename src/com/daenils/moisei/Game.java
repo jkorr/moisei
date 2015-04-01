@@ -33,10 +33,20 @@ public class Game extends Canvas implements Runnable {
 	private static boolean devMode = false;
 	private static byte gameState = 0, newGameState = 0; // -1: Blank; 0: Main Menu; 1-4: reserved for menus; 5: game
 	private static String[] gameStateString = {"mainmenu", "stageselect", "settings", "spells", "credits", "ingame"};
-	private static final String[] MAIN_MENU_STRINGS = {"New Game", "Continue", "Select Stage", "Settings", "Exit Game"};
+	private static final String[] MAIN_MENU_STRINGS = {"New Game", "Continue", "Select Stage", "Settings", "Exit Game", "[Unlock Spells]"};
+	private static final int MAIN_MENU_ITEMS = MAIN_MENU_STRINGS.length - 1; // because of "continue" not a separate item 
 	private static final String[] LIST_OF_BANNED_NAMES = {"default"};
 	
-	private Thread thread;
+	// TODO TO DELETE - TEMP -
+	private boolean[] openAll = {true, true, true, true,
+														true, true, true, true,
+															true, true, true, true,
+																true, true, true, true};
+														
+														
+	
+	
+ 	private Thread thread;
 	private JFrame frame;
 
 	private Screen screen;
@@ -115,6 +125,7 @@ public class Game extends Canvas implements Runnable {
 			FileManager.createStatisticsFile();
 			FileManager.createCombatLogFile();
 			
+			CombatLog.cleanLog();
 			CombatLog.init();
 
 			stage = new Stage(key, mouse, s);
@@ -218,6 +229,7 @@ public class Game extends Canvas implements Runnable {
 			notifications.get(i).update();
 		}
 		removeNotifications();
+
 		
 		// UPDATE MENU LOGIC
 		if (gameState == 0) updateMainMenu();
@@ -244,6 +256,8 @@ public class Game extends Canvas implements Runnable {
 			gameState = 5;
 		}
 		
+		screen.update();
+		
 		// CATCH 'RETURN-TO-MENU' REQUEST FROM INGAME
 		// TODO: careful with saving [differentiate between win and loss!] when impementing profile code!
 		if (gameplay != null)
@@ -251,9 +265,8 @@ public class Game extends Canvas implements Runnable {
 		
 		// TEXT INPUT UPDATE FOR PROFILENAME
 		if (Screen.windowExists("yourName"))
-			updateTextInputForProfileNaming("yourName", Screen.getWindow("yourName").getInputField(), Screen.getWindow("yourName").getInputFieldString());
+			updateTextInputForProfileNaming(Screen.getWindow("yourName").getInputField(), Screen.getWindow("yourName").getInputFieldString());
 		
-		screen.update();
 		
 		// don't forget to drop the other objects' update() methods here
 		key.update();
@@ -270,8 +283,8 @@ public class Game extends Canvas implements Runnable {
 		}
 	}
 
-	private void updateTextInputForProfileNaming(String windowName, List<Character> inputField, String inputFieldStr) {
-		if (textInputEnabled && Screen.windowExists(windowName)) {
+	private void updateTextInputForProfileNaming(List<Character> inputField, String inputFieldStr) {
+		if (textInputEnabled && Screen.windowExists("yourName")) {
 			for (int i = 0; i < 26; i++) {
 				if (key.alphabet[i] && !onCooldown && inputField.size() < 10) {
 					inputField.add((char) (i + 65));
@@ -281,8 +294,8 @@ public class Game extends Canvas implements Runnable {
 					enableCooldown(125);
 				} else if (key.playerEndTurn && !onCooldown) {
 					inputFieldStr = "";
-					for (int k = 0; i < inputField.size(); i++)
-						inputFieldStr += inputField.get(i);
+					for (int k = 0; k < inputField.size(); k++)
+						inputFieldStr += inputField.get(k);
 					
 					enableCooldown(300);
 					
@@ -294,8 +307,10 @@ public class Game extends Canvas implements Runnable {
 					
 					if (isValidName) {
 						System.out.println("Entry \"" + inputFieldStr.toLowerCase() + "\" submitted.");
-						Screen.getWindow(windowName).closeTextInput();
-						Screen.getWindow(windowName).askForRemoval();
+						
+						Screen.getWindow("yourName").askForRemoval();
+						Screen.getWindow("yourName").closeTextInput();
+				//		Screen.killWindow("yourName");
 						
 						FileManager.setProfileData("name", inputFieldStr.toLowerCase());
 						initializeProfileName();
@@ -327,6 +342,11 @@ public class Game extends Canvas implements Runnable {
 		if (menuOptionSelected == 3 && key.playerEndTurn && !onCooldown) {
 			System.exit(0);
 		}
+		
+		if (menuOptionSelected == 4 && key.playerEndTurn && !onCooldown) {
+			showMessage("Unlocking all spells for the current profile (debug).", 0, 1, TOPLEFT);
+			FileManager.setProfileData("spells", openAll);
+		}
 	}
 	
 	private void updateStageSelectionMenu() {
@@ -344,19 +364,19 @@ public class Game extends Canvas implements Runnable {
 		switch(menu) {
 			case 0: {
 				// DOWN AND UP
-				if (key.radialChoice[2] && menuOptionSelected < 3 && !onCooldown) {
+				if (key.radialChoice[2] && menuOptionSelected < (MAIN_MENU_ITEMS - 1) && !onCooldown && !textInputEnabled) {
 					menuOptionSelected++;
 					enableCooldown(300);
-				} else if (key.radialChoice[0] && menuOptionSelected > 0 && !onCooldown) {
+				} else if (key.radialChoice[0] && menuOptionSelected > 0 && !onCooldown && !textInputEnabled) {
 					menuOptionSelected--;
 					enableCooldown(300);
 				}
 				
 				// TOP AND BOTTOM
-				if (key.radialChoice[0] && menuOptionSelected == 0 && !onCooldown) {
-					menuOptionSelected = 3;
+				if (key.radialChoice[0] && menuOptionSelected == 0 && !onCooldown && !textInputEnabled) {
+					menuOptionSelected = (MAIN_MENU_ITEMS - 1);
 					enableCooldown(300);
-				} else if (key.radialChoice[2] && menuOptionSelected == 3 && !onCooldown) {
+				} else if (key.radialChoice[2] && menuOptionSelected == (MAIN_MENU_ITEMS - 1) && !onCooldown && !textInputEnabled) {
 					menuOptionSelected = 0;
 					enableCooldown(300);
 				}
@@ -430,6 +450,7 @@ public class Game extends Canvas implements Runnable {
 							+ "\n\n  " + MAIN_MENU_STRINGS[2]
 									+ "\n\n  " + MAIN_MENU_STRINGS[3]
 											+ "\n\n  " + MAIN_MENU_STRINGS[4]
+													+ "\n\n  " + MAIN_MENU_STRINGS[5]
 					);
 			
 			// "greeting" (non-technical) profile notification here: Welcome back, XY or Welcome!
@@ -454,7 +475,7 @@ public class Game extends Canvas implements Runnable {
 	}
 	
 	public void renderSelectionMarker() {
-		int[] sel = {156, 172, 188, 204};
+		int[] sel = {156, 172, 188, 204, 220};		// +16
 		for (int i = 0; i < sel.length; i++) {
 			if (menuOptionSelected == i) new Text().render(283, sel[i], -8, 0xffffffff, Text.font_default, 1, ">", screen);
 		}

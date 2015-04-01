@@ -66,7 +66,7 @@ public class Gameplay {
 	private boolean forcedPause;
 	
 	// SWITCH BETWEEN DIFFERENT UI VIEWS / TOGGLE UI STUFF
-	private int debugView = 5;
+	private int debugView = 0;
 
 	private Text font;
 	
@@ -109,6 +109,12 @@ public class Gameplay {
 	protected boolean shopHasOpened; // set it true when first opens so it will only open once, set it back to false at
 											// the start of a new wave probably
 	
+	protected String monstersLeftGraphic;
+	
+	// COMBATLOG DISPLAY
+	protected int curLine = (CombatLog.getSize() -1);
+	private int[] linesDisplayed = new int[5];
+	private final int LINES_TO_DISPLAY = 5;
 
 	private int[] elementPercentage = new int[4];
 	
@@ -129,11 +135,14 @@ public class Gameplay {
 		this.waveCount = 0;
 		
 		font = new Text();
-
 		
 		// just so that file is initialized as well, probably a temporary measure
 	//	Gamestats.submitStats_endWave();
 	//	FileManager.saveStatisticsFile();
+		
+		// init combatlog display
+		for (int i = 0; i < 5; i++)
+			linesDisplayed[i] = i;
 	}
 	
 
@@ -306,6 +315,7 @@ public class Gameplay {
 		renderVersionInfo(screen);
 		
 		// RENDER DEBUG VIEW
+		if (debugView == 0) renderStageInfo(screen);
 		if (debugView == 1) renderDebugInfoLetterDroptable(screen);
 		if (debugView == 2) renderDebugInfoElementalDroptable(screen);
 		if (debugView == 3) renderDebugInfo(screen);
@@ -382,8 +392,13 @@ public class Gameplay {
 		int xB = 450+2, yB = 300+2;
 		int w = 20, h = 20;
 		int wB = 16, hB = 16;
-		int[] segmentMark = {3, 3+6, 3+6+9, 3+6+9+12};
-		int[] subtractValue = {3, 3+6, 3+6+9};
+		int[] segmentMark = {stage.getPlayer().getElementalPowerCap(0), 
+				stage.getPlayer().getElementalPowerCap(0)+stage.getPlayer().getElementalPowerCap(1),
+				stage.getPlayer().getElementalPowerCap(0)+stage.getPlayer().getElementalPowerCap(1)+stage.getPlayer().getElementalPowerCap(2),
+				stage.getPlayer().getElementalPowerCap(0)+stage.getPlayer().getElementalPowerCap(1)+stage.getPlayer().getElementalPowerCap(2)+stage.getPlayer().getElementalPowerCap(3)};
+		int[] subtractValue = {stage.getPlayer().getElementalPowerCap(0), 
+				stage.getPlayer().getElementalPowerCap(0)+stage.getPlayer().getElementalPowerCap(1), 
+				stage.getPlayer().getElementalPowerCap(0)+stage.getPlayer().getElementalPowerCap(1)+stage.getPlayer().getElementalPowerCap(2)};
 		int[] elementSegments = new int[4];
 		
 
@@ -467,11 +482,26 @@ public class Gameplay {
 	}
 
 	private void renderCombatLog(Screen screen) {
-		if (CombatLog.getLogLength() > 4) {
-			for (int i = 0; i < 5; i++) {
-				font.render(0, 250 + (i*10), -8, 0xffe5e5e5, Text.font_default, 1.0, CombatLog.getLastLines(4 - i), screen);
+		setLinesDisplayedByEndPoint();
+		if (CombatLog.getLogLength() > (LINES_TO_DISPLAY - 1)) {
+			for (int i = 0; i < LINES_TO_DISPLAY; i++) {
+				font.render(0, 250 + (i*10), -8, 0xffe5e5e5, Text.font_default, 1.0, CombatLog.getLine(linesDisplayed[i]), screen);
 			}
 		}
+	}
+	
+	// TODO: move these methods to the end
+	public void setLinesDisplayedByEndPoint() {
+		for (int i = 0; i < LINES_TO_DISPLAY; i++) {
+			linesDisplayed[(LINES_TO_DISPLAY - 1) - i] = curLine - i;
+		}
+	}
+	
+	public void setLinesDisplayedScroll(boolean b) {		// TODO: set it to +11 later
+		if (curLine - 1 > (LINES_TO_DISPLAY - 2) && b)				// -2 for all log | +11 for only log (without header)
+			curLine--;
+		if (curLine -1 < ((CombatLog.getSize() -1)-1) && !b)
+			curLine++;
 	}
 	
 	private void renderTurnInfo(Screen screen) {
@@ -702,6 +732,22 @@ public class Gameplay {
 		}
 	}
 	
+	protected void renderStageInfo(Screen screen) {
+		// RENDER ALL (BG)
+		for (int i = 0; i < stage.getMonstersTotal(); i++) {
+			font.render(-24+(i*24), -10, 0, 0xff404040, Text.font_kubastaBig, 1, "#", screen);
+	//		font.render(-3+(i*8), 2, -8, 0xff757575, Text.font_default, 1, "$", screen);
+		}
+
+		// RENDER ALIVE
+		if (stage.getMonstersAlive() > 0) {
+			for (int i = 0; i < stage.getMonstersAlive(); i++) {
+			//	font.render(-3+(i*8), 2, -8, 0xffffffff, Text.font_default, 1, "$", screen);
+				font.render(-22+(i*24), -10, 0, 0xffC24040, Text.font_kubastaBig, 1, "#", screen);
+			}
+		}
+	}
+ 	
 	protected void renderDebugInfo(Screen screen) {
 		font.render(-4, 2, -8, 0xff00aa55, Text.font_default, 1, "DEBUG STUFF\n"
 				+ "\nMonsters on stage: " + stage.getMonstersTotal()
@@ -734,8 +780,9 @@ public class Gameplay {
 				+ "\nGold: " + stage.getPlayer().getGoldAmount()
 				+ "\n"
 				+ "\nFixateElement: " + stage.getPlayer().getFixElement()
+				+ "\nRepl. elem: " + stage.getPlayer().getReplaceElementsNow()
 				+ "\nWord DMG mod: " + stage.getPlayer().getWordDamageModifier()
-				+ "\n\n"
+				+ "\nhas reflective mit: " + stage.getPlayer().hasReflectiveMitigation()
 	//			+ "Target Level:" + stage.getMonsters().get(0).getLevel()
 				, screen);
 	}
@@ -1148,6 +1195,10 @@ public class Gameplay {
 		this.isPlayerTurn = true;
 	}
 	
+	public void resetCombatLogScroll() {
+		curLine = CombatLog.getSize() - 1;
+	}
+	
 	public void enableGlobalCooldown() {
 		resetStartGCDTimer();
 		onGlobalCooldown = true;
@@ -1374,8 +1425,15 @@ public class Gameplay {
 	// GAMEFLOW CONTROL
 	public void gameFlow() {		
 		// TODO: maybe invoke DIE/WIN notifications from here (when they are converted to notifs)
+		
+		if (!continueGame && !forcedPause && stage.getPlayer().getIsAlive() && stage.getMonstersAlive() > 0) {
+			System.out.println("!%");
+			stage.updateMonsterFlags();
+		}
 		// CONTINUE ON PLAYER DEATH (LOSE)
 		if (!continueGame && !forcedPause && stage.getInputPlayerEndTurn() && !stage.getPlayer().getIsAlive()) {
+			CombatLog.printFooter();					// print the footer with the list of submitted words
+			FileManager.saveCombatLogFile();		// save the combatlog one last time	
 			setAskingForQuit(true, QUIT_BY_DEFEAT);			
 			Game.showMessage("Game ended on condition = " + QUIT_BY_DEFEAT +".", 0, 2, Game.TOPLEFT, false);
 		}
@@ -1383,6 +1441,8 @@ public class Gameplay {
 		// CONTINUE ON MONSTERS DEAD (WIN)
 		if (!continueGame && !forcedPause && stage.getInputPlayerEndTurn() && stage.getPlayer().getIsAlive() && !onGlobalCooldown) {
 			savePlayerToProfile();
+			CombatLog.printFooter();					// print the footer with the list of submitted words
+			FileManager.saveCombatLogFile();		// save the combatlog one last time	
 			setAskingForQuit(true, QUIT_BY_VICTORY);
 			Game.showMessage("Game ended on condition = " + QUIT_BY_VICTORY +".", 0, 2, Game.TOPLEFT, false);
 		}
@@ -1407,6 +1467,8 @@ public class Gameplay {
 		
 		// CONFIRMED QUIT
 		if (!onGlobalCooldown && isQuitAlreadyRequested && stage.getInputPlayerExitToMenu() && (System.nanoTime() <= (requestStartTime + (requestDuration * 1000000000L)))) {
+			CombatLog.printFooter();					// print the footer with the list of submitted words
+			FileManager.saveCombatLogFile();		// save the combatlog one last time	
 			setAskingForQuit(true, QUIT_BY_PLAYER);
 			Game.showMessage("Game ended on condition = " + QUIT_BY_PLAYER +".", 0, 2, Game.TOPLEFT, false);
 		}

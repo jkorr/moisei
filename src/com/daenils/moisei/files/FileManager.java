@@ -500,10 +500,23 @@ public class FileManager {
 	public static boolean[] getProfileDataAsBooleanArray(String field) {
 		String fieldString = getProfileData(field);
 		boolean[] b = new boolean[fieldString.length()];
-		for (int i = 0; i < fieldString.length(); i++) {
-			if (fieldString.charAt(i) == '0') b[i] = false;
-			else if (fieldString.charAt(i) == '1') b[i] = true;
+		int ic = 0, skip = 0;
+		while(ic < fieldString.length() - skip) {
+			if (fieldString.charAt(ic+skip) == '0') {
+				b[ic] = false;
+				ic++;
+			}
+			else if (fieldString.charAt(ic+skip) == '1') {
+				b[ic] = true;
+				ic++;
+			}
+			else if (fieldString.charAt(ic+skip) == ' ') {
+				skip++;
+			}
 			else System.err.println("ERROR: INVALID VALUE IN BOOLEAN ARRAY.");
+			
+		}
+		for (int i = 0; i < fieldString.length(); i++) {
 		}
 		return b;
 	}

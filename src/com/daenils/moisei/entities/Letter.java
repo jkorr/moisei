@@ -44,6 +44,11 @@ public class Letter {
 		this.type = letterElement;
 		this.icon = Sprite.letter[(int) value - 65];
 		
+		setFrameColor(letterElement);
+	
+	}
+
+	private void setFrameColor(Element letterElement) {
 		if (letterElement == Element.NEUTRAL) this.frameColor = 0xffffffff;
 		else if (letterElement == Element.FIRE) this.frameColor = Screen.PALETTE_LIGHT[0];
 		else if (letterElement == Element.WATER) this.frameColor = Screen.PALETTE_LIGHT[1];
@@ -51,7 +56,6 @@ public class Letter {
 		else if (letterElement == Element.WIND) this.frameColor = Screen.PALETTE_LIGHT[3];
 		else if (letterElement == Element.MAGIC) this.frameColor = 0xffaa00aa;
 		else this.frameColor = 0;
-	
 	}
 	
 	// GETTERS
@@ -99,6 +103,19 @@ public class Letter {
 	
 	public void setIsSelected(boolean b) {
 		isSelected = b;
+	}
+	
+	public void setElementByInt(int element) {
+		Element replaceType;
+		switch(element) {
+			case 0: {replaceType = Element.FIRE; break;}
+			case 2: {replaceType = Element.WATER; break;}
+			case 3: {replaceType = Element.EARTH; break;}
+			case 1: {replaceType = Element.WIND; break;}
+			default: {replaceType = Element.NEUTRAL; break;}
+		}
+		this.type = replaceType;
+		setFrameColor(type);
 	}
 	
 	public void setSelected() {

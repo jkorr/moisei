@@ -26,7 +26,6 @@ public class Screen {
 	
 	// GUI WINDOW STUFF
 	protected static List<Window> windows = new ArrayList<Window>();
-	protected static Map<String, Integer> mapWindows = new HashMap<String, Integer>();
 	protected static boolean noWindows;
 	
 	// GUI ELEMENTS
@@ -279,7 +278,6 @@ public class Screen {
 		Window winnie = new Window(x, y, width, height, bgColor, isBorderless, title);
 	//	winnie.add(1, Window.BUTTON_CLOSE);
 	//	winnie.add(4, 1);
-		mapWindows.put(winnie.name, windows.size());
 		windows.add(winnie);
 	}
 	
@@ -306,6 +304,7 @@ public class Screen {
 			System.out.print("\nWindow '" + w.name + "' is closed.");
 			windows.remove(w);
 		}
+
 		
 		public String newLnLeftPad(int n) {
 			String returnString = "\n";
@@ -322,10 +321,11 @@ public class Screen {
 		}
 		
 		public static Window getWindow(String name) {
-			if (windows.size() > 0
-					&& mapWindows.containsKey(name))
-				return windows.get(mapWindows.get(name));
-			else return null;
+			if (windows.size() > 0)
+				for (int i = 0; i < windows.size(); i++) {
+					if (windows.get(i).getName().equals(name)) return windows.get(i);
+				}
+			return null;
 		}
 		
 		public static boolean getNoWindows() {
@@ -333,8 +333,12 @@ public class Screen {
 		}
 		
 		public static boolean windowExists(String name) {
-			if (mapWindows.containsKey(name)) return true;
-			else return false;
+			for (int i = 0; i < windows.size(); i++) {
+				if (windows.get(i).getName().equals(name)) return true;
+			}
+			
+//			if (mapWindows.containsKey(name)) return true;
+			return false;
 		}
 	
 	public static void killAllWindows() {

@@ -61,6 +61,11 @@ public class Player extends Entity {
 	protected int fixElement = -1;
 	protected boolean elementRadialMenuRequested;
 	protected boolean isRadialMenuEleUp;
+	protected boolean replaceElementsNow;
+	
+	// SPELL SELECT
+	protected boolean[] isRadialMenuSpellUp= new boolean[4];
+	private boolean[] spellList;
 	
 	// LETTER GEN STUFF
 	private List<Character> letterlistValue;
@@ -105,7 +110,7 @@ public class Player extends Entity {
 	
 	// NEW GAMEPLAY STUFF (ELEMENTAL POWER)
 	protected int[] elementalPower = new int[4]; // fi wa ea wi
-	protected int[] elementalPowerCap = new int[4]; // each item equals to the amount of points required to have that segment filled -> add all of them to get the cap for the bar
+	protected static int[] elementalPowerCap = new int[4]; // each item equals to the amount of points required to have that segment filled -> add all of them to get the cap for the bar
 	protected int elementalPowerCapSum;
 
 	public Player(Keyboard input, Mouse inputM, Entity defaultTarget, Stage stage) {
@@ -126,11 +131,10 @@ public class Player extends Entity {
 		this.input = input;
 		this.inputM = inputM;
 		this.canUseSkills = false;	
-		this.abilityCount = 4;
+		this.abilityCount = 16;
 		this.weaponCount = 10;
 		
-		
-		
+		spellList = FileManager.getProfileDataAsBooleanArray("spells");
 //		this.playerAbility[0] = new Ability(1, this);
 //		this.playerAbility[1] = new Ability(2, this);
 //		this.playerAbility[2] = new Ability(3, this);
@@ -138,7 +142,7 @@ public class Player extends Entity {
 		
 		initAbilities();
 	//	initWeapons();
-		this.addEP(0, 25);
+	//	this.addEP(0, 50);
 		
 		this.baseHealth = 50;
 		this.baseMana = 25;
@@ -185,11 +189,22 @@ public class Player extends Entity {
 	}
 
 	private void fillBaseElementalPowerCaps() {
-		// 3, 6, 9, 12
-		for (int i = 0; i < elementalPowerCap.length; i++) 	{
-			elementalPowerCap[i] = (i+1) * 3;
+		// CALCULATED ENTRY:
+		// 3, 6, 9, 12	--> req: 3, 9, 18, 30
+		// 2, 4, 6, 8 	--> req: 2, 6, 12, 20
+/*		for (int i = 0; i < elementalPowerCap.length; i++) 	{
+			elementalPowerCap[i] = (i+1) * 2;
 			elementalPowerCapSum += elementalPowerCap[i];
 		}
+*/		
+		// MANUAL ENTRY:
+		
+		elementalPowerCap[0] = 2;
+		elementalPowerCap[1] = 2;
+		elementalPowerCap[2] = 3;
+		elementalPowerCap[3] = 5;
+		elementalPowerCapSum = 12;
+		
 	}
 	
 	private void initLetters() {
@@ -201,8 +216,18 @@ public class Player extends Entity {
 	}
 
 	public void initAbilities() {
-		for (int i = 1; i <= 16; i++)
-			unlockAbility(this, i);
+		// INIT ALL
+	//	for (int i = 1; i <= 16; i++)
+	//		unlockAbility(this, i);
+		
+		// INIT FROM PROFILE
+		for (int i = 1; i <= 16; i++) {
+			if (spellList[i-1]) unlockAbility(this, i);
+			else unlockAbility(this,-1);
+		}
+		
+//		for (int i = 0; i < abilities.size(); i++)
+//			System.out.println(abilities.get(i).getName());
 	}
 	
 	public void initWeapons() {
@@ -309,34 +334,43 @@ public class Player extends Entity {
 		for (int i = 0; i < 4; i++) {
 			if (input.radialChoice[i] && canUseSkills && isRadialMenuEleUp) {
 				setFixElement(i);
+				if (replaceElementsNow) {
+					replaceElement(fixElement);
+					replaceElementsNow = false;
+				}
 				isRadialMenuEleUp = false;
 				}
+		}
+		
+		// SPELL RADIAL
+		for (int i = 0; i < 4; i++) {
+			if (isRadialMenuSpellUp[i]) updateSpellRadial(i);
 		}
 		
 //		System.out.println(radialMenuSize);
 		
 		// FIRE SPELLS
 		if (input.playerQ && canUseSkills) {
-			useAbility(this, abilities.get(0));	
+//			useAbility(this, abilities.get(0));
+			createRadialMenuSpellSelect(0);
 			Game.getGameplay().enableGlobalCooldown();
 		}
 		
 		// WATER SPELLS
 		if (input.playerW && canUseSkills) {
-			useAbility(this, abilities.get(1));
-			
+			createRadialMenuSpellSelect(1);
 			Game.getGameplay().enableGlobalCooldown();
 		}
 		
 		// EARTH SPELLS
 		if (input.playerE && canUseSkills) {
-			useAbility(this, abilities.get(2));
+			createRadialMenuSpellSelect(2);
 			Game.getGameplay().enableGlobalCooldown();
 		}
 		
 		// WIND SPELLS
 		if (input.playerR && canUseSkills) {
-			useAbility(this, abilities.get(3));
+			createRadialMenuSpellSelect(3);
 			Game.getGameplay().enableGlobalCooldown();
 		}
 		
@@ -388,7 +422,7 @@ public class Player extends Entity {
 			Game.getGameplay().enableGlobalCooldown(); 
 		}
 		
-		// DEBUG: ADD MONSTER
+		// DEBUG: FORCE ENDTURN
 		if (input.debugAddMonster && !Game.getGameplay().isOnGlobalCooldown()) {
 			Game.getGameplay().endTurn(this);
 			Game.getGameplay().enableGlobalCooldown();
@@ -397,10 +431,10 @@ public class Player extends Entity {
 	//		else Game.getGameplay().newMonsterWave();
 	//	}
 		
-		// DEBUG: FORCE NEW WAVE
-		if (input.debugForceNewWave && !Game.getGameplay().isOnGlobalCooldown()) {
-		
-	//		Game.getGameplay().enableGlobalCooldown(); 
+		// DEBUG: ADD EPU
+		if (input.debugAddEP && !Game.getGameplay().isOnGlobalCooldown()) {
+			addEP(0, 1);		 
+			Game.getGameplay().enableGlobalCooldown(); 
 		}
 		
 		// DEBUG: TOGGLE FPS LOCK
@@ -418,8 +452,19 @@ public class Player extends Entity {
 			else Game.getGameplay().setDebugView(0);
 			Game.getGameplay().enableGlobalCooldown();
 		}
+		
+		// CHAT SCROLL
+		if (input.debugLockAbility && !Game.getGameplay().isOnGlobalCooldown()) {
+			Game.getGameplay().setLinesDisplayedScroll(true);
+	//		Game.getGameplay().enableGlobalCooldown();
+		}
+		
+		if (input.debugUnlockAbility && !Game.getGameplay().isOnGlobalCooldown()) {
+			Game.getGameplay().setLinesDisplayedScroll(false);
+//			Game.getGameplay().enableGlobalCooldown();
+		}
 
-		inputTargeting();
+	//	inputTargeting();
 		if (Screen.getNoWindows()) mouseInput();
 
 		
@@ -445,6 +490,21 @@ public class Player extends Entity {
 				
 		remove();
 		
+	}
+
+	private void updateSpellRadial(int n) {
+		for (int i = n; i < 16; i += 4) {
+			if (input.radialChoice[i / 4] && canUseSkills && isRadialMenuSpellUp[n]) {
+				useAbility(this, abilities.get(i));
+				isRadialMenuSpellUp[n] = false;
+				Game.getGameplay().enableGlobalCooldown();
+			}
+			
+			if (input.playerExitToMenu && !Game.getGameplay().isOnGlobalCooldown() && isRadialMenuSpellUp[n]) {
+				isRadialMenuSpellUp[n] = false;
+				Game.getGameplay().enableGlobalCooldown();
+			}
+		}
 	}
 	
 	protected void updateVowelCount() {
@@ -584,8 +644,6 @@ public class Player extends Entity {
 				screen.renderSprite( radialMenuIcon[2][0], radialMenuIcon[2][1], Sprite.letter[28+5], 1); // WA
 				screen.renderSprite( radialMenuIcon[3][0], radialMenuIcon[3][1], Sprite.letter[29+5], 1); // EA
 				screen.renderSprite( radialMenuIcon[4][0], radialMenuIcon[4][1], Sprite.letter[26+5], 1);
-			
-
 		}
 		
 		if (isRadialMenuEleUp) {
@@ -594,6 +652,19 @@ public class Player extends Entity {
 			screen.renderSprite( radialMenuIcon[2][0], radialMenuIcon[2][1], Sprite.letter[28], 1); // WA
 			screen.renderSprite( radialMenuIcon[3][0], radialMenuIcon[3][1], Sprite.letter[29], 1); // EA
 			//		screen.renderSprite( radialMenuIcon[4][0], radialMenuIcon[4][1], Sprite.letter[26+5], 1);
+		}
+		
+		for (int i= 0; i < 4; i++) {
+			if (isRadialMenuSpellUp[i]) {
+				if (affordToUseAbility(this, abilities.get(0+i)))
+				screen.renderSprite( radialMenuIcon[0][0], radialMenuIcon[0][1], Sprite.spellIcon[1+(i*4)], 1); 
+				if (affordToUseAbility(this, abilities.get(4+i)))
+				screen.renderSprite( radialMenuIcon[1][0], radialMenuIcon[1][1], Sprite.spellIcon[2+(i*4)], 1); 
+				if (affordToUseAbility(this, abilities.get(8+i)))
+				screen.renderSprite( radialMenuIcon[2][0], radialMenuIcon[2][1], Sprite.spellIcon[3+(i*4)], 1);
+				if (affordToUseAbility(this, abilities.get(12+i)))
+					screen.renderSprite( radialMenuIcon[3][0], radialMenuIcon[3][1], Sprite.spellIcon[4+(i*4)], 1);
+			}			
 		}
 		
 		for (int i = 0; i < letterInventory.size(); i++) {
@@ -744,12 +815,37 @@ public class Player extends Entity {
 			}
 		}
 		
-		public void createRadialMenuFixElement() {
-			isRadialMenuEleUp = true;
-			setElementRadialRequested(true);
+		public void createRadialMenuFixElement(int spellId) {
+			if (spellId == 4) {
+				isRadialMenuEleUp = true;
+				setElementRadialRequested(true);
+			}
+			
+			if (spellId == 16) {
+				isRadialMenuEleUp = true;
+				setElementRadialRequested(true);
+			}
+		}
+		
+		public void createRadialMenuSpellSelect(int element) {
+			// check if the player has EP enough for at least the second spell
+			int epReq = getElementalPowerCap(0) + getElementalPowerCap(1);
+			if (this.getElementalPower(element) >= epReq && unlockedSpellCountInElement(element) > 1) 
+				isRadialMenuSpellUp[element] = true;
+			else {
+				useAbility(this, abilities.get(element));
+			}
 		}
 		
 		
+		private int unlockedSpellCountInElement(int element) {
+			int ic = 0;
+			for (int i = element; i < 15; i += 4) {
+				if (spellList[i]) ic++;
+			}
+			return ic;
+		}
+
 		private void submitWord() {
 			String word = getWordFromBar();
 			
@@ -841,25 +937,25 @@ public class Player extends Entity {
 				case 2:
 					// FIRE
 					if (elementalPower[0] < elementalPowerCapSum){
-						addElementalPower(0);						
+						incrementElementalPower(0);						
 					}
 					break;
 				case 4:
 					// WATER
 					if (elementalPower[1] < elementalPowerCapSum){						
-						addElementalPower(1);
+						incrementElementalPower(1);
 					}
 					break;
 				case 3:
 					// EARTH
 					if (elementalPower[2] < elementalPowerCapSum){						
-						addElementalPower(2);
+						incrementElementalPower(2);
 					}
 					break;
 				case 5:
 					// WIND
 					if (elementalPower[3] < elementalPowerCapSum){						
-						addElementalPower(3);
+						incrementElementalPower(3);
 					}
 					break;
 				default:	
@@ -1668,6 +1764,13 @@ public class Player extends Entity {
 		
 	}
 	
+	protected void replaceElement(int element) {
+		for (int i = 0; i < letterInventory.size(); i++) {
+			letterInventory.get(i).setElementByInt(element);
+		}
+		fixElement = -1;
+	}
+	
 	private void insSort(int[] arrayIn) {
 		for (int i = 1; i < arrayIn.length; i++) {
 			int temp = arrayIn[i];
@@ -1921,7 +2024,7 @@ public class Player extends Entity {
 		return elementalPower[i];
 	}
 	
-	public int getElementalPowerCap(int i) {
+	public static int getElementalPowerCap(int i) {
 		return elementalPowerCap[i];
 	}
 	
@@ -1933,6 +2036,19 @@ public class Player extends Entity {
 		elementalPowerCap[i] = value;
 	}
 	
+	public static int getElementalPowerReq(int i) {
+		switch(i) {
+		case 0: {return getElementalPowerCap(0);}
+		case 1: {return getElementalPowerCap(0) + getElementalPowerCap(1);}
+		case 2: {return getElementalPowerCap(0) + getElementalPowerCap(1) + getElementalPowerCap(2);}
+		case 3: {return getElementalPowerCap(0) + getElementalPowerCap(1) + getElementalPowerCap(2) + getElementalPowerCap(3);}
+		default: {
+			System.err.println("ERROR: Invalid power requirement value. There are only four elements!");
+			return -99;
+		}
+		}
+	}
+	
 	public void addElementalPower(int i, int value) {
 		if (elementalPower[i] + value <= elementalPowerCapSum) {
 			elementalPower[i] += value;			
@@ -1941,7 +2057,7 @@ public class Player extends Entity {
 		}
 	}
 	
-	public void addElementalPower(int i) {
+	public void incrementElementalPower(int i) {
 		if (elementalPower[i] < elementalPowerCapSum)
 			elementalPower[i]++;
 	}
@@ -2059,8 +2175,16 @@ public class Player extends Entity {
 		CombatLog.println("New fixate element: " + i);
 	}
 	
+	public void setReplaceElementsNow(boolean b) {
+		replaceElementsNow = b;
+	}
+	
 	public int getFixElement() {
 		return fixElement;
+	}
+	
+	public boolean getReplaceElementsNow() {
+		return replaceElementsNow;
 	}
 
 	public int getWordDamageModifier() {
@@ -2091,6 +2215,10 @@ public class Player extends Entity {
 	
 	public int getSubmittedWordCount() {
 		return submittedWords.size();
+	}
+	
+	public String getSubmittedWord(int i) {
+		return submittedWords.get(i);
 	}
 	
 	public void setWordDamageReduction(int n) {

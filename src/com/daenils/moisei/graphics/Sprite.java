@@ -63,6 +63,7 @@ public class Sprite {
 	
 	public static Sprite[] letter = Sprite.split(Spritesheet.lettersheet);
 	public static Sprite[] elementalCircle = Sprite.split(Spritesheet.circlesheet);
+	public static Sprite[] spellIcon = Sprite.split(Spritesheet.spelliconsheet);
 	
 	public Sprite(String path, int w, int h) {
 		this.width = w;

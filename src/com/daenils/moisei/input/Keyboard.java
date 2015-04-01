@@ -29,7 +29,7 @@ public class Keyboard implements KeyListener {
 	// debug stuff
 	public boolean debugLockAbility, debugUnlockAbility;
 	public boolean debugAddMonster;
-	public boolean debugForceNewWave;
+	public boolean debugAddEP;
 	public boolean debugToggleFpsLock, debugShowDebugInfo;
 	
 	public long[] keysPressTime = new long[300];
@@ -70,10 +70,10 @@ public class Keyboard implements KeyListener {
 		radialChoice[3] = keys[KeyEvent.VK_LEFT];
 		radialChoice[4] = keys[KeyEvent.VK_SPACE];
 		
-		playerQ = keys[KeyEvent.VK_6];
-		playerW = keys[KeyEvent.VK_7];
-		playerE = keys[KeyEvent.VK_8];
-		playerR = keys[KeyEvent.VK_9];
+		playerQ = keys[KeyEvent.VK_1];
+		playerW = keys[KeyEvent.VK_2];
+		playerE = keys[KeyEvent.VK_3];
+		playerR = keys[KeyEvent.VK_4];
 		
 		playerBasicAttack = keys[KeyEvent.VK_SPACE];
 		playerEndTurn = keys[KeyEvent.VK_ENTER];
@@ -81,11 +81,11 @@ public class Keyboard implements KeyListener {
 		playerExitToMenu = keys[KeyEvent.VK_ESCAPE];
 		
 		playerCycleTargets = keys[KeyEvent.VK_0];
-		playerTarget[0] = keys[KeyEvent.VK_1];
-		playerTarget[1] = keys[KeyEvent.VK_2];
-		playerTarget[2] = keys[KeyEvent.VK_3];
-		playerTarget[3] = keys[KeyEvent.VK_4];
-		playerTarget[4] = keys[KeyEvent.VK_5];
+		playerTarget[0] = keys[KeyEvent.VK_5];
+		playerTarget[1] = keys[KeyEvent.VK_6];
+		playerTarget[2] = keys[KeyEvent.VK_7];
+		playerTarget[3] = keys[KeyEvent.VK_8];
+		playerTarget[4] = keys[KeyEvent.VK_9];
 		
 		playerSwitchGUIView = keys[KeyEvent.VK_F5];
 		playerPauseGame = keys[KeyEvent.VK_F1];
@@ -94,7 +94,7 @@ public class Keyboard implements KeyListener {
 		debugLockAbility = keys[KeyEvent.VK_PAGE_UP];
 		debugUnlockAbility = keys[KeyEvent.VK_PAGE_DOWN];
 		debugAddMonster = keys[KeyEvent.VK_F2];
-		debugForceNewWave = keys[KeyEvent.VK_F3];
+		debugAddEP = keys[KeyEvent.VK_F3];
 		debugToggleFpsLock = keys[KeyEvent.VK_F12];
 		
 //		for (int i = 0; i < keys.length; i++)

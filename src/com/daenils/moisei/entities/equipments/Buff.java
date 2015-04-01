@@ -1,5 +1,7 @@
 package com.daenils.moisei.entities.equipments;
 
+import java.util.Random;
+
 import com.daenils.moisei.CombatLog;
 import com.daenils.moisei.Game;
 import com.daenils.moisei.entities.Entity;
@@ -18,6 +20,9 @@ public class Buff {
 	protected boolean tickDone = false, isApplied = false;
 	protected int tick = 0;
 	protected boolean needsRemoval = false;
+	
+	protected int hits = 0, hitChance = 0;
+	private Random rand;
 	
 	protected int wordsCheckValue;
 	
@@ -47,6 +52,8 @@ public class Buff {
 	
 		this.wordsCheckValue = ((Player) caster).getSubmittedWordCount();
 		CombatLog.println("Buff/Debuff " + getInId() + ":" + getGlId() + ":" + "start:" + getStartTurn() + ":end:" + getEndTurn() + ":ticksleft:" + getTicksLeft());
+		
+		rand = new Random();
 	}
 	
 	public int getTicksLeft() {
@@ -82,7 +89,7 @@ public class Buff {
 			
 			// 3:buff.fixElement
 			if (ability.getAbilityType() == 3) {
-				if (!((Player) caster).isElementRadialRequested()) ((Player) caster).createRadialMenuFixElement();
+				if (!((Player) caster).isElementRadialRequested()) ((Player) caster).createRadialMenuFixElement(ability.getID());
 				tick();
 			}
 			
@@ -145,9 +152,25 @@ public class Buff {
 			}
 			
 			// 12: buff.fireball
+			if (ability.getAbilityType() == 12) {
+				this.target = caster.getCurrentTarget();
+				hitChance = rand.nextInt(((100-(0)) + 1) + (0));
+				if (hitChance > (50 + (hits * 20))) { 
+					hits++;
+					caster.dealDamage(caster, target, ability, caster.getCalcDamage(caster, target, ability));
+					CombatLog.println(caster.getName() + "'s " + ability.getName() + " hits.");
+				} else {
+					CombatLog.println(caster.getName() + "'s " + ability.getName() + " misses.");
+				}
+				
+				tick();
+			}
 			
 			// 13: buff.reflectiveMitigation
-		
+			if (ability.getAbilityType() == 13) {
+				((Player) caster).setReflectiveMitigation(true);
+				tick();
+			}
 
 
 		}
@@ -170,6 +193,10 @@ public class Buff {
 		if (ability.getAbilityType() == 3) {
 			((Player) caster).setElementRadialRequested(false);
 			((Player) caster).setFixElement(-1);
+		}
+		
+		if (ability.getAbilityType() == 13) {
+			((Player) caster).setReflectiveMitigation(false);
 		}
 		
 		System.out.println("Buff/Debuff " + inId + " removed.");

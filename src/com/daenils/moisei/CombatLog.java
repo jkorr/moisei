@@ -18,11 +18,13 @@ public class CombatLog {
 		string = logOpener.concat(string);
 		System.out.print("\n" + string);
 		combatlog.add(string);
+		if (Game.getGameplay() != null) Game.getGameplay().resetCombatLogScroll();		// SETS THE LOG SCROLL TO THE TOP
 	}
 	
 	public static void print(String string) {
 		System.out.print(string);
 		combatlog.add(string);
+		if (Game.getGameplay() != null) Game.getGameplay().resetCombatLogScroll();		// SETS THE LOG SCROLL TO THE TOP
 	}
 	
 	public static void printnt(String string) {
@@ -34,6 +36,7 @@ public class CombatLog {
 		string = logOpener.concat(string);
 		System.out.print("\n" + string);
 		combatlog.add(string);
+		if (Game.getGameplay() != null) Game.getGameplay().resetCombatLogScroll();		// SETS THE LOG SCROLL TO THE TOP
 	}
 	
 	public static void printet(String string) {
@@ -42,6 +45,7 @@ public class CombatLog {
 		string = logOpener.concat(string);
 		System.out.print("\n" + string);
 		combatlog.add(string);
+		if (Game.getGameplay() != null) Game.getGameplay().resetCombatLogScroll();		// SETS THE LOG SCROLL TO THE TOP
 	}
 	
 	public static void printpr(String string) {
@@ -50,6 +54,7 @@ public class CombatLog {
 		string = logOpener.concat(string);
 		System.out.print("\n" + string);
 		combatlog.add(string);
+		if (Game.getGameplay() != null) Game.getGameplay().resetCombatLogScroll();		// SETS THE LOG SCROLL TO THE TOP
 	}
 	
 	private static void printHeader() {
@@ -76,6 +81,22 @@ public class CombatLog {
 	}
 	
 	
+	public static void printFooter() {
+		String footOpener = "+WORDLIST";
+		String footCloser = "-WORDLIST";
+		
+		
+		System.out.print("\n" + footOpener);
+		combatlog.add(footOpener);
+		
+		for (int i = 0; i < Game.getGameplay().getStage().getPlayer().getSubmittedWordCount(); i++) {
+			printpr(Game.getGameplay().getStage().getPlayer().getSubmittedWord(i));
+		}
+		
+		System.out.print("\n" + footCloser);
+		combatlog.add(footCloser);
+	}
+	
 	// COMBAT LOG STUFF
 	
 	public static void init() {
@@ -95,6 +116,10 @@ public class CombatLog {
 		return combatlog.get(combatlog.size() - n - 1);
 	}
 	
+	public static String getLine(int i) {
+		return combatlog.get(i);
+	}
+	
 	public static int getSize() {
 		return combatlog.size();
 	}
@@ -105,5 +130,14 @@ public class CombatLog {
 			s = s.concat(combatlog.get(i) + "\n");
 		}
 		return s;
+	}
+	
+	public static void cleanLog() {
+		if (combatlog.size() > 0) {
+			do {
+				combatlog.remove(0);
+			}	while (combatlog.size() > 0);
+		}
+		System.out.println("Combatlog emptied. (" + combatlog.size() + ")");
 	}
 }

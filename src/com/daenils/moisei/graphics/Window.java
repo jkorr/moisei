@@ -336,7 +336,8 @@ public class Window {
 	}
 	
 	public void askForRemoval() {
-		this.needsClosing = true;
+		System.out.println("Window "+  this.getName() + " is up for removal." );
+		needsClosing = true;
 	}
 	
 	// GETTERS

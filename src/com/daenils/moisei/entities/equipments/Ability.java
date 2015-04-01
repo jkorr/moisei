@@ -64,7 +64,7 @@ public class Ability extends Equipment {
 		this.name = tempString[3];
 		this.description = tempString[4];
 		this.icon = Sprite.parseSprite(tempString[5]);
-		this.EPcost = Integer.parseInt(tempString[6]);
+		this.EPcost = parseEPCost(tempString[6]);
 		this.cooldown = Integer.parseInt(tempString[7]);
 		this.valueType = parseValueType(tempString[8]);
 		

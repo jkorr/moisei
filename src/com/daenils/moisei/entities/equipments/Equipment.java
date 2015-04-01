@@ -2,6 +2,7 @@ package com.daenils.moisei.entities.equipments;
 
 import com.daenils.moisei.entities.Entity;
 import com.daenils.moisei.entities.Letter.Element;
+import com.daenils.moisei.entities.Player;
 import com.daenils.moisei.graphics.Sprite;
 
 public class Equipment {
@@ -195,6 +196,21 @@ public class Equipment {
 		if (str.equals("per")) return 1;
 		if (str.equals("cal")) return 2;
 		else return -1;
+	}
+	
+	public int parseEPCost(String str) {
+		 for (char i = '0'; i <= '9'; i++) {
+			 if (str.startsWith(i + "")) return Integer.parseInt(str);
+		 }
+		 
+			 if (str.equalsIgnoreCase("t0")) return Player.getElementalPowerReq(0);
+			 else if (str.equalsIgnoreCase("t1")) return Player.getElementalPowerReq(1);
+			 else if (str.equalsIgnoreCase("t2")) return Player.getElementalPowerReq(2);
+			 else if (str.equalsIgnoreCase("t3")) return Player.getElementalPowerReq(3);
+			 else {
+				 System.err.println("ERROR: Invalid spell cost value: " + str);
+				 return -99;
+			 }
 	}
 	
 	public Element parseElementType(int i) {

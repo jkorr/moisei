@@ -57,6 +57,7 @@ public class Entity {
 	protected int lastHitReceived = (lastHealth - health) * -1; // temporarily fix the value here
 	protected int lastHitChance;
 	protected int damageReduction;
+	protected boolean reflectiveMitigation;
 	
 	public boolean isGettingDamage;
 	
@@ -180,9 +181,18 @@ public class Entity {
 	protected void dealDamage(Entity e1, Entity e2, Equipment a, int d, Boolean mute) {
 		// deal with this double copied code, for some reason (a != null) won't work
 		if(a == null) {
-			decreaseHealth(e1, e2, d);
-			stillAlive(e2, e1);
-			if (!mute) CombatLog.println("" + e1.name + " --> " + e2.name + " (" + d + " damage)");
+			// TODO: this is the one currently used by player letterattack and monster attack
+			// CHECK THE OTHERS: are they even neccessary anymore?
+			if (!e2.hasReflectiveMitigation()) {
+				decreaseHealth(e1, e2, d);
+				stillAlive(e2, e1);
+				if (!mute) CombatLog.println("" + e1.name + " --> " + e2.name + " (" + d + " damage)");
+			} else if (e2.hasReflectiveMitigation()) {
+				decreaseHealth(e1, e1, d);
+				stillAlive(e1, e1);
+				if (!mute) CombatLog.println("" + e1.name + " --> " + e1.name + " (" + d + " reflected damage)");
+			}
+	
 		}
 		
 		else {
@@ -345,6 +355,7 @@ public class Entity {
 	}
 	
 	protected void useAbility(Entity e1, Ability a) {
+	//	System.out.println("attempting to use spell id " + a.getID());
 		if (affordToUseAbility(e1, a)) {
 			
 			// BUFFS-DEBUFFS
@@ -365,9 +376,9 @@ public class Entity {
 				}
 				
 				// adv.water && ult.water
-				if (a.getAbilityType() == 9) {
+				if (a.getAbilityType() == 9 && !this.isHealthFull()) {
 					if (a.getValueType() == 2) doHealing(this, this, a, calculateDamage(this, this, a));
-					if (a.getValueType() == 1) // TODO: finish it
+					if (a.getValueType() == 1) doHealing(this, this, a, calculateHealToMax(this));
 					compensateForCosts(e1, e1.currentTarget, a);
 				}
 				
@@ -389,8 +400,20 @@ public class Entity {
 				
 				// ult.wind 
 				if (a.getAbilityType() == 14) {
-					
+					if (this instanceof Player) {
+						if (((Player) this).fixElement == -1) {
+							((Player) this).createRadialMenuFixElement(a.getID());
+							((Player) this).setReplaceElementsNow(true);
+							compensateForCosts(e1, e1, a);
+						}
+						else CombatLog.println("Cannot use that spell yet.");
+					}
 				}
+			}
+			
+			// DUMMY-CHECK
+			if (a.getID() == -1) {
+				CombatLog.println("That spell is not yet unlocked.");
 			}
 			
 			
@@ -399,7 +422,7 @@ public class Entity {
 
 	private int calculateDamage(Entity e1, Entity e2, Ability a) {
 		// e1: caster | e2: target
-		if (a.getAbilityType() == 8) {
+		if (a.getAbilityType() == 8 || a.getAbilityType() == 12) {
 			return (e1.getLevel() - e2.getLevel()) + (e1.getLevel() * a.getDamageValue());
 		}
 		else if (a.getAbilityType() == 9) {
@@ -408,7 +431,15 @@ public class Entity {
 		else return -1;
 	}
 	
-	private boolean affordToUseAbility(Entity e1, Ability a) {
+	public int getCalcDamage(Entity e1, Entity e2, Ability a) {
+		return calculateDamage(e1, e2, a);
+	}
+	
+	private int calculateHealToMax(Entity e) {
+		return e.getMaxHealth() - e.getHealth();
+	}
+	
+	protected boolean affordToUseAbility(Entity e1, Ability a) {
 		if (((Player) e1).getElementalPower(a.getElementType()) >= a.getEPcost())
 			return true;
 		else 
@@ -583,7 +614,7 @@ public class Entity {
 		if (e.abilities.size() < e.abilityCount) {
 			Ability abi = new Ability(id, e);
 			this.addAbility(abi);
-			CombatLog.println(e.name + "'s " + abi.getName() + " unlocked.");
+			if (abi.getID() != -1) CombatLog.println(e.name + "'s " + abi.getName() + " unlocked.");
 		}
 	}
 	
@@ -835,6 +866,15 @@ public class Entity {
 		return tick;
 	}
 	
+	public boolean isHealthFull() {
+		if (this.getHealth() == this.getMaxHealth()) return true;
+		else return false;
+	}
+	
+	public boolean hasReflectiveMitigation() {
+		return reflectiveMitigation;
+	}
+	
 	// SETTERS
 	
 	protected void setWait(Boolean b) {
@@ -885,6 +925,10 @@ public class Entity {
 			}			
 		} else
 			this.currentTarget = null;
+	}
+	
+	public void setReflectiveMitigation(boolean b) {
+		reflectiveMitigation = b;
 	}
 	
 	protected void cycleTarget(Entity e) {

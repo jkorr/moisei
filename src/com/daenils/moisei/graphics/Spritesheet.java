@@ -21,6 +21,7 @@ public class Spritesheet {
 	
 	public static Spritesheet lettersheet = new Spritesheet("/textures/letters/letter-grid.png", 180, 180, 30, 30);
 	public static Spritesheet circlesheet = new Spritesheet("/textures/gui/circle-final.png", 20, 100, 20, 20);
+	public static Spritesheet spelliconsheet = new Spritesheet("/textures/gui/spells/spells-testicon.png", 120, 150, 30, 30);
 	
 	public Spritesheet(String path, int w, int h, int sw, int sh) {
 		this.path = path;
